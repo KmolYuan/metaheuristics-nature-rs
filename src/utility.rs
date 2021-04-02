@@ -42,8 +42,7 @@ pub struct Report {
     time: f64,
 }
 
-/// The base of the objective function.
-/// For example:
+/// The base of the objective function. For example:
 /// ```
 /// struct MyFunc(u32, Vec<f64>, Vec<f64>);
 /// impl MyFunc {
@@ -84,7 +83,7 @@ pub struct Settings {
 }
 
 /// Base class of algorithms.
-pub struct Algorithm<F: ObjFunc> {
+pub struct AlgorithmBase<F: ObjFunc> {
     pop_num: usize,
     dim: usize,
     rpt: u32,
@@ -99,7 +98,7 @@ pub struct Algorithm<F: ObjFunc> {
     func: F,
 }
 
-impl<F: ObjFunc> Algorithm<F> {
+impl<F: ObjFunc> AlgorithmBase<F> {
     pub fn new(func: F, settings: Settings) -> Self {
         let dim = func.dim();
         Self {
@@ -117,51 +116,64 @@ impl<F: ObjFunc> Algorithm<F> {
             func,
         }
     }
-    pub fn new_pop(&mut self) {
-        self.fitness = zeros!(self.pop_num);
-        self.pool = zeros!(self.pop_num, self.dim);
+}
+
+pub trait Algorithm<F: ObjFunc> {
+    fn base(&self) -> &AlgorithmBase<F>;
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
+    fn new_pop(&mut self) {
+        let b = self.base_mut();
+        b.fitness = zeros!(b.pop_num);
+        b.pool = zeros!(b.pop_num, b.dim);
     }
-    pub fn make_tmp(&self) -> Vec<f64> { zeros!(self.dim) }
-    pub fn assign(&mut self, i: usize, j: usize) {
-        self.fitness[i] = self.fitness[j];
-        self.pool[i] = self.pool[j].clone();
+    fn make_tmp(&self) -> Vec<f64> { zeros!(self.base().dim) }
+    fn assign(&mut self, i: usize, j: usize) {
+        let b = self.base_mut();
+        b.fitness[i] = b.fitness[j];
+        b.pool[i] = b.pool[j].clone();
     }
-    pub fn assign_from(&mut self, i: usize, f: f64, v: &Vec<f64>) {
-        self.fitness[i] = f;
-        self.pool[i] = v.clone();
+    fn assign_from(&mut self, i: usize, f: f64, v: &Vec<f64>) {
+        let b = self.base_mut();
+        b.fitness[i] = f;
+        b.pool[i] = v.clone();
     }
-    pub fn set_best(&mut self, i: usize) {
-        self.best_f = self.fitness[i];
-        self.best = self.pool[i].clone();
+    fn set_best(&mut self, i: usize) {
+        let b = self.base_mut();
+        b.best_f = b.fitness[i];
+        b.best = b.pool[i].clone();
     }
-    pub fn find_best(&mut self) {
+    fn find_best(&mut self) {
+        let b = self.base_mut();
         let mut best = 0;
-        for i in 0..self.pop_num {
-            if self.fitness[i] < self.fitness[best] {
+        for i in 0..b.pop_num {
+            if b.fitness[i] < b.fitness[best] {
                 best = i;
             }
         }
-        if self.fitness[best] < self.best_f {
+        if b.fitness[best] < b.best_f {
             self.set_best(best);
         }
     }
-    pub fn init_pop(&mut self) {
-        for i in 0..self.pop_num {
-            for s in 0..self.dim {
-                self.pool[i][s] = rand_v!(self.func.lb(s), self.func.ub(s));
+    fn init_pop(&mut self) {
+        let b = self.base_mut();
+        for i in 0..b.pop_num {
+            for s in 0..b.dim {
+                b.pool[i][s] = rand_v!(b.func.lb(s), b.func.ub(s));
             }
-            self.fitness[i] = self.func.fitness(&self.pool[i]);
+            b.fitness[i] = b.func.fitness(&b.pool[i]);
         }
     }
-    pub fn report(&mut self) {
-        self.reports.push(Report {
-            gen: *self.func.gen(),
-            fitness: self.best_f,
-            time: (Instant::now() - self.time_start).as_secs_f64(),
+    fn report(&mut self) {
+        let b = self.base_mut();
+        b.reports.push(Report {
+            gen: *b.func.gen(),
+            fitness: b.best_f,
+            time: (Instant::now() - b.time_start).as_secs_f64(),
         });
     }
-    pub fn history(&self) -> Vec<Report> { self.reports.clone() }
-    pub fn result(&self) -> (Vec<f64>, f64) {
-        (self.best.clone(), self.best_f)
+    fn history(&self) -> Vec<Report> { self.base().reports.clone() }
+    fn result(&self) -> (Vec<f64>, f64) {
+        let b = self.base();
+        (b.best.clone(), b.best_f)
     }
 }
