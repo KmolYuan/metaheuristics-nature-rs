@@ -5,6 +5,7 @@ use std::{
 };
 use rand::{thread_rng, Rng};
 
+#[macro_export]
 macro_rules! rand_v {
     ($v1: expr, $v2: expr) => {
         {
@@ -15,16 +16,16 @@ macro_rules! rand_v {
     () => { rand_v!(0., 1.) };
 }
 
+#[macro_export]
 macro_rules! rand_i {
     ($v: expr) => { rand_v!(0, $v) };
 }
 
+#[macro_export]
 macro_rules! zeros {
-    ($dim: expr) => {
-        Vec::from_iter(repeat(0.).take($dim))
-    };
-    ($w: expr, $h: expr) => {
-        Vec::from_iter(repeat(zeros!($h)).take($w))
+    ($dim: expr) => { Vec::from_iter(repeat(0.).take($dim)) };
+    ($w: expr, $h: expr $(, $d: expr)*) => {
+        Vec::from_iter(repeat(zeros!($h$(, $d)*)).take($w))
     };
 }
 
@@ -84,8 +85,8 @@ pub struct Settings {
 
 /// Base class of algorithms.
 pub struct AlgorithmBase<F: ObjFunc> {
-    pop_num: usize,
-    dim: usize,
+    pub pop_num: usize,
+    pub dim: usize,
     rpt: u32,
     task: Task,
     stop_at: f64,
@@ -95,7 +96,7 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pool: Vec<Vec<f64>>,
     time_start: Instant,
     reports: Vec<Report>,
-    func: F,
+    pub func: F,
 }
 
 impl<F: ObjFunc> AlgorithmBase<F> {
@@ -121,12 +122,13 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 pub trait Algorithm<F: ObjFunc> {
     fn base(&self) -> &AlgorithmBase<F>;
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
+    fn init(&mut self);
+    fn generation(&mut self);
     fn new_pop(&mut self) {
         let b = self.base_mut();
         b.fitness = zeros!(b.pop_num);
         b.pool = zeros!(b.pop_num, b.dim);
     }
-    fn make_tmp(&self) -> Vec<f64> { zeros!(self.base().dim) }
     fn assign(&mut self, i: usize, j: usize) {
         let b = self.base_mut();
         b.fitness[i] = b.fitness[j];
@@ -175,5 +177,50 @@ pub trait Algorithm<F: ObjFunc> {
     fn result(&self) -> (Vec<f64>, f64) {
         let b = self.base();
         (b.best.clone(), b.best_f)
+    }
+    fn run(&mut self) -> F::Result {
+        *self.base_mut().func.gen() = 0;
+        self.base_mut().time_start = Instant::now();
+        self.init();
+        self.report();
+        let mut last_diff = 0.;
+        loop {
+            let best_f = {
+                let b = self.base_mut();
+                *b.func.gen() += 1;
+                b.best_f
+            };
+            self.generation();
+            if {
+                let b = self.base_mut();
+                *b.func.gen() % b.rpt == 0
+            } {
+                self.report();
+            }
+            let b = self.base_mut();
+            match b.task {
+                Task::MaxGen => if *b.func.gen() >= b.stop_at as u32 {
+                    break;
+                }
+                Task::MinFit => if b.best_f >= b.stop_at {
+                    break;
+                }
+                Task::MaxTime => if (Instant::now() - b.time_start).as_secs_f64() >= b.stop_at {
+                    break;
+                }
+                Task::SlowDown => {
+                    let diff = best_f - b.best_f;
+                    if last_diff > 0. && diff / last_diff >= b.stop_at {
+                        break;
+                    }
+                    last_diff = diff;
+                }
+            }
+        }
+        self.report();
+        {
+            let b = self.base();
+            b.func.result(&b.best)
+        }
     }
 }

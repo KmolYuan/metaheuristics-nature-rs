@@ -1,3 +1,4 @@
+mod rga;
 mod utility;
 
 #[cfg(test)]
