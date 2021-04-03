@@ -44,13 +44,14 @@ pub struct Report {
 /// ```
 /// struct MyFunc(u32, Vec<f64>, Vec<f64>);
 /// impl MyFunc {
-///     fn new() { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
+///     fn new() -> Self { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
 /// }
-/// impl ObjFunc<f64> for MyFunc {
+/// impl ObjFunc for MyFunc {
+///     type Result = f64;
 ///     fn fitness(&self, _gen: u32, v: &Vec<f64>) -> f64 {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
-///     fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(v) }
+///     fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(0, v) }
 ///     fn ub(&self) -> &Vec<f64> { &self.2 }
 ///     fn lb(&self) -> &Vec<f64> { &self.1 }
 /// }
@@ -68,10 +69,21 @@ pub trait ObjFunc {
 }
 
 pub struct Settings {
-    task: Task,
-    stop_at: f64,
-    pop_num: usize,
-    rpt: u32,
+    pub task: Task,
+    pub stop_at: f64,
+    pub pop_num: usize,
+    pub rpt: u32,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            task: Task::MaxGen,
+            stop_at: 200.,
+            pop_num: 200,
+            rpt: 50,
+        }
+    }
 }
 
 /// Base class of algorithms.
@@ -108,8 +120,8 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             stop_at: settings.stop_at,
             best_f: f64::INFINITY,
             best: zeros!(dim),
-            fitness: vec![],
-            pool: vec![],
+            fitness: zeros!(settings.pop_num),
+            pool: zeros!(settings.pop_num, dim),
             time_start: Instant::now(),
             reports: vec![],
             func,
@@ -124,11 +136,6 @@ pub trait Algorithm<F: ObjFunc> {
     fn generation(&mut self);
     fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
     fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
-    fn new_pop(&mut self) {
-        let b = self.base_mut();
-        b.fitness = zeros!(b.pop_num);
-        b.pool = zeros!(b.pop_num, b.dim);
-    }
     fn assign(&mut self, i: usize, j: usize) {
         let b = self.base_mut();
         b.fitness[i] = b.fitness[j];
@@ -202,7 +209,7 @@ pub trait Algorithm<F: ObjFunc> {
                 Task::MaxGen => if b.gen >= b.stop_at as u32 {
                     break;
                 }
-                Task::MinFit => if b.best_f >= b.stop_at {
+                Task::MinFit => if b.best_f <= b.stop_at {
                     break;
                 }
                 Task::MaxTime => if (Instant::now() - b.time_start).as_secs_f64() >= b.stop_at {

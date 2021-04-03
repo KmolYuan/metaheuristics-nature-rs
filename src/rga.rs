@@ -9,6 +9,21 @@ pub struct RGASetting {
     delta: f64,
 }
 
+impl Default for RGASetting {
+    fn default() -> Self {
+        Self {
+            base: Settings {
+                pop_num: 500,
+                ..Default::default()
+            },
+            cross: 0.95,
+            mutate: 0.05,
+            win: 0.95,
+            delta: 5.,
+        }
+    }
+}
+
 pub struct RGA<F: ObjFunc> {
     cross: f64,
     mutate: f64,
@@ -124,5 +139,33 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
         self.select();
         self.crossover();
         self.mutate();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tests::TestObj;
+    use crate::rga::{RGA, RGASetting};
+    use crate::utility::{Algorithm, Settings, Task};
+
+    #[test]
+    fn rga() {
+        let mut a = RGA::new(
+            TestObj::new(),
+            RGASetting {
+                base: Settings {
+                    task: Task::MinFit,
+                    stop_at: 1e-20,
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        );
+        let ans = a.run();
+        let (x, y) = a.result();
+        assert!(ans.abs() < 1e-20);
+        assert!(x[0].abs() < 1e-20);
+        assert!(x[1].abs() < 1e-20);
+        assert!(y.abs() < 1e-20);
     }
 }
