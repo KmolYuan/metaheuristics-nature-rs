@@ -25,6 +25,7 @@ macro_rules! zeros {
     };
 }
 
+/// The terminal condition of the algorithm setting.
 #[derive(Eq, PartialEq)]
 pub enum Task {
     MaxGen,
@@ -33,15 +34,17 @@ pub enum Task {
     SlowDown,
 }
 
+/// The data of generation sampling.
 #[derive(Copy, Clone)]
 pub struct Report {
-    gen: u32,
-    fitness: f64,
-    time: f64,
+    pub gen: u32,
+    pub fitness: f64,
+    pub time: f64,
 }
 
 /// The base of the objective function. For example:
 /// ```
+/// use metaheuristics_rs::ObjFunc;
 /// struct MyFunc(u32, Vec<f64>, Vec<f64>);
 /// impl MyFunc {
 ///     fn new() -> Self { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
@@ -86,7 +89,7 @@ impl Default for Settings {
     }
 }
 
-/// Base class of algorithms.
+/// The base class of algorithms.
 pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     pub dim: usize,
@@ -129,10 +132,13 @@ impl<F: ObjFunc> AlgorithmBase<F> {
     }
 }
 
+/// The methods of the meta-heuristic algorithms.
 pub trait Algorithm<F: ObjFunc> {
     fn base(&self) -> &AlgorithmBase<F>;
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
+    /// Initialization implementation.
     fn init(&mut self);
+    /// Processing implementation of each generation.
     fn generation(&mut self);
     fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
     fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
@@ -180,11 +186,14 @@ pub trait Algorithm<F: ObjFunc> {
             time: (Instant::now() - b.time_start).as_secs_f64(),
         });
     }
+    /// Get the history for plotting.
     fn history(&self) -> Vec<Report> { self.base().reports.clone() }
+    /// Return the x and y of function.
     fn result(&self) -> (Vec<f64>, f64) {
         let b = self.base();
         (b.best.clone(), b.best_f)
     }
+    /// Start the algorithm.
     fn run(&mut self) -> F::Result {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();

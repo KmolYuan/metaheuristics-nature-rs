@@ -1,5 +1,10 @@
 mod rga;
+mod fa;
 mod utility;
+
+pub use crate::rga::{RGASetting, RGA};
+pub use crate::fa::{FASetting, FA};
+pub use crate::utility::{ObjFunc, Algorithm, AlgorithmBase, Task, Report};
 
 #[cfg(test)]
 mod tests {

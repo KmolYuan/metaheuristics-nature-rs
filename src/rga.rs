@@ -1,12 +1,13 @@
 use crate::utility::{AlgorithmBase, Algorithm, Settings, ObjFunc, Task};
 use crate::{zeros, rand};
 
+/// Real-coded Genetic Algorithm settings.
 pub struct RGASetting {
-    base: Settings,
-    cross: f64,
-    mutate: f64,
-    win: f64,
-    delta: f64,
+    pub base: Settings,
+    pub cross: f64,
+    pub mutate: f64,
+    pub win: f64,
+    pub delta: f64,
 }
 
 impl Default for RGASetting {
@@ -24,6 +25,7 @@ impl Default for RGASetting {
     }
 }
 
+/// Real-coded Genetic Algorithm type.
 pub struct RGA<F: ObjFunc> {
     cross: f64,
     mutate: f64,
