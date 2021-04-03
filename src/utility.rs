@@ -1,34 +1,31 @@
 //! The definitions of objective function trait and algorithm base.
-use std::{
-    iter::{repeat, FromIterator},
-    time::{Duration, Instant},
-};
-use rand::{thread_rng, Rng};
+use std::time::Instant;
 
 #[macro_export]
-macro_rules! rand_v {
-    ($v1: expr, $v2: expr) => {
+macro_rules! rand {
+    ($v1:expr, $v2:expr) => {
         {
+            use rand::Rng;
             let mut rng = rand::thread_rng();
             rng.gen_range($v1..$v2)
         }
     };
-    () => { rand_v!(0., 1.) };
-}
-
-#[macro_export]
-macro_rules! rand_i {
-    ($v: expr) => { rand_v!(0, $v) };
+    ($v: expr) => { rand!(0, $v) };
+    () => { rand!(0., 1.) };
 }
 
 #[macro_export]
 macro_rules! zeros {
-    ($dim: expr) => { Vec::from_iter(repeat(0.).take($dim)) };
-    ($w: expr, $h: expr $(, $d: expr)*) => {
-        Vec::from_iter(repeat(zeros!($h$(, $d)*)).take($w))
+    () => { 0. };
+    ($w:expr $(, $h:expr)* $(,)?) => {
+        {
+            use std::iter::{repeat, FromIterator};
+            Vec::from_iter(repeat(zeros!($($h,)*)).take($w))
+        }
     };
 }
 
+#[derive(Eq, PartialEq)]
 pub enum Task {
     MaxGen,
     MinFit,
@@ -50,30 +47,24 @@ pub struct Report {
 ///     fn new() { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
 /// }
 /// impl ObjFunc<f64> for MyFunc {
-///     fn fitness(&self, v: &Vec<f64>) -> f64 {
+///     fn fitness(&self, _gen: u32, v: &Vec<f64>) -> f64 {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
 ///     fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(v) }
-///     fn dim(&self) -> usize { 3 }
-///     fn ub(&self, i: usize) -> f64 { self.2[i] }
-///     fn lb(&self, i: usize) -> f64 { self.1[i] }
-///     fn gen(&mut self) -> &mut u32 { &mut self.0 }
+///     fn ub(&self) -> &Vec<f64> { &self.2 }
+///     fn lb(&self) -> &Vec<f64> { &self.1 }
 /// }
 /// ```
 pub trait ObjFunc {
     type Result;
     /// Return fitness, the smaller value represents good.
-    fn fitness(&self, v: &Vec<f64>) -> f64;
+    fn fitness(&self, gen: u32, v: &Vec<f64>) -> f64;
     /// Return the final result of the problem.
     fn result(&self, v: &Vec<f64>) -> Self::Result;
-    /// Get the number of variables.
-    fn dim(&self) -> usize;
     /// Get upper bound.
-    fn ub(&self, i: usize) -> f64;
+    fn ub(&self) -> &Vec<f64>;
     /// Get lower bound.
-    fn lb(&self, i: usize) -> f64;
-    /// Get generation.
-    fn gen(&mut self) -> &mut u32;
+    fn lb(&self) -> &Vec<f64>;
 }
 
 pub struct Settings {
@@ -87,13 +78,14 @@ pub struct Settings {
 pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     pub dim: usize,
+    pub gen: u32,
     rpt: u32,
-    task: Task,
-    stop_at: f64,
-    best_f: f64,
-    best: Vec<f64>,
-    fitness: Vec<f64>,
-    pool: Vec<Vec<f64>>,
+    pub task: Task,
+    pub stop_at: f64,
+    pub best_f: f64,
+    pub best: Vec<f64>,
+    pub fitness: Vec<f64>,
+    pub pool: Vec<Vec<f64>>,
     time_start: Instant,
     reports: Vec<Report>,
     pub func: F,
@@ -101,10 +93,16 @@ pub struct AlgorithmBase<F: ObjFunc> {
 
 impl<F: ObjFunc> AlgorithmBase<F> {
     pub fn new(func: F, settings: Settings) -> Self {
-        let dim = func.dim();
+        let dim = {
+            let lb = func.lb();
+            let ub = func.ub();
+            assert_eq!(lb.len(), ub.len());
+            lb.len()
+        };
         Self {
             pop_num: settings.pop_num,
             dim,
+            gen: 0,
             rpt: settings.rpt,
             task: settings.task,
             stop_at: settings.stop_at,
@@ -124,6 +122,8 @@ pub trait Algorithm<F: ObjFunc> {
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
     fn init(&mut self);
     fn generation(&mut self);
+    fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
+    fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
     fn new_pop(&mut self) {
         let b = self.base_mut();
         b.fitness = zeros!(b.pop_num);
@@ -134,10 +134,10 @@ pub trait Algorithm<F: ObjFunc> {
         b.fitness[i] = b.fitness[j];
         b.pool[i] = b.pool[j].clone();
     }
-    fn assign_from(&mut self, i: usize, f: f64, v: &Vec<f64>) {
+    fn assign_from(&mut self, i: usize, f: f64, v: Vec<f64>) {
         let b = self.base_mut();
         b.fitness[i] = f;
-        b.pool[i] = v.clone();
+        b.pool[i] = v;
     }
     fn set_best(&mut self, i: usize) {
         let b = self.base_mut();
@@ -157,18 +157,18 @@ pub trait Algorithm<F: ObjFunc> {
         }
     }
     fn init_pop(&mut self) {
-        let b = self.base_mut();
-        for i in 0..b.pop_num {
-            for s in 0..b.dim {
-                b.pool[i][s] = rand_v!(b.func.lb(s), b.func.ub(s));
+        for i in 0..self.base().pop_num {
+            for s in 0..self.base().dim {
+                self.base_mut().pool[i][s] = rand!(self.lb(s), self.ub(s));
             }
-            b.fitness[i] = b.func.fitness(&b.pool[i]);
+            let b = self.base_mut();
+            b.fitness[i] = b.func.fitness(b.gen, &b.pool[i]);
         }
     }
     fn report(&mut self) {
         let b = self.base_mut();
         b.reports.push(Report {
-            gen: *b.func.gen(),
+            gen: b.gen,
             fitness: b.best_f,
             time: (Instant::now() - b.time_start).as_secs_f64(),
         });
@@ -179,7 +179,7 @@ pub trait Algorithm<F: ObjFunc> {
         (b.best.clone(), b.best_f)
     }
     fn run(&mut self) -> F::Result {
-        *self.base_mut().func.gen() = 0;
+        self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
         self.init();
         self.report();
@@ -187,19 +187,19 @@ pub trait Algorithm<F: ObjFunc> {
         loop {
             let best_f = {
                 let b = self.base_mut();
-                *b.func.gen() += 1;
+                b.gen += 1;
                 b.best_f
             };
             self.generation();
             if {
                 let b = self.base_mut();
-                *b.func.gen() % b.rpt == 0
+                b.gen % b.rpt == 0
             } {
                 self.report();
             }
             let b = self.base_mut();
             match b.task {
-                Task::MaxGen => if *b.func.gen() >= b.stop_at as u32 {
+                Task::MaxGen => if b.gen >= b.stop_at as u32 {
                     break;
                 }
                 Task::MinFit => if b.best_f >= b.stop_at {

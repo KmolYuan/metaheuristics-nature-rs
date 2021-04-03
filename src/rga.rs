@@ -1,6 +1,5 @@
-use std::iter::{repeat, FromIterator};
-use crate::utility::{AlgorithmBase, Algorithm, Settings, ObjFunc};
-use crate::zeros;
+use crate::utility::{AlgorithmBase, Algorithm, Settings, ObjFunc, Task};
+use crate::{zeros, rand};
 
 pub struct RGASetting {
     base: Settings,
@@ -41,15 +40,89 @@ impl<F: ObjFunc> RGA<F> {
             base,
         }
     }
+    fn check(&self, i: usize, v: f64) -> f64 {
+        if self.ub(i) < v || self.lb(i) > v {
+            rand!(self.lb(i), self.ub(i))
+        } else { v }
+    }
+    fn crossover(&mut self) {
+        for i in (0..(self.base.pop_num - 1)).step_by(2) {
+            if !(rand!() < self.cross) {
+                continue;
+            }
+            for s in 0..self.base.dim {
+                self.tmp1[s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
+                self.tmp2[s] = self.check(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
+                self.tmp3[s] = self.check(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
+            }
+            self.f_tmp[0] = self.base.func.fitness(self.base.gen, &self.tmp1);
+            self.f_tmp[1] = self.base.func.fitness(self.base.gen, &self.tmp2);
+            self.f_tmp[2] = self.base.func.fitness(self.base.gen, &self.tmp3);
+            if self.f_tmp[0] > self.f_tmp[1] {
+                self.f_tmp.swap(0, 1);
+                std::mem::swap(&mut self.tmp1, &mut self.tmp2);
+            }
+            if self.f_tmp[0] > self.f_tmp[2] {
+                self.f_tmp.swap(0, 2);
+                std::mem::swap(&mut self.tmp1, &mut self.tmp3);
+            }
+            if self.f_tmp[1] > self.f_tmp[2] {
+                self.f_tmp.swap(1, 2);
+                std::mem::swap(&mut self.tmp2, &mut self.tmp3);
+            }
+            self.assign_from(i, self.f_tmp[0], self.tmp1.clone());
+            self.assign_from(i + 1, self.f_tmp[1], self.tmp2.clone());
+        }
+    }
+    fn get_delta(&self, y: f64) -> f64 {
+        let r = if self.base.task == Task::MaxGen && self.base.stop_at > 0. {
+            self.base.gen as f64 / self.base.stop_at
+        } else { 1. };
+        y * rand!() * (1. - r).powf(self.delta)
+    }
+    fn mutate(&mut self) {
+        for i in 0..self.base.pop_num {
+            if !(rand!() < self.mutate) {
+                continue;
+            }
+            let s = rand!(self.base.dim);
+            if rand!() < 0.5 {
+                self.base.pool[i][s] += self.get_delta(self.ub(s) - self.base.pool[i][s]);
+            } else {
+                self.base.pool[i][s] -= self.get_delta(self.base.pool[i][s] - self.lb(s));
+            }
+            self.base.fitness[i] = self.base.func.fitness(self.base.gen, &self.base.pool[i]);
+        }
+        self.find_best();
+    }
+    fn select(&mut self) {
+        for i in 0..self.base.pop_num {
+            let j = rand!(self.base.pop_num);
+            let k = rand!(self.base.pop_num);
+            if self.base.fitness[j] > self.base.fitness[k] && rand!() < self.win {
+                self.new_fitness[i] = self.base.fitness[k];
+                self.new_pool[i] = self.base.pool[k].clone();
+            } else {
+                self.new_fitness[i] = self.base.fitness[j];
+                self.new_pool[i] = self.base.pool[j].clone();
+            }
+            self.base.fitness = self.new_fitness.clone();
+            self.base.pool = self.new_pool.clone();
+            self.assign_from(rand!(self.base.pop_num), self.base.best_f, self.base.best.clone());
+        }
+    }
 }
 
 impl<F: ObjFunc> Algorithm<F> for RGA<F> {
     fn base(&self) -> &AlgorithmBase<F> { &self.base }
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
     fn init(&mut self) {
-        unimplemented!()
+        self.init_pop();
+        self.set_best(0);
     }
     fn generation(&mut self) {
-        unimplemented!()
+        self.select();
+        self.crossover();
+        self.mutate();
     }
 }
