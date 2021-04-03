@@ -44,7 +44,7 @@ pub struct Report {
 
 /// The base of the objective function. For example:
 /// ```
-/// use metaheuristics_rs::ObjFunc;
+/// use metaheuristics::ObjFunc;
 /// struct MyFunc(u32, Vec<f64>, Vec<f64>);
 /// impl MyFunc {
 ///     fn new() -> Self { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
