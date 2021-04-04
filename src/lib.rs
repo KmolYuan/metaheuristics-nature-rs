@@ -1,11 +1,13 @@
 mod rga;
 mod de;
 mod fa;
+mod tlbo;
 mod utility;
 
 pub use crate::rga::{RGASetting, RGA};
 pub use crate::de::{DESetting, DE, Strategy};
 pub use crate::fa::{FASetting, FA};
+pub use crate::tlbo::{TLBOSetting, TLBO};
 pub use crate::utility::{ObjFunc, Setting, Algorithm, AlgorithmBase, Task, Report};
 
 #[cfg(test)]
