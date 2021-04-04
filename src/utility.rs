@@ -45,9 +45,9 @@ pub struct Report {
 /// The base of the objective function. For example:
 /// ```
 /// use metaheuristics::ObjFunc;
-/// struct MyFunc(u32, Vec<f64>, Vec<f64>);
+/// struct MyFunc(Vec<f64>, Vec<f64>);
 /// impl MyFunc {
-///     fn new() -> Self { Self(0, vec![0., 0., 0.], vec![50., 50., 50.]) }
+///     fn new() -> Self { Self(vec![0., 0., 0.], vec![50., 50., 50.]) }
 /// }
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
@@ -55,8 +55,8 @@ pub struct Report {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
 ///     fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(0, v) }
-///     fn ub(&self) -> &Vec<f64> { &self.2 }
-///     fn lb(&self) -> &Vec<f64> { &self.1 }
+///     fn ub(&self) -> &Vec<f64> { &self.1 }
+///     fn lb(&self) -> &Vec<f64> { &self.0 }
 /// }
 /// ```
 pub trait ObjFunc {
@@ -71,14 +71,15 @@ pub trait ObjFunc {
     fn lb(&self) -> &Vec<f64>;
 }
 
-pub struct Settings {
+/// Base settings.
+pub struct Setting {
     pub task: Task,
     pub stop_at: f64,
     pub pop_num: usize,
     pub rpt: u32,
 }
 
-impl Default for Settings {
+impl Default for Setting {
     fn default() -> Self {
         Self {
             task: Task::MaxGen,
@@ -107,7 +108,7 @@ pub struct AlgorithmBase<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> AlgorithmBase<F> {
-    pub fn new(func: F, settings: Settings) -> Self {
+    pub fn new(func: F, settings: Setting) -> Self {
         let dim = {
             let lb = func.lb();
             let ub = func.ub();
@@ -234,9 +235,6 @@ pub trait Algorithm<F: ObjFunc> {
             }
         }
         self.report();
-        {
-            let b = self.base();
-            b.func.result(&b.best)
-        }
+        self.base().func.result(&self.base().best)
     }
 }

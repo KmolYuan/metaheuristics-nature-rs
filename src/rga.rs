@@ -1,9 +1,9 @@
-use crate::utility::{AlgorithmBase, Algorithm, Settings, ObjFunc, Task};
+use crate::utility::{AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
 use crate::{zeros, rand};
 
 /// Real-coded Genetic Algorithm settings.
 pub struct RGASetting {
-    pub base: Settings,
+    pub base: Setting,
     pub cross: f64,
     pub mutate: f64,
     pub win: f64,
@@ -13,7 +13,7 @@ pub struct RGASetting {
 impl Default for RGASetting {
     fn default() -> Self {
         Self {
-            base: Settings {
+            base: Setting {
                 pop_num: 500,
                 ..Default::default()
             },
@@ -147,14 +147,14 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
 #[cfg(test)]
 mod tests {
     use crate::tests::TestObj;
-    use crate::{RGA, RGASetting, Algorithm, Settings, Task};
+    use crate::{RGA, RGASetting, Algorithm, Setting, Task};
 
     #[test]
     fn rga() {
         let mut a = RGA::new(
             TestObj::new(),
             RGASetting {
-                base: Settings {
+                base: Setting {
                     task: Task::MinFit,
                     stop_at: 1e-20,
                     ..Default::default()

@@ -1,4 +1,4 @@
-use crate::utility::{AlgorithmBase, Algorithm, Settings, ObjFunc};
+use crate::utility::{AlgorithmBase, Algorithm, Setting, ObjFunc};
 use crate::{zeros, rand};
 
 pub enum Strategy {
@@ -14,8 +14,9 @@ pub enum Strategy {
     S10,
 }
 
+/// Differential Evolution settings.
 pub struct DESetting {
-    pub base: Settings,
+    pub base: Setting,
     pub strategy: Strategy,
     pub f: f64,
     pub cr: f64,
@@ -24,7 +25,7 @@ pub struct DESetting {
 impl Default for DESetting {
     fn default() -> Self {
         Self {
-            base: Settings {
+            base: Setting {
                 pop_num: 400,
                 ..Default::default()
             },
@@ -35,6 +36,7 @@ impl Default for DESetting {
     }
 }
 
+/// Differential Evolution type.
 pub struct DE<F: ObjFunc> {
     strategy: Strategy,
     f: f64,
@@ -161,14 +163,14 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
 #[cfg(test)]
 mod tests {
     use crate::tests::TestObj;
-    use crate::{DE, DESetting, Algorithm, Settings, Task};
+    use crate::{DE, DESetting, Algorithm, Setting, Task};
 
     #[test]
     fn de() {
         let mut a = DE::new(
             TestObj::new(),
             DESetting {
-                base: Settings {
+                base: Setting {
                     task: Task::MinFit,
                     stop_at: 1e-20,
                     ..Default::default()

@@ -1,9 +1,9 @@
-use crate::utility::{Settings, ObjFunc, AlgorithmBase, Algorithm};
+use crate::utility::{Setting, ObjFunc, AlgorithmBase, Algorithm};
 use crate::rand;
 
 /// Firefly Algorithm settings.
 pub struct FASetting {
-    pub base: Settings,
+    pub base: Setting,
     pub alpha: f64,
     pub beta_min: f64,
     pub gamma: f64,
@@ -13,7 +13,7 @@ pub struct FASetting {
 impl Default for FASetting {
     fn default() -> Self {
         Self {
-            base: Settings {
+            base: Setting {
                 pop_num: 80,
                 ..Default::default()
             },
@@ -111,14 +111,14 @@ impl<F: ObjFunc> Algorithm<F> for FA<F> {
 #[cfg(test)]
 mod tests {
     use crate::tests::TestObj;
-    use crate::{FA, FASetting, Algorithm, Settings, Task};
+    use crate::{FA, FASetting, Algorithm, Setting, Task};
 
     #[test]
     fn fa() {
         let mut a = FA::new(
             TestObj::new(),
             FASetting {
-                base: Settings {
+                base: Setting {
                     task: Task::MinFit,
                     stop_at: 1e-20,
                     ..Default::default()
