@@ -147,8 +147,7 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
 #[cfg(test)]
 mod tests {
     use crate::tests::TestObj;
-    use crate::rga::{RGA, RGASetting};
-    use crate::utility::{Algorithm, Settings, Task};
+    use crate::{RGA, RGASetting, Algorithm, Settings, Task};
 
     #[test]
     fn rga() {
@@ -161,13 +160,13 @@ mod tests {
                     ..Default::default()
                 },
                 ..Default::default()
-            }
+            },
         );
         let ans = a.run();
         let (x, y) = a.result();
         assert!(ans.abs() < 1e-20);
-        assert!(x[0].abs() < 1e-20);
-        assert!(x[1].abs() < 1e-20);
+        assert!(x[0].abs() < 1e-10);
+        assert!(x[1].abs() < 1e-10);
         assert!(y.abs() < 1e-20);
     }
 }
