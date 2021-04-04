@@ -1,5 +1,4 @@
-use crate::utility::{Setting, ObjFunc, AlgorithmBase, Algorithm};
-use crate::{zeros, rand};
+use crate::{zeros, rand, Setting, ObjFunc, AlgorithmBase, Algorithm};
 
 /// Teaching Learning Based Optimization settings.
 pub type TLBOSetting = Setting;
@@ -84,24 +83,20 @@ impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::TestObj;
-    use crate::{TLBO, TLBOSetting, Algorithm, Task};
+    use crate::{
+        tests::{test, TestObj},
+        {TLBO, TLBOSetting, Task},
+    };
 
     #[test]
     fn tlbo() {
-        let mut a = TLBO::new(
+        test(TLBO::new(
             TestObj::new(),
             TLBOSetting {
                 task: Task::MinFit,
                 stop_at: 1e-20,
                 ..Default::default()
             },
-        );
-        let ans = a.run();
-        let (x, y) = a.result();
-        assert!(ans.abs() < 1e-20);
-        assert!(x[0].abs() < 1e-10);
-        assert!(x[1].abs() < 1e-10);
-        assert!(y.abs() < 1e-20);
+        ));
     }
 }

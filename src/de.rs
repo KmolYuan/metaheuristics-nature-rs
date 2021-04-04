@@ -1,5 +1,4 @@
-use crate::utility::{AlgorithmBase, Algorithm, Setting, ObjFunc};
-use crate::{zeros, rand};
+use crate::{zeros, rand, AlgorithmBase, Algorithm, Setting, ObjFunc};
 
 pub enum Strategy {
     S1,
@@ -162,12 +161,14 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::TestObj;
-    use crate::{DE, DESetting, Algorithm, Setting, Task};
+    use crate::{
+        tests::{test, TestObj},
+        {DE, DESetting, Setting, Task},
+    };
 
     #[test]
     fn de() {
-        let mut a = DE::new(
+        test(DE::new(
             TestObj::new(),
             DESetting {
                 base: Setting {
@@ -177,12 +178,6 @@ mod tests {
                 },
                 ..Default::default()
             },
-        );
-        let ans = a.run();
-        let (x, y) = a.result();
-        assert!(ans.abs() < 1e-20);
-        assert!(x[0].abs() < 1e-10);
-        assert!(x[1].abs() < 1e-10);
-        assert!(y.abs() < 1e-20);
+        ));
     }
 }

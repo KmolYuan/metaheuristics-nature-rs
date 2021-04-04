@@ -1,5 +1,4 @@
-use crate::utility::{Setting, ObjFunc, AlgorithmBase, Algorithm};
-use crate::rand;
+use crate::{rand, Setting, ObjFunc, AlgorithmBase, Algorithm};
 
 /// Firefly Algorithm settings.
 pub struct FASetting {
@@ -110,12 +109,14 @@ impl<F: ObjFunc> Algorithm<F> for FA<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::TestObj;
-    use crate::{FA, FASetting, Algorithm, Setting, Task};
+    use crate::{
+        tests::{test, TestObj},
+        {FA, FASetting, Setting, Task},
+    };
 
     #[test]
     fn fa() {
-        let mut a = FA::new(
+        test(FA::new(
             TestObj::new(),
             FASetting {
                 base: Setting {
@@ -125,12 +126,6 @@ mod tests {
                 },
                 ..Default::default()
             },
-        );
-        let ans = a.run();
-        let (x, y) = a.result();
-        assert!(ans.abs() < 1e-20);
-        assert!(x[0].abs() < 1e-10);
-        assert!(x[1].abs() < 1e-10);
-        assert!(y.abs() < 1e-20);
+        ));
     }
 }

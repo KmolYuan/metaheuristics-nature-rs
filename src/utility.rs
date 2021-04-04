@@ -1,4 +1,3 @@
-//! The definitions of objective function trait and algorithm base.
 use std::time::Instant;
 
 #[macro_export]

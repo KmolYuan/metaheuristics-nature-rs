@@ -4,15 +4,17 @@ mod fa;
 mod tlbo;
 mod utility;
 
-pub use crate::rga::{RGASetting, RGA};
-pub use crate::de::{DESetting, DE, Strategy};
-pub use crate::fa::{FASetting, FA};
-pub use crate::tlbo::{TLBOSetting, TLBO};
-pub use crate::utility::{ObjFunc, Setting, Algorithm, AlgorithmBase, Task, Report};
+pub use crate::{
+    rga::{RGASetting, RGA},
+    de::{DESetting, DE, Strategy},
+    fa::{FASetting, FA},
+    tlbo::{TLBOSetting, TLBO},
+    utility::{ObjFunc, Setting, Algorithm, AlgorithmBase, Task, Report},
+};
 
 #[cfg(test)]
 mod tests {
-    use crate::ObjFunc;
+    use crate::{ObjFunc, Algorithm};
 
     pub(crate) struct TestObj(Vec<f64>, Vec<f64>);
 
@@ -30,5 +32,16 @@ mod tests {
         fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(0, v) }
         fn ub(&self) -> &Vec<f64> { &self.1 }
         fn lb(&self) -> &Vec<f64> { &self.0 }
+    }
+
+    pub(crate) fn test<F, A>(mut a: A)
+        where F: ObjFunc<Result=f64>,
+              A: Algorithm<F> {
+        let ans = a.run();
+        let (x, y) = a.result();
+        assert!(ans.abs() < 1e-20);
+        assert!(x[0].abs() < 1e-10);
+        assert!(x[1].abs() < 1e-10);
+        assert!(y.abs() < 1e-20);
     }
 }
