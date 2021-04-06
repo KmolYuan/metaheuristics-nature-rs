@@ -5,23 +5,26 @@ macro_rules! rand {
     ($v1:expr, $v2:expr) => {
         {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            rng.gen_range($v1..$v2)
+            rand::thread_rng().gen_range($v1..$v2)
         }
     };
-    ($v: expr) => { rand!(0, $v) };
     () => { rand!(0., 1.) };
+}
+
+#[macro_export]
+macro_rules! maybe {
+    ($v:expr) => {
+        {
+            use rand::Rng;
+            rand::thread_rng().gen_bool($v)
+        }
+    };
 }
 
 #[macro_export]
 macro_rules! zeros {
     () => { 0. };
-    ($w:expr $(, $h:expr)* $(,)?) => {
-        {
-            use std::iter::{repeat, FromIterator};
-            Vec::from_iter(repeat(zeros!($($h,)*)).take($w))
-        }
-    };
+    ($w:expr $(, $h:expr)* $(,)?) => { vec![zeros!($($h,)*); $w] };
 }
 
 /// The terminal condition of the algorithm setting.
@@ -59,6 +62,7 @@ pub struct Report {
 /// }
 /// ```
 pub trait ObjFunc {
+    /// The result type.
     type Result;
     /// Return fitness, the smaller value represents good.
     fn fitness(&self, gen: u32, v: &Vec<f64>) -> f64;
@@ -133,30 +137,63 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 }
 
 /// The methods of the meta-heuristic algorithms.
+///
+/// This trait is extendable.
+/// Create a structure and store a `AlgorithmBase` member to implement it.
+/// ```
+/// use metaheuristics::{AlgorithmBase, Algorithm, ObjFunc, Setting};
+/// struct MyAlgorithm<F: ObjFunc> {
+///     tmp: Vec<f64>,
+///     base: AlgorithmBase<F>,
+/// }
+/// impl<F: ObjFunc> MyAlgorithm<F> {
+///     fn new(func: F, settings: Setting) -> Self {
+///         let base = AlgorithmBase::new(func, settings);
+///         Self {
+///             tmp: vec![],
+///             base,
+///         }
+///     }
+/// }
+/// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
+///     fn base(&self) -> &AlgorithmBase<F> { &self.base }
+///     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+///     fn init(&mut self) { unimplemented!() }
+///     fn generation(&mut self) { unimplemented!() }
+/// }
+/// ```
 pub trait Algorithm<F: ObjFunc> {
+    /// Return a base handle.
     fn base(&self) -> &AlgorithmBase<F>;
+    /// Return a mutable base handle.
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
     /// Initialization implementation.
     fn init(&mut self);
     /// Processing implementation of each generation.
     fn generation(&mut self);
+    /// Get lower bound with index.
     fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
+    /// Get upper bound with index.
     fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
+    /// Assign i to j.
     fn assign(&mut self, i: usize, j: usize) {
         let b = self.base_mut();
         b.fitness[i] = b.fitness[j];
         b.pool[i] = b.pool[j].clone();
     }
+    /// Assign from source.
     fn assign_from(&mut self, i: usize, f: f64, v: Vec<f64>) {
         let b = self.base_mut();
         b.fitness[i] = f;
         b.pool[i] = v;
     }
+    /// Set the index to best.
     fn set_best(&mut self, i: usize) {
         let b = self.base_mut();
         b.best_f = b.fitness[i];
         b.best = b.pool[i].clone();
     }
+    /// Find the best, and set it globally.
     fn find_best(&mut self) {
         let b = self.base_mut();
         let mut best = 0;
@@ -169,6 +206,7 @@ pub trait Algorithm<F: ObjFunc> {
             self.set_best(best);
         }
     }
+    /// Initialize population.
     fn init_pop(&mut self) {
         for i in 0..self.base().pop_num {
             for s in 0..self.base().dim {
@@ -178,6 +216,7 @@ pub trait Algorithm<F: ObjFunc> {
             b.fitness[i] = b.func.fitness(b.gen, &b.pool[i]);
         }
     }
+    /// Record the performance.
     fn report(&mut self) {
         let b = self.base_mut();
         b.reports.push(Report {

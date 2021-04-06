@@ -1,4 +1,4 @@
-use crate::{zeros, rand, AlgorithmBase, Algorithm, Setting, ObjFunc};
+use crate::{zeros, rand, maybe, AlgorithmBase, Algorithm, Setting, ObjFunc};
 
 pub enum Strategy {
     S1,
@@ -68,7 +68,7 @@ impl<F: ObjFunc> DE<F> {
         self.v = Vec::from_iter(repeat(i).take(num));
         for j in 0..self.v.len() {
             while self.v[j] == i || self.v[..j].contains(&self.v[j]) {
-                self.v[j] = rand!(self.base.pop_num);
+                self.v[j] = rand!(0, self.base.pop_num);
             }
         }
     }
@@ -96,7 +96,7 @@ impl<F: ObjFunc> DE<F> {
     }
     fn recombination(&mut self, i: usize) {
         self.tmp = self.base.pool[i].clone();
-        let mut n = rand!(self.base.dim);
+        let mut n = rand!(0, self.base.dim);
         let formula = match self.strategy {
             Strategy::S1 | Strategy::S6 => Self::f1,
             Strategy::S2 | Strategy::S7 => Self::f2,
@@ -111,14 +111,14 @@ impl<F: ObjFunc> DE<F> {
                     formula(self, n);
                     n = (n + 1) % self.base.dim;
                     lv += 1;
-                    if rand!() > self.cr || lv >= self.base.dim {
+                    if !maybe!(self.cr) || lv >= self.base.dim {
                         break;
                     }
                 }
             }
             Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
                 for lv in 0..self.base.dim {
-                    if rand!() < self.cr || lv == self.base.dim - 1 {
+                    if !maybe!(self.cr) || lv == self.base.dim - 1 {
                         formula(self, n);
                     }
                     n = (n + 1) % self.base.dim;

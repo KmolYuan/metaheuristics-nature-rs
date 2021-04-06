@@ -50,7 +50,7 @@ impl<F: ObjFunc> TLBO<F> {
     }
     fn learning(&mut self, i: usize) {
         let j = {
-            let j = rand!(self.base.pop_num - 1);
+            let j = rand!(0, self.base.pop_num - 1);
             if j >= i { j + 1 } else { j }
         };
         for s in 0..self.base.dim {

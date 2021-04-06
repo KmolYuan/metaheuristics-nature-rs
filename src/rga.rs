@@ -1,4 +1,4 @@
-use crate::{zeros, rand, AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
+use crate::{zeros, rand, maybe, AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
 
 /// Real-coded Genetic Algorithm settings.
 pub struct RGASetting {
@@ -63,7 +63,7 @@ impl<F: ObjFunc> RGA<F> {
     }
     fn crossover(&mut self) {
         for i in (0..(self.base.pop_num - 1)).step_by(2) {
-            if !(rand!() < self.cross) {
+            if !maybe!(self.cross) {
                 continue;
             }
             for s in 0..self.base.dim {
@@ -98,11 +98,11 @@ impl<F: ObjFunc> RGA<F> {
     }
     fn mutate(&mut self) {
         for i in 0..self.base.pop_num {
-            if !(rand!() < self.mutate) {
+            if !maybe!(self.mutate) {
                 continue;
             }
-            let s = rand!(self.base.dim);
-            if rand!() < 0.5 {
+            let s = rand!(0, self.base.dim);
+            if maybe!(0.5) {
                 self.base.pool[i][s] += self.get_delta(self.ub(s) - self.base.pool[i][s]);
             } else {
                 self.base.pool[i][s] -= self.get_delta(self.base.pool[i][s] - self.lb(s));
@@ -113,9 +113,9 @@ impl<F: ObjFunc> RGA<F> {
     }
     fn select(&mut self) {
         for i in 0..self.base.pop_num {
-            let j = rand!(self.base.pop_num);
-            let k = rand!(self.base.pop_num);
-            if self.base.fitness[j] > self.base.fitness[k] && rand!() < self.win {
+            let j = rand!(0, self.base.pop_num);
+            let k = rand!(0, self.base.pop_num);
+            if self.base.fitness[j] > self.base.fitness[k] && maybe!(self.win) {
                 self.new_fitness[i] = self.base.fitness[k];
                 self.new_pool[i] = self.base.pool[k].clone();
             } else {
@@ -124,7 +124,7 @@ impl<F: ObjFunc> RGA<F> {
             }
             self.base.fitness = self.new_fitness.clone();
             self.base.pool = self.new_pool.clone();
-            self.assign_from(rand!(self.base.pop_num), self.base.best_f, self.base.best.clone());
+            self.assign_from(rand!(0, self.base.pop_num), self.base.best_f, self.base.best.clone());
         }
     }
 }
