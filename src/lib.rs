@@ -20,14 +20,14 @@ mod tests {
 
     impl TestObj {
         pub(crate) fn new() -> Self {
-            Self(vec![0., 0.], vec![50., 50.])
+            Self(vec![0.; 4], vec![50.; 4])
         }
     }
 
     impl ObjFunc for TestObj {
         type Result = f64;
         fn fitness(&self, _gen: u32, v: &Vec<f64>) -> f64 {
-            v[0] * v[0] + 8. * v[1]
+            v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
         }
         fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(0, v) }
         fn ub(&self) -> &Vec<f64> { &self.1 }
@@ -39,9 +39,10 @@ mod tests {
               A: Algorithm<F> {
         let ans = a.run();
         let (x, y) = a.result();
-        assert!(ans.abs() < 1e-20);
-        assert!(x[0].abs() < 1e-10);
-        assert!(x[1].abs() < 1e-10);
+        assert!(ans.abs() < 1e-20, "{}", ans);
+        for i in 0..4 {
+            assert!(x[i].abs() < 1e-10, "x{} = {}", i, x[i]);
+        }
         assert!(y.abs() < 1e-20);
     }
 }
