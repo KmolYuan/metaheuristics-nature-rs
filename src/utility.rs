@@ -207,10 +207,7 @@ pub trait Algorithm<F: ObjFunc> {
                 b.best_f
             };
             self.generation();
-            if {
-                let b = self.base_mut();
-                b.gen % b.rpt == 0
-            } {
+            if self.base().gen % self.base().rpt == 0 {
                 self.report();
             }
             let b = self.base_mut();
