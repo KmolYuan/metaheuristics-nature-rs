@@ -38,12 +38,12 @@ impl Default for DESetting {
 
 /// Differential Evolution type.
 pub struct DE<F: ObjFunc> {
-    strategy: Strategy,
     f: f64,
     cr: f64,
     v: Vec<usize>,
     tmp: Vec<f64>,
     formula: fn(&Self, usize) -> f64,
+    setter: fn(&mut Self, usize),
     base: AlgorithmBase<F>,
 }
 
@@ -57,7 +57,6 @@ impl<F: ObjFunc> DE<F> {
             Strategy::S5 | Strategy::S10 => 5,
         };
         Self {
-            strategy: settings.strategy,
             f: settings.f,
             cr: settings.cr,
             v: vec![0; num],
@@ -69,12 +68,18 @@ impl<F: ObjFunc> DE<F> {
                 Strategy::S4 | Strategy::S9 => Self::f4,
                 Strategy::S5 | Strategy::S10 => Self::f5,
             },
+            setter: match settings.strategy {
+                Strategy::S1 | Strategy::S2 | Strategy::S3
+                | Strategy::S4 | Strategy::S5 => Self::s1,
+                Strategy::S6 | Strategy::S7 | Strategy::S8
+                | Strategy::S9 | Strategy::S10 => Self::s2,
+            },
             base,
         }
     }
     fn vector(&mut self, i: usize) {
-        self.v.fill(i);
         for j in 0..self.v.len() {
+            self.v[j] = i;
             while self.v[j] == i || self.v[..j].contains(&self.v[j]) {
                 self.v[j] = rand!(0, self.base.pop_num);
             }
@@ -102,30 +107,28 @@ impl<F: ObjFunc> DE<F> {
             * (self.base.pool[self.v[0]][n] + self.base.pool[self.v[1]][n]
             - self.base.pool[self.v[2]][n] - self.base.pool[self.v[3]][n])
     }
-    fn recombination(&mut self, i: usize) {
-        self.tmp = self.base.pool[i].clone();
-        let mut n = rand!(0, self.base.dim);
-        match self.strategy {
-            Strategy::S1 | Strategy::S2 | Strategy::S3 | Strategy::S4 | Strategy::S5 => {
-                let mut lv = 0;
-                loop {
-                    self.tmp[n] = (self.formula)(self, n);
-                    n = (n + 1) % self.base.dim;
-                    lv += 1;
-                    if !maybe!(self.cr) || lv >= self.base.dim {
-                        break;
-                    }
-                }
-            }
-            Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
-                for lv in 0..self.base.dim {
-                    if !maybe!(self.cr) || lv == self.base.dim - 1 {
-                        self.tmp[n] = (self.formula)(self, n);
-                    }
-                    n = (n + 1) % self.base.dim;
-                }
+    fn s1(&mut self, mut n: usize) {
+        let mut lv = 0;
+        loop {
+            self.tmp[n] = (self.formula)(self, n);
+            n = (n + 1) % self.base.dim;
+            lv += 1;
+            if !maybe!(self.cr) || lv >= self.base.dim {
+                break;
             }
         }
+    }
+    fn s2(&mut self, mut n: usize) {
+        for lv in 0..self.base.dim {
+            if !maybe!(self.cr) || lv == self.base.dim - 1 {
+                self.tmp[n] = (self.formula)(self, n);
+            }
+            n = (n + 1) % self.base.dim;
+        }
+    }
+    fn recombination(&mut self, i: usize) {
+        self.tmp = self.base.pool[i].clone();
+        (self.setter)(self, rand!(0, self.base.dim));
     }
     fn check(&self) -> bool {
         for i in 0..self.base.dim {
