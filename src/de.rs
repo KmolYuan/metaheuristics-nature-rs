@@ -132,14 +132,6 @@ impl<F: ObjFunc> DE<F> {
         self.tmp = self.base.pool[i].clone();
         (self.setter)(self, rand!(0, self.base.dim));
     }
-    fn check(&self) -> bool {
-        for i in 0..self.base.dim {
-            if self.tmp[i] > self.ub(i) || self.tmp[i] < self.lb(i) {
-                return true;
-            }
-        }
-        false
-    }
 }
 
 impl<F: ObjFunc> Algorithm<F> for DE<F> {
@@ -150,11 +142,13 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
         self.find_best();
     }
     fn generation(&mut self) {
-        for i in 0..self.base.pop_num {
+        'a: for i in 0..self.base.pop_num {
             self.vector(i);
             self.recombination(i);
-            if self.check() {
-                continue;
+            for s in 0..self.base.dim {
+                if self.tmp[s] > self.ub(s) || self.tmp[s] < self.lb(s) {
+                    continue 'a;
+                }
             }
             let tmp_f = self.base.func.fitness(self.base.gen, &self.tmp);
             if tmp_f < self.base.fitness[i] {

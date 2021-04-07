@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 
-/// Generate random values by range.
+/// Generate random values by range or [0., 1.).
 #[macro_export]
 macro_rules! rand {
     ($v1:expr, $v2:expr) => {
@@ -227,6 +227,14 @@ pub trait Algorithm<F: ObjFunc> {
             let b = self.base_mut();
             b.fitness[i] = b.func.fitness(b.gen, &b.pool[i]);
         }
+    }
+    /// Check the bounds.
+    fn check(&self, s: usize, v: f64) -> f64 {
+        if v > self.ub(s) {
+            self.ub(s)
+        } else if v < self.lb(s) {
+            self.lb(s)
+        } else { v }
     }
     /// Record the performance.
     fn report(&mut self) {

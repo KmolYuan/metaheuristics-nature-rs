@@ -53,13 +53,6 @@ impl<F: ObjFunc> FA<F> {
             base,
         }
     }
-    fn check(&self, s: usize, v: f64) -> f64 {
-        if v > self.ub(s) {
-            self.ub(s)
-        } else if v < self.lb(s) {
-            self.lb(s)
-        } else { v }
-    }
     fn move_firefly(&mut self, me: usize, she: usize) {
         let r = distance(&self.base.pool[me], &self.base.pool[she]);
         let beta = (self.beta0 - self.beta_min) * (-self.gamma * r * r).exp() + self.beta_min;

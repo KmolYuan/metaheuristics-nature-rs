@@ -1,12 +1,14 @@
 mod utility;
 mod rga;
 mod de;
+mod pso;
 mod fa;
 mod tlbo;
 
 pub use crate::{
     rga::{RGASetting, RGA},
     de::{DESetting, DE, Strategy},
+    pso::{PSOSetting, PSO},
     fa::{FASetting, FA},
     tlbo::{TLBOSetting, TLBO},
     utility::{ObjFunc, Setting, Algorithm, AlgorithmBase, Task, Report},
