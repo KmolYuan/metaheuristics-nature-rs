@@ -1,8 +1,8 @@
+mod utility;
 mod rga;
 mod de;
 mod fa;
 mod tlbo;
-mod utility;
 
 pub use crate::{
     rga::{RGASetting, RGA},

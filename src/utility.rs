@@ -1,5 +1,8 @@
+#![macro_use]
+
 use std::time::Instant;
 
+/// Generate random values by range.
 #[macro_export]
 macro_rules! rand {
     ($v1:expr, $v2:expr) => {
@@ -11,6 +14,7 @@ macro_rules! rand {
     () => { rand!(0., 1.) };
 }
 
+/// Generate random boolean by positive factor.
 #[macro_export]
 macro_rules! maybe {
     ($v:expr) => {
@@ -21,6 +25,7 @@ macro_rules! maybe {
     };
 }
 
+/// Make a multi-dimension array of the floating point zeros.
 #[macro_export]
 macro_rules! zeros {
     () => { 0. };
@@ -49,7 +54,7 @@ pub struct Report {
 /// use metaheuristics::ObjFunc;
 /// struct MyFunc(Vec<f64>, Vec<f64>);
 /// impl MyFunc {
-///     fn new() -> Self { Self(vec![0., 0., 0.], vec![50., 50., 50.]) }
+///     fn new() -> Self { Self(vec![0.; 3], vec![50.; 3]) }
 /// }
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
@@ -61,6 +66,11 @@ pub struct Report {
 ///     fn lb(&self) -> &Vec<f64> { &self.0 }
 /// }
 /// ```
+/// The objective function returns fitness value that used to evaluate the objective.
+///
+/// The lower bound and upper bound represents the number of variables at the same time.
+///
+/// This trait is designed as immutable.
 pub trait ObjFunc {
     /// The result type.
     type Result;
@@ -94,6 +104,7 @@ impl Default for Setting {
 }
 
 /// The base class of algorithms.
+/// Please see [Algorithm](trait.Algorithm.html) for more information.
 pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     pub dim: usize,
@@ -115,7 +126,8 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         let dim = {
             let lb = func.lb();
             let ub = func.ub();
-            assert_eq!(lb.len(), ub.len());
+            assert_eq!(lb.len(), ub.len(),
+                       "different dimension of the variables!");
             lb.len()
         };
         Self {

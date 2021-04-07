@@ -1,5 +1,7 @@
-use crate::{zeros, rand, maybe, AlgorithmBase, Algorithm, Setting, ObjFunc};
+use crate::{AlgorithmBase, Algorithm, Setting, ObjFunc};
 
+/// The Differential Evolution strategy.
+/// Each strategy has different formula on recombination.
 #[derive(Copy, Clone)]
 pub enum Strategy {
     S1,

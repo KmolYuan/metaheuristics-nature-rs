@@ -1,6 +1,7 @@
-use crate::{zeros, rand, Setting, ObjFunc, AlgorithmBase, Algorithm};
+use crate::{Setting, ObjFunc, AlgorithmBase, Algorithm};
 
 /// Teaching Learning Based Optimization settings.
+/// This is a type alias to [Setting](struct.Setting.html).
 pub type TLBOSetting = Setting;
 
 /// Teaching Learning Based Optimization type.

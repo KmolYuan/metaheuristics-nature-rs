@@ -1,4 +1,4 @@
-use crate::{rand, Setting, ObjFunc, AlgorithmBase, Algorithm};
+use crate::{Setting, ObjFunc, AlgorithmBase, Algorithm};
 
 /// Firefly Algorithm settings.
 pub struct FASetting {

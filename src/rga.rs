@@ -1,4 +1,4 @@
-use crate::{zeros, rand, maybe, AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
+use crate::{AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
 
 /// Real-coded Genetic Algorithm settings.
 pub struct RGASetting {
