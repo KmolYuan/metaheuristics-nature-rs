@@ -43,6 +43,6 @@ mod tests {
         for i in 0..4 {
             assert!(x[i].abs() < 1e-10, "x{} = {}", i, x[i]);
         }
-        assert!(y.abs() < 1e-20);
+        assert_eq!(y.abs(), ans);
     }
 }
