@@ -91,9 +91,10 @@ impl<F: ObjFunc> RGA<F> {
         }
     }
     fn get_delta(&self, y: f64) -> f64 {
-        let r = if self.base.task == Task::MaxGen && self.base.stop_at > 0. {
-            self.base.gen as f64 / self.base.stop_at
-        } else { 1. };
+        let r = match self.base.task {
+            Task::MaxGen(v) if v > 0 => self.base.gen as f64 / v as f64,
+            _ => 1.,
+        };
         y * rand!() * (1. - r).powf(self.delta)
     }
     fn mutate(&mut self) {
@@ -156,8 +157,7 @@ mod tests {
             TestObj::new(),
             RGASetting {
                 base: Setting {
-                    task: Task::MinFit,
-                    stop_at: 1e-20,
+                    task: Task::MinFit(1e-20),
                     ..Default::default()
                 },
                 ..Default::default()

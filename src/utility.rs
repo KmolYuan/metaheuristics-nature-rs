@@ -5,10 +5,10 @@ use std::time::Instant;
 /// Generate random values by range or [0., 1.).
 #[macro_export]
 macro_rules! rand {
-    ($v1:expr, $v2:expr) => {
+    ($lb:expr, $ub:expr) => {
         {
             use rand::Rng;
-            rand::thread_rng().gen_range($v1..$v2)
+            rand::thread_rng().gen_range($lb..$ub)
         }
     };
     () => { rand!(0., 1.) };
@@ -33,12 +33,15 @@ macro_rules! zeros {
 }
 
 /// The terminal condition of the algorithm setting.
-#[derive(Eq, PartialEq)]
 pub enum Task {
-    MaxGen,
-    MinFit,
-    MaxTime,
-    SlowDown,
+    /// Max generation.
+    MaxGen(u32),
+    /// Minimum fitness.
+    MinFit(f64),
+    /// Max time in second.
+    MaxTime(f32),
+    /// Minimum delta value.
+    SlowDown(f64),
 }
 
 /// The data of generation sampling.
@@ -87,7 +90,6 @@ pub trait ObjFunc {
 /// Base settings.
 pub struct Setting {
     pub task: Task,
-    pub stop_at: f64,
     pub pop_num: usize,
     pub rpt: u32,
 }
@@ -95,8 +97,7 @@ pub struct Setting {
 impl Default for Setting {
     fn default() -> Self {
         Self {
-            task: Task::MaxGen,
-            stop_at: 200.,
+            task: Task::MaxGen(200),
             pop_num: 200,
             rpt: 50,
         }
@@ -111,7 +112,6 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pub gen: u32,
     rpt: u32,
     pub task: Task,
-    pub stop_at: f64,
     pub best_f: f64,
     pub best: Vec<f64>,
     pub fitness: Vec<f64>,
@@ -136,7 +136,6 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             gen: 0,
             rpt: settings.rpt,
             task: settings.task,
-            stop_at: settings.stop_at,
             best_f: f64::INFINITY,
             best: zeros!(dim),
             fitness: zeros!(settings.pop_num),
@@ -271,18 +270,18 @@ pub trait Algorithm<F: ObjFunc> {
             }
             let b = self.base_mut();
             match b.task {
-                Task::MaxGen => if b.gen >= b.stop_at as u32 {
+                Task::MaxGen(v) => if b.gen >= v {
                     break;
                 }
-                Task::MinFit => if b.best_f <= b.stop_at {
+                Task::MinFit(v) => if b.best_f <= v {
                     break;
                 }
-                Task::MaxTime => if (Instant::now() - b.time_start).as_secs_f64() >= b.stop_at {
+                Task::MaxTime(v) => if (Instant::now() - b.time_start).as_secs_f32() >= v {
                     break;
                 }
-                Task::SlowDown => {
+                Task::SlowDown(v) => {
                     let diff = best_f - b.best_f;
-                    if last_diff > 0. && diff / last_diff >= b.stop_at {
+                    if last_diff > 0. && diff / last_diff >= v {
                         break;
                     }
                     last_diff = diff;

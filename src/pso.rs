@@ -90,8 +90,7 @@ mod tests {
             TestObj::new(),
             PSOSetting {
                 base: Setting {
-                    task: Task::MinFit,
-                    stop_at: 1e-20,
+                    task: Task::MinFit(1e-20),
                     ..Default::default()
                 },
                 ..Default::default()
