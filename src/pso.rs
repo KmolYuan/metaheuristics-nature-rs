@@ -57,8 +57,8 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
     }
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
-            let alpha = self.cognition * rand!();
-            let beta = self.social * rand!();
+            let alpha = rand!(0., self.cognition);
+            let beta = rand!(0., self.social);
             for s in 0..self.base.dim {
                 self.base.pool[i][s] = self.check(s, self.velocity * self.base.pool[i][s]
                     + alpha * (self.best_past[i][s] - self.base.pool[i][s])

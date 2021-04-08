@@ -56,9 +56,9 @@ impl<F: ObjFunc> RGA<F> {
             base,
         }
     }
-    fn check(&self, i: usize, v: f64) -> f64 {
-        if self.ub(i) < v || self.lb(i) > v {
-            rand!(self.lb(i), self.ub(i))
+    fn bound(&self, s: usize, v: f64) -> f64 {
+        if self.ub(s) < v || self.lb(s) > v {
+            rand!(self.lb(s), self.ub(s))
         } else { v }
     }
     fn crossover(&mut self) {
@@ -68,8 +68,8 @@ impl<F: ObjFunc> RGA<F> {
             }
             for s in 0..self.base.dim {
                 self.tmp1[s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
-                self.tmp2[s] = self.check(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
-                self.tmp3[s] = self.check(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
+                self.tmp2[s] = self.bound(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
+                self.tmp3[s] = self.bound(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
             }
             self.f_tmp[0] = self.base.func.fitness(self.base.gen, &self.tmp1);
             self.f_tmp[1] = self.base.func.fitness(self.base.gen, &self.tmp2);

@@ -54,7 +54,7 @@ pub struct Report {
 
 /// The base of the objective function. For example:
 /// ```
-/// use meta_heuristics::ObjFunc;
+/// use metaheuristics_nature::ObjFunc;
 /// struct MyFunc(Vec<f64>, Vec<f64>);
 /// impl MyFunc {
 ///     fn new() -> Self { Self(vec![0.; 3], vec![50.; 3]) }
@@ -152,7 +152,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// This trait is extendable.
 /// Create a structure and store a `AlgorithmBase` member to implement it.
 /// ```
-/// use meta_heuristics::{AlgorithmBase, Algorithm, ObjFunc, Setting};
+/// use metaheuristics_nature::{AlgorithmBase, Algorithm, ObjFunc, Setting};
 /// struct MyAlgorithm<F: ObjFunc> {
 ///     tmp: Vec<f64>,
 ///     base: AlgorithmBase<F>,
