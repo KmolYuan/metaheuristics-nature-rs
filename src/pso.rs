@@ -28,7 +28,7 @@ pub struct PSO<F: ObjFunc> {
     social: f64,
     velocity: f64,
     best_past: Vec<Vec<f64>>,
-    fitness_past: Vec<f64>,
+    best_f_past: Vec<f64>,
     base: AlgorithmBase<F>,
 }
 
@@ -40,7 +40,7 @@ impl<F: ObjFunc> PSO<F> {
             social: settings.social,
             velocity: settings.velocity,
             best_past: vec![],
-            fitness_past: vec![],
+            best_f_past: vec![],
             base,
         }
     }
@@ -52,7 +52,7 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
     fn init(&mut self) {
         self.init_pop();
         self.best_past = self.base.pool.clone();
-        self.fitness_past = self.base.fitness.clone();
+        self.best_f_past = self.base.fitness.clone();
         self.find_best();
     }
     fn generation(&mut self) {
@@ -66,9 +66,9 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
             }
             let b = &mut self.base;
             b.fitness[i] = b.func.fitness(b.gen, &b.pool[i]);
-            if b.fitness[i] < self.fitness_past[i] {
+            if b.fitness[i] < self.best_f_past[i] {
                 self.best_past[i] = b.pool[i].clone();
-                self.fitness_past[i] = b.fitness[i].clone();
+                self.best_f_past[i] = b.fitness[i].clone();
             }
             if b.fitness[i] < b.best_f {
                 self.set_best(i);
