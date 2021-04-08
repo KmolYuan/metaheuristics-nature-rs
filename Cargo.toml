@@ -10,4 +10,4 @@ repository = "https://github.com/KmolYuan/metaheuristics-nature-rs"
 keywords = ["metaheuristic", "algorithm", "optimization"]
 
 [dependencies]
-rand = "*"
+rand = "0.8.3"
