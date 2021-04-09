@@ -41,6 +41,7 @@ mod tests {
               A: Algorithm<F> {
         let ans = a.run();
         let (x, y) = a.result();
+        assert!(a.history().len() > 0);
         assert!(ans.abs() < 1e-20, "{}", ans);
         for i in 0..4 {
             assert!(x[i].abs() < 1e-10, "x{} = {}", i, x[i]);

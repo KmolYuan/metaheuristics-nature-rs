@@ -31,9 +31,7 @@ pub struct RGA<F: ObjFunc> {
     win: f64,
     delta: f64,
     new_fitness: Vec<f64>,
-    tmp1: Vec<f64>,
-    tmp2: Vec<f64>,
-    tmp3: Vec<f64>,
+    tmp: Vec<Vec<f64>>,
     f_tmp: Vec<f64>,
     new_pool: Vec<Vec<f64>>,
     base: AlgorithmBase<F>,
@@ -48,18 +46,11 @@ impl<F: ObjFunc> RGA<F> {
             win: settings.win,
             delta: settings.delta,
             new_fitness: zeros!(base.pop_num),
-            tmp1: zeros!(base.dim),
-            tmp2: zeros!(base.dim),
-            tmp3: zeros!(base.dim),
+            tmp: zeros!(3, base.dim),
             f_tmp: zeros!(3),
             new_pool: zeros!(base.pop_num, base.dim),
             base,
         }
-    }
-    fn bound(&self, s: usize, v: f64) -> f64 {
-        if self.ub(s) < v || self.lb(s) > v {
-            rand!(self.lb(s), self.ub(s))
-        } else { v }
     }
     fn crossover(&mut self) {
         for i in (0..(self.base.pop_num - 1)).step_by(2) {
@@ -67,27 +58,27 @@ impl<F: ObjFunc> RGA<F> {
                 continue;
             }
             for s in 0..self.base.dim {
-                self.tmp1[s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
-                self.tmp2[s] = self.bound(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
-                self.tmp3[s] = self.bound(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
+                self.tmp[0][s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
+                self.tmp[1][s] = self.check(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
+                self.tmp[2][s] = self.check(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
             }
-            self.f_tmp[0] = self.base.func.fitness(self.base.gen, &self.tmp1);
-            self.f_tmp[1] = self.base.func.fitness(self.base.gen, &self.tmp2);
-            self.f_tmp[2] = self.base.func.fitness(self.base.gen, &self.tmp3);
+            self.f_tmp[0] = self.base.func.fitness(self.base.gen, &self.tmp[0]);
+            self.f_tmp[1] = self.base.func.fitness(self.base.gen, &self.tmp[1]);
+            self.f_tmp[2] = self.base.func.fitness(self.base.gen, &self.tmp[2]);
             if self.f_tmp[0] > self.f_tmp[1] {
                 self.f_tmp.swap(0, 1);
-                std::mem::swap(&mut self.tmp1, &mut self.tmp2);
+                self.tmp.swap(0, 1);
             }
             if self.f_tmp[0] > self.f_tmp[2] {
                 self.f_tmp.swap(0, 2);
-                std::mem::swap(&mut self.tmp1, &mut self.tmp3);
+                self.tmp.swap(0, 2);
             }
             if self.f_tmp[1] > self.f_tmp[2] {
                 self.f_tmp.swap(1, 2);
-                std::mem::swap(&mut self.tmp2, &mut self.tmp3);
+                self.tmp.swap(1, 2);
             }
-            self.assign_from(i, self.f_tmp[0], self.tmp1.clone());
-            self.assign_from(i + 1, self.f_tmp[1], self.tmp2.clone());
+            self.assign_from(i, self.f_tmp[0], self.tmp[0].clone());
+            self.assign_from(i + 1, self.f_tmp[1], self.tmp[1].clone());
         }
     }
     fn get_delta(&self, y: f64) -> f64 {
@@ -141,6 +132,11 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
         self.select();
         self.crossover();
         self.mutate();
+    }
+    fn check(&self, s: usize, v: f64) -> f64 {
+        if self.ub(s) < v || self.lb(s) > v {
+            rand!(self.lb(s), self.ub(s))
+        } else { v }
     }
 }
 

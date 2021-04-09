@@ -18,13 +18,6 @@ impl<F: ObjFunc> TLBO<F> {
             base,
         }
     }
-    fn bounding(&mut self, s: usize) {
-        if self.tmp[s] < self.lb(s) {
-            self.tmp[s] = self.lb(s);
-        } else if self.tmp[s] > self.ub(s) {
-            self.tmp[s] = self.ub(s);
-        }
-    }
     fn register(&mut self, i: usize) {
         let f_new = self.base.func.fitness(self.base.gen, &self.tmp);
         if f_new < self.base.fitness[i] {
@@ -43,9 +36,8 @@ impl<F: ObjFunc> TLBO<F> {
                 mean += self.base.pool[j][s];
             }
             mean /= self.base.dim as f64;
-            self.tmp[s] = self.base.pool[i][s] + rand!(1., self.base.dim as f64)
-                * (self.base.best[s] - tf * mean);
-            self.bounding(s);
+            self.tmp[s] = self.check(s, self.base.pool[i][s]
+                + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean));
         }
         self.register(i);
     }
@@ -60,8 +52,8 @@ impl<F: ObjFunc> TLBO<F> {
             } else {
                 self.base.pool[j][s] - self.base.pool[i][s]
             };
-            self.tmp[s] = self.base.pool[i][s] + diff * rand!(1., self.base.dim as f64);
-            self.bounding(s);
+            self.tmp[s] = self.check(s, self.base.pool[i][s]
+                + rand!(1., self.base.dim as f64) * diff);
         }
         self.register(i);
     }
