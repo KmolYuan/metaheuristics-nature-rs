@@ -21,9 +21,7 @@ mod tests {
     pub(crate) struct TestObj(Vec<f64>, Vec<f64>);
 
     impl TestObj {
-        pub(crate) fn new() -> Self {
-            Self(vec![0.; 4], vec![50.; 4])
-        }
+        pub(crate) fn new() -> Self { Self(vec![0.; 4], vec![50.; 4]) }
     }
 
     impl ObjFunc for TestObj {

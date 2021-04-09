@@ -26,8 +26,8 @@ impl Default for FASetting {
 
 fn distance(me: &Vec<f64>, she: &Vec<f64>) -> f64 {
     let mut dist = 0.;
-    for i in 0..me.len() {
-        let diff = me[i] - she[i];
+    for s in 0..me.len() {
+        let diff = me[s] - she[s];
         dist += diff * diff;
     }
     dist
@@ -55,7 +55,8 @@ impl<F: ObjFunc> FA<F> {
     }
     fn move_firefly(&mut self, me: usize, she: usize) {
         let r = distance(&self.base.pool[me], &self.base.pool[she]);
-        let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
+        self.beta0 -= self.beta_min;
+        let beta = self.beta0 * (-self.gamma * r).exp() + self.beta_min;
         for s in 0..self.base.dim {
             self.base.pool[me][s] = self.check(s, self.base.pool[me][s]
                 + beta * (self.base.pool[she][s] - self.base.pool[me][s])
