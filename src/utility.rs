@@ -145,6 +145,18 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             func,
         }
     }
+    /// Get fitness from individual `i`.
+    pub fn fitness(&mut self, i: usize) {
+        self.fitness[i] = self.func.fitness(self.gen, &self.pool[i]);
+    }
+    /// Record the performance.
+    fn report(&mut self) {
+        self.reports.push(Report {
+            gen: self.gen,
+            fitness: self.best_f,
+            time: (Instant::now() - self.time_start).as_secs_f64(),
+        });
+    }
 }
 
 /// The methods of the meta-heuristic algorithms.
@@ -169,7 +181,6 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
 ///     fn base(&self) -> &AlgorithmBase<F> { &self.base }
 ///     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
-///     fn init(&mut self) { unimplemented!() }
 ///     fn generation(&mut self) { unimplemented!() }
 /// }
 /// ```
@@ -179,19 +190,13 @@ pub trait Algorithm<F: ObjFunc> {
     /// Return a mutable base handle.
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
     /// Initialization implementation.
-    fn init(&mut self);
+    fn init(&mut self) {}
     /// Processing implementation of each generation.
     fn generation(&mut self);
     /// Get lower bound with index.
     fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
     /// Get upper bound with index.
     fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
-    /// Assign i to j.
-    fn assign(&mut self, i: usize, j: usize) {
-        let b = self.base_mut();
-        b.fitness[i] = b.fitness[j];
-        b.pool[i] = b.pool[j].clone();
-    }
     /// Assign from source.
     fn assign_from(&mut self, i: usize, f: f64, v: Vec<f64>) {
         let b = self.base_mut();
@@ -219,12 +224,18 @@ pub trait Algorithm<F: ObjFunc> {
     }
     /// Initialize population.
     fn init_pop(&mut self) {
+        let mut best = 0;
         for i in 0..self.base().pop_num {
             for s in 0..self.base().dim {
                 self.base_mut().pool[i][s] = rand!(self.lb(s), self.ub(s));
             }
-            let b = self.base_mut();
-            b.fitness[i] = b.func.fitness(b.gen, &b.pool[i]);
+            self.base_mut().fitness(i);
+            if self.base().fitness[i] < self.base().fitness[best] {
+                best = i;
+            }
+        }
+        if self.base().fitness[best] < self.base().best_f {
+            self.set_best(best);
         }
     }
     /// Check the bounds.
@@ -234,15 +245,6 @@ pub trait Algorithm<F: ObjFunc> {
         } else if v < self.lb(s) {
             self.lb(s)
         } else { v }
-    }
-    /// Record the performance.
-    fn report(&mut self) {
-        let b = self.base_mut();
-        b.reports.push(Report {
-            gen: b.gen,
-            fitness: b.best_f,
-            time: (Instant::now() - b.time_start).as_secs_f64(),
-        });
     }
     /// Get the history for plotting.
     fn history(&self) -> Vec<Report> { self.base().reports.clone() }
@@ -255,8 +257,9 @@ pub trait Algorithm<F: ObjFunc> {
     fn run(&mut self) -> F::Result {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
+        self.init_pop();
         self.init();
-        self.report();
+        self.base_mut().report();
         let mut last_diff = 0.;
         loop {
             let best_f = {
@@ -266,7 +269,7 @@ pub trait Algorithm<F: ObjFunc> {
             };
             self.generation();
             if self.base().gen % self.base().rpt == 0 {
-                self.report();
+                self.base_mut().report();
             }
             let b = self.base_mut();
             match b.task {
@@ -288,7 +291,7 @@ pub trait Algorithm<F: ObjFunc> {
                 }
             }
         }
-        self.report();
+        self.base_mut().report();
         self.base().func.result(&self.base().best)
     }
 }

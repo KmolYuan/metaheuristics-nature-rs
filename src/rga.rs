@@ -62,9 +62,9 @@ impl<F: ObjFunc> RGA<F> {
                 self.tmp[1][s] = self.check(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
                 self.tmp[2][s] = self.check(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
             }
-            self.f_tmp[0] = self.base.func.fitness(self.base.gen, &self.tmp[0]);
-            self.f_tmp[1] = self.base.func.fitness(self.base.gen, &self.tmp[1]);
-            self.f_tmp[2] = self.base.func.fitness(self.base.gen, &self.tmp[2]);
+            for j in 0..3 {
+                self.f_tmp[j] = self.base.func.fitness(self.base.gen, &self.tmp[j]);
+            }
             if self.f_tmp[0] > self.f_tmp[1] {
                 self.f_tmp.swap(0, 1);
                 self.tmp.swap(0, 1);
@@ -99,7 +99,7 @@ impl<F: ObjFunc> RGA<F> {
             } else {
                 self.base.pool[i][s] -= self.get_delta(self.base.pool[i][s] - self.lb(s));
             }
-            self.base.fitness[i] = self.base.func.fitness(self.base.gen, &self.base.pool[i]);
+            self.base.fitness(i);
         }
         self.find_best();
     }
@@ -124,10 +124,6 @@ impl<F: ObjFunc> RGA<F> {
 impl<F: ObjFunc> Algorithm<F> for RGA<F> {
     fn base(&self) -> &AlgorithmBase<F> { &self.base }
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
-    fn init(&mut self) {
-        self.init_pop();
-        self.set_best(0);
-    }
     fn generation(&mut self) {
         self.select();
         self.crossover();

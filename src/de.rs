@@ -137,10 +137,6 @@ impl<F: ObjFunc> DE<F> {
 impl<F: ObjFunc> Algorithm<F> for DE<F> {
     fn base(&self) -> &AlgorithmBase<F> { &self.base }
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
-    fn init(&mut self) {
-        self.init_pop();
-        self.find_best();
-    }
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
             self.vector(i);
