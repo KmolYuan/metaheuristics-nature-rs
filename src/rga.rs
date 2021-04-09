@@ -1,4 +1,4 @@
-use crate::{AlgorithmBase, Algorithm, Setting, ObjFunc, Task};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting, Task};
 
 /// Real-coded Genetic Algorithm settings.
 pub struct RGASetting {
@@ -139,8 +139,8 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tests::{test, TestObj},
         {RGA, RGASetting, Setting, Task},
+        tests::{test, TestObj},
     };
 
     #[test]

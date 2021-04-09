@@ -1,4 +1,4 @@
-use crate::{Setting, ObjFunc, AlgorithmBase, Algorithm};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
 /// Firefly Algorithm settings.
 pub struct FASetting {
@@ -96,8 +96,8 @@ impl<F: ObjFunc> Algorithm<F> for FA<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tests::{test, TestObj},
         {FA, FASetting, Setting, Task},
+        tests::{test, TestObj},
     };
 
     #[test]

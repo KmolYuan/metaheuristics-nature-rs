@@ -1,4 +1,4 @@
-use crate::{Setting, ObjFunc, AlgorithmBase, Algorithm};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
 /// Particle Swarm Optimization settings.
 pub struct PSOSetting {
@@ -77,8 +77,8 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tests::{test, TestObj},
         {PSO, PSOSetting, Setting, Task},
+        tests::{test, TestObj},
     };
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::{Setting, ObjFunc, AlgorithmBase, Algorithm};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
 /// Teaching Learning Based Optimization settings.
 /// This is a type alias to [Setting](struct.Setting.html).
@@ -73,8 +73,8 @@ impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
+        {Task, TLBO, TLBOSetting},
         tests::{test, TestObj},
-        {TLBO, TLBOSetting, Task},
     };
 
     #[test]

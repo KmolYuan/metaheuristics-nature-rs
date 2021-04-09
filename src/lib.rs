@@ -1,3 +1,12 @@
+pub use crate::{
+    de::{DE, DESetting, Strategy},
+    fa::{FA, FASetting},
+    pso::{PSO, PSOSetting},
+    rga::{RGA, RGASetting},
+    tlbo::{TLBO, TLBOSetting},
+    utility::{Algorithm, AlgorithmBase, ObjFunc, Report, Setting, Task},
+};
+
 mod utility;
 mod rga;
 mod de;
@@ -5,18 +14,9 @@ mod pso;
 mod fa;
 mod tlbo;
 
-pub use crate::{
-    rga::{RGASetting, RGA},
-    de::{DESetting, DE, Strategy},
-    pso::{PSOSetting, PSO},
-    fa::{FASetting, FA},
-    tlbo::{TLBOSetting, TLBO},
-    utility::{ObjFunc, Setting, Algorithm, AlgorithmBase, Task, Report},
-};
-
 #[cfg(test)]
 mod tests {
-    use crate::{ObjFunc, Algorithm};
+    use crate::{Algorithm, ObjFunc};
 
     pub(crate) struct TestObj(Vec<f64>, Vec<f64>);
 

@@ -1,4 +1,4 @@
-use crate::{AlgorithmBase, Algorithm, Setting, ObjFunc};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
 /// The Differential Evolution strategy.
 /// Each strategy has different formula on recombination.
@@ -158,8 +158,8 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tests::{test, TestObj},
         {DE, DESetting, Setting, Task},
+        tests::{test, TestObj},
     };
 
     #[test]
