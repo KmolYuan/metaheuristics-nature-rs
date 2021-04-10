@@ -1,10 +1,30 @@
+//! A collection of nature-inspired metaheuristic algorithms.
+//! ```rust
+//! use metaheuristics_nature::{RGA, RGASetting, Setting, Solver, Task};
+//!
+//! fn main() {
+//!     let mut a = RGA::new(
+//!         MyObj::new(),
+//!         RGASetting {
+//!             base: Setting {
+//!                 task: Task::MinFit(1e-20),
+//!                 ..Default::default()
+//!             },
+//!             ..Default::default()
+//!         },
+//!     );
+//!     let ans = a.run();
+//!     let (x, y) = a.result();
+//! }
+//! ```
+
 pub use crate::{
     de::{DE, DESetting, Strategy},
     fa::{FA, FASetting},
     pso::{PSO, PSOSetting},
     rga::{RGA, RGASetting},
     tlbo::{TLBO, TLBOSetting},
-    utility::{Algorithm, AlgorithmBase, ObjFunc, Report, Setting, Task},
+    utility::{Algorithm, AlgorithmBase, ObjFunc, Report, Setting, Solver, Task},
 };
 
 mod utility;
@@ -16,7 +36,7 @@ mod tlbo;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Algorithm, ObjFunc};
+    use crate::{ObjFunc, Solver};
 
     pub(crate) struct TestObj(Vec<f64>, Vec<f64>);
 
@@ -34,9 +54,9 @@ mod tests {
         fn lb(&self) -> &Vec<f64> { &self.0 }
     }
 
-    pub(crate) fn test<F, A>(mut a: A)
+    pub(crate) fn test<F, S>(mut a: S)
         where F: ObjFunc<Result=f64>,
-              A: Algorithm<F> {
+              S: Solver<F> {
         let ans = a.run();
         let (x, y) = a.result();
         assert!(a.history().len() > 0);

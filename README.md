@@ -13,22 +13,3 @@ This crate implemented following algorithms:
 
 Each algorithm gives same API and default parameters to help you test different implementation.
 For example, you can test another algorithm by simply replace `RGA` and `RGASettings` to `DE` and `DESetting`.
-
-```rust
-use metaheuristics_nature::{RGA, RGASetting, Setting, Task};
-
-fn main() {
-    let a = RGA::new(
-        MyObj::new(),
-        RGASetting {
-            base: Setting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-    );
-    let ans = a.run();
-    let (x, y) = a.result();
-}
-```

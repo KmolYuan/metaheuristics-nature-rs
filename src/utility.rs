@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 
-/// Generate random values by range or [0., 1.).
+/// Generate random values between [0., 1.) or by range.
 #[macro_export]
 macro_rules! rand {
     ($lb:expr, $ub:expr) => {
@@ -52,7 +52,9 @@ pub struct Report {
     pub time: f64,
 }
 
-/// The base of the objective function. For example:
+/// The base of the objective function.
+///
+/// For example:
 /// ```
 /// use metaheuristics_nature::ObjFunc;
 /// struct MyFunc(Vec<f64>, Vec<f64>);
@@ -246,6 +248,10 @@ pub trait Algorithm<F: ObjFunc> {
             self.lb(s)
         } else { v }
     }
+}
+
+/// The public API for [Algorithm](trait.Algorithm.html).
+pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Get the history for plotting.
     fn history(&self) -> Vec<Report> { self.base().reports.clone() }
     /// Return the x and y of function.
@@ -295,3 +301,5 @@ pub trait Algorithm<F: ObjFunc> {
         self.base().func.result(&self.base().best)
     }
 }
+
+impl<F, T> Solver<F> for T where F: ObjFunc, T: Algorithm<F> {}
