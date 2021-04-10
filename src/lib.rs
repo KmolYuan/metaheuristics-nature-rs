@@ -1,6 +1,6 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```rust
-//! use metaheuristics_nature::{RGA, RGASetting, Setting, Solver, Task};
+//! use metaheuristics_nature::{Report, RGA, RGASetting, Setting, Solver, Task};
 //!
 //! fn main() {
 //!     let mut a = RGA::new(
@@ -13,8 +13,9 @@
 //!             ..Default::default()
 //!         },
 //!     );
-//!     let ans = a.run();
-//!     let (x, y) = a.result();
+//!     let ans = a.run();  // Run and get the final result
+//!     let (x, y): (Vec<f64>, f64) = a.result();  // Get the optimized XY value of your function
+//!     let reports: Vec<Report> = a.history();
 //! }
 //! ```
 
