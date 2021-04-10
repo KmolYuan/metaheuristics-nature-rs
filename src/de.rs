@@ -110,12 +110,10 @@ impl<F: ObjFunc> DE<F> {
             - self.base.pool[self.v[2]][n] - self.base.pool[self.v[3]][n])
     }
     fn s1(&mut self, mut n: usize) {
-        let mut lv = 0;
-        loop {
+        for _ in 0..self.base.dim {
             self.tmp[n] = (self.formula)(self, n);
             n = (n + 1) % self.base.dim;
-            lv += 1;
-            if !maybe!(self.cr) || lv >= self.base.dim {
+            if !maybe!(self.cr) {
                 break;
             }
         }
