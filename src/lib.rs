@@ -18,14 +18,7 @@
 //! }
 //! ```
 
-pub use crate::{
-    de::{DE, DESetting, Strategy},
-    fa::{FA, FASetting},
-    pso::{PSO, PSOSetting},
-    rga::{RGA, RGASetting},
-    tlbo::{TLBO, TLBOSetting},
-    utility::{Algorithm, AlgorithmBase, ObjFunc, Report, Setting, Solver, Task},
-};
+pub use crate::{de::*, fa::*, pso::*, rga::*, tlbo::*, utility::*};
 
 mod utility;
 mod rga;

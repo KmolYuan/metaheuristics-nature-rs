@@ -161,7 +161,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
     }
 }
 
-/// The methods of the meta-heuristic algorithms.
+/// The methods of the metaheuristic algorithms.
 ///
 /// This trait is extendable.
 /// Create a structure and store a `AlgorithmBase` member to implement it.
@@ -186,6 +186,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 ///     fn generation(&mut self) { unimplemented!() }
 /// }
 /// ```
+/// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
 pub trait Algorithm<F: ObjFunc> {
     /// Return a base handle.
     fn base(&self) -> &AlgorithmBase<F>;
@@ -255,11 +256,12 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Get the history for plotting.
     fn history(&self) -> Vec<Report> { self.base().reports.clone() }
     /// Return the x and y of function.
+    /// The algorithm must be executed once.
     fn result(&self) -> (Vec<f64>, f64) {
         let b = self.base();
         (b.best.clone(), b.best_f)
     }
-    /// Start the algorithm.
+    /// Start the algorithm and return the final result.
     fn run(&mut self) -> F::Result {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
