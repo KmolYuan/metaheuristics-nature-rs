@@ -12,4 +12,4 @@ This crate implemented following algorithms:
 + Teaching-Learning Based Optimization (TLBO)
 
 Each algorithm gives same API and default parameters to help you test different implementation.
-For example, you can test another algorithm by simply replace `RGA` and `RGASettings` to `DE` and `DESetting`.
+For example, you can test another algorithm by simply replacing `RGA` and `RGASettings` to `DE` and `DESetting`.
