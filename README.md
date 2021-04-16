@@ -1,4 +1,4 @@
-# metaheuristics-nature-rs
+# metaheuristics-nature
 
 A collection of nature-inspired metaheuristic algorithms. Provides objective function trait,
 well-known methods, and tool functions let you implement your own searching method.
