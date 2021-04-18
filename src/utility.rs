@@ -57,11 +57,13 @@ pub trait ObjFunc {
     fn lb(&self) -> &Vec<f64>;
 }
 
-/// Base settings.
-pub struct Setting {
-    pub task: Task,
-    pub pop_num: usize,
-    pub rpt: u32,
+with_builder! {
+    /// Base settings.
+    pub struct Setting {
+        task: Task,
+        pop_num: usize,
+        rpt: u32,
+    }
 }
 
 impl Default for Setting {

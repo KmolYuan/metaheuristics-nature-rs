@@ -1,17 +1,11 @@
 //! A collection of nature-inspired metaheuristic algorithms.
-//! ```rust
+//! ```ignore
 //! use metaheuristics_nature::{Report, RGA, RGASetting, Setting, Solver, Task};
 //!
 //! fn main() {
 //!     let mut a = RGA::new(
 //!         MyObj::new(),
-//!         RGASetting {
-//!             base: Setting {
-//!                 task: Task::MinFit(1e-20),
-//!                 ..Default::default()
-//!             },
-//!             ..Default::default()
-//!         },
+//!         RGASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
 //!     );
 //!     let ans = a.run();  // Run and get the final result
 //!     let (x, y): (Vec<f64>, f64) = a.result();  // Get the optimized XY value of your function
@@ -47,6 +41,20 @@ macro_rules! maybe {
 macro_rules! zeros {
     () => { 0. };
     ($w:expr $(, $h:expr)* $(,)?) => { vec![zeros!($($h,)*); $w] };
+}
+
+#[macro_export]
+macro_rules! with_builder {
+    ($(#[$attr:meta])* $v:vis struct $name:ident { $($field:ident: $field_type:ty,)+ }) => {
+        $(#[$attr])*
+        $v struct $name { $($field: $field_type,)+ }
+        impl $name {
+            $(pub fn $field<'a>(mut self, $field: $field_type) -> Self {
+                self.$field = $field;
+                self
+            })+
+        }
+    };
 }
 
 mod de;

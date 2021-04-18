@@ -1,21 +1,20 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting, Task};
 
-/// Real-coded Genetic Algorithm settings.
-pub struct RGASetting {
-    pub base: Setting,
-    pub cross: f64,
-    pub mutate: f64,
-    pub win: f64,
-    pub delta: f64,
+with_builder! {
+    /// Real-coded Genetic Algorithm settings.
+    pub struct RGASetting {
+        base: Setting,
+        cross: f64,
+        mutate: f64,
+        win: f64,
+        delta: f64,
+    }
 }
 
 impl Default for RGASetting {
     fn default() -> Self {
         Self {
-            base: Setting {
-                pop_num: 500,
-                ..Default::default()
-            },
+            base: Setting::default().pop_num(500),
             cross: 0.95,
             mutate: 0.05,
             win: 0.95,

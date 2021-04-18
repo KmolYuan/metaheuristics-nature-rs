@@ -47,13 +47,7 @@ where
 fn de() {
     test(DE::new(
         TestObj::new(),
-        DESetting {
-            base: Setting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        DESetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
     ));
 }
 
@@ -61,13 +55,7 @@ fn de() {
 fn pso() {
     test(PSO::new(
         TestObj::new(),
-        PSOSetting {
-            base: Setting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        PSOSetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
     ));
 }
 
@@ -75,13 +63,7 @@ fn pso() {
 fn fa() {
     test(FA::new(
         TestObj::new(),
-        FASetting {
-            base: Setting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        FASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
     ));
 }
 
@@ -89,13 +71,7 @@ fn fa() {
 fn rga() {
     test(RGA::new(
         TestObj::new(),
-        RGASetting {
-            base: Setting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        RGASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
     ));
 }
 
@@ -103,9 +79,6 @@ fn rga() {
 fn tlbo() {
     test(TLBO::new(
         TestObj::new(),
-        TLBOSetting {
-            task: Task::MinFit(1e-20),
-            ..Default::default()
-        },
+        TLBOSetting::default().task(Task::MinFit(1e-20)),
     ));
 }

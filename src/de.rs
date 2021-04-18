@@ -16,21 +16,20 @@ pub enum Strategy {
     S10,
 }
 
-/// Differential Evolution settings.
-pub struct DESetting {
-    pub base: Setting,
-    pub strategy: Strategy,
-    pub f: f64,
-    pub cr: f64,
+with_builder! {
+    /// Differential Evolution settings.
+    pub struct DESetting {
+        base: Setting,
+        strategy: Strategy,
+        f: f64,
+        cr: f64,
+    }
 }
 
 impl Default for DESetting {
     fn default() -> Self {
         Self {
-            base: Setting {
-                pop_num: 400,
-                ..Default::default()
-            },
+            base: Setting::default().pop_num(400),
             strategy: Strategy::S1,
             f: 0.6,
             cr: 0.9,

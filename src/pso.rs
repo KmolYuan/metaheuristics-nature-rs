@@ -1,20 +1,19 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
-/// Particle Swarm Optimization settings.
-pub struct PSOSetting {
-    pub base: Setting,
-    pub cognition: f64,
-    pub social: f64,
-    pub velocity: f64,
+with_builder! {
+    /// Particle Swarm Optimization settings.
+    pub struct PSOSetting {
+        base: Setting,
+        cognition: f64,
+        social: f64,
+        velocity: f64,
+    }
 }
 
 impl Default for PSOSetting {
     fn default() -> Self {
         Self {
-            base: Setting {
-                pop_num: 200,
-                ..Default::default()
-            },
+            base: Setting::default().pop_num(200),
             cognition: 2.05,
             social: 2.05,
             velocity: 1.3,
