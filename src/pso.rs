@@ -47,8 +47,12 @@ impl<F: ObjFunc> PSO<F> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for PSO<F> {
-    fn base(&self) -> &AlgorithmBase<F> { &self.base }
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+    fn base(&self) -> &AlgorithmBase<F> {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
+        &mut self.base
+    }
     fn init(&mut self) {
         self.best_past = self.base.pool.clone();
         self.best_f_past = self.base.fitness.clone();
@@ -58,9 +62,12 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
             let alpha = rand!(0., self.cognition);
             let beta = rand!(0., self.social);
             for s in 0..self.base.dim {
-                self.base.pool[i][s] = self.check(s, self.velocity * self.base.pool[i][s]
-                    + alpha * (self.best_past[i][s] - self.base.pool[i][s])
-                    + beta * (self.base.best[s] - self.base.pool[i][s]));
+                self.base.pool[i][s] = self.check(
+                    s,
+                    self.velocity * self.base.pool[i][s]
+                        + alpha * (self.best_past[i][s] - self.base.pool[i][s])
+                        + beta * (self.base.best[s] - self.base.pool[i][s]),
+                );
             }
             self.base.fitness(i);
             if self.base.fitness[i] < self.best_f_past[i] {
@@ -77,8 +84,8 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        {PSO, PSOSetting, Setting, Task},
         tests::{test, TestObj},
+        {PSOSetting, Setting, Task, PSO},
     };
 
     #[test]

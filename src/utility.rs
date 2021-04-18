@@ -1,36 +1,4 @@
-#![macro_use]
-
 use std::time::Instant;
-
-/// Generate random values between [0., 1.) or by range.
-#[macro_export]
-macro_rules! rand {
-    ($lb:expr, $ub:expr) => {
-        {
-            use rand::Rng;
-            rand::thread_rng().gen_range($lb..$ub)
-        }
-    };
-    () => { rand!(0., 1.) };
-}
-
-/// Generate random boolean by positive factor.
-#[macro_export]
-macro_rules! maybe {
-    ($v:expr) => {
-        {
-            use rand::Rng;
-            rand::thread_rng().gen_bool($v)
-        }
-    };
-}
-
-/// Make a multi-dimension array of the floating point zeros.
-#[macro_export]
-macro_rules! zeros {
-    () => { 0. };
-    ($w:expr $(, $h:expr)* $(,)?) => { vec![zeros!($($h,)*); $w] };
-}
 
 /// The terminal condition of the algorithm setting.
 pub enum Task {
@@ -128,8 +96,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         let dim = {
             let lb = func.lb();
             let ub = func.ub();
-            assert_eq!(lb.len(), ub.len(),
-                       "different dimension of the variables!");
+            assert_eq!(lb.len(), ub.len(), "different dimension of the variables!");
             lb.len()
         };
         Self {
@@ -197,9 +164,13 @@ pub trait Algorithm<F: ObjFunc> {
     /// Processing implementation of each generation.
     fn generation(&mut self);
     /// Get lower bound with index.
-    fn lb(&self, i: usize) -> f64 { self.base().func.lb()[i] }
+    fn lb(&self, i: usize) -> f64 {
+        self.base().func.lb()[i]
+    }
     /// Get upper bound with index.
-    fn ub(&self, i: usize) -> f64 { self.base().func.ub()[i] }
+    fn ub(&self, i: usize) -> f64 {
+        self.base().func.ub()[i]
+    }
     /// Assign from source.
     fn assign_from(&mut self, i: usize, f: f64, v: Vec<f64>) {
         let b = self.base_mut();
@@ -247,14 +218,18 @@ pub trait Algorithm<F: ObjFunc> {
             self.ub(s)
         } else if v < self.lb(s) {
             self.lb(s)
-        } else { v }
+        } else {
+            v
+        }
     }
 }
 
 /// The public API for [Algorithm](trait.Algorithm.html).
 pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Get the history for plotting.
-    fn history(&self) -> Vec<Report> { self.base().reports.clone() }
+    fn history(&self) -> Vec<Report> {
+        self.base().reports.clone()
+    }
     /// Return the x and y of function.
     /// The algorithm must be executed once.
     fn result(&self) -> (Vec<f64>, f64) {
@@ -281,14 +256,20 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
             }
             let b = self.base_mut();
             match b.task {
-                Task::MaxGen(v) => if b.gen >= v {
-                    break;
+                Task::MaxGen(v) => {
+                    if b.gen >= v {
+                        break;
+                    }
                 }
-                Task::MinFit(v) => if b.best_f <= v {
-                    break;
+                Task::MinFit(v) => {
+                    if b.best_f <= v {
+                        break;
+                    }
                 }
-                Task::MaxTime(v) => if (Instant::now() - b.time_start).as_secs_f32() >= v {
-                    break;
+                Task::MaxTime(v) => {
+                    if (Instant::now() - b.time_start).as_secs_f32() >= v {
+                        break;
+                    }
                 }
                 Task::SlowDown(v) => {
                     let diff = best_f - b.best_f;
@@ -304,4 +285,9 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     }
 }
 
-impl<F, T> Solver<F> for T where F: ObjFunc, T: Algorithm<F> {}
+impl<F, T> Solver<F> for T
+where
+    F: ObjFunc,
+    T: Algorithm<F>,
+{
+}

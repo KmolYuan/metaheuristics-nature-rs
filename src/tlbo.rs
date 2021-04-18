@@ -36,15 +36,22 @@ impl<F: ObjFunc> TLBO<F> {
                 mean += self.base.pool[j][s];
             }
             mean /= self.base.dim as f64;
-            self.tmp[s] = self.check(s, self.base.pool[i][s]
-                + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean));
+            self.tmp[s] = self.check(
+                s,
+                self.base.pool[i][s]
+                    + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean),
+            );
         }
         self.register(i);
     }
     fn learning(&mut self, i: usize) {
         let j = {
             let j = rand!(0, self.base.pop_num - 1);
-            if j >= i { j + 1 } else { j }
+            if j >= i {
+                j + 1
+            } else {
+                j
+            }
         };
         for s in 0..self.base.dim {
             let diff = if self.base.fitness[j] < self.base.fitness[i] {
@@ -52,16 +59,22 @@ impl<F: ObjFunc> TLBO<F> {
             } else {
                 self.base.pool[j][s] - self.base.pool[i][s]
             };
-            self.tmp[s] = self.check(s, self.base.pool[i][s]
-                + rand!(1., self.base.dim as f64) * diff);
+            self.tmp[s] = self.check(
+                s,
+                self.base.pool[i][s] + rand!(1., self.base.dim as f64) * diff,
+            );
         }
         self.register(i);
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
-    fn base(&self) -> &AlgorithmBase<F> { &self.base }
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+    fn base(&self) -> &AlgorithmBase<F> {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
+        &mut self.base
+    }
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
             self.teaching(i);
@@ -73,8 +86,8 @@ impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        {Task, TLBO, TLBOSetting},
         tests::{test, TestObj},
+        {TLBOSetting, Task, TLBO},
     };
 
     #[test]

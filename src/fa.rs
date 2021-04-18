@@ -58,9 +58,12 @@ impl<F: ObjFunc> FA<F> {
         self.beta0 -= self.beta_min;
         let beta = self.beta0 * (-self.gamma * r).exp() + self.beta_min;
         for s in 0..self.base.dim {
-            self.base.pool[me][s] = self.check(s, self.base.pool[me][s]
-                + beta * (self.base.pool[she][s] - self.base.pool[me][s])
-                + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5));
+            self.base.pool[me][s] = self.check(
+                s,
+                self.base.pool[me][s]
+                    + beta * (self.base.pool[she][s] - self.base.pool[me][s])
+                    + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
+            );
         }
     }
     fn move_fireflies(&mut self) {
@@ -75,8 +78,11 @@ impl<F: ObjFunc> FA<F> {
             }
             if !moved {
                 for s in 0..self.base.dim {
-                    self.base.pool[i][s] = self.check(s, self.base.pool[i][s]
-                        + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5));
+                    self.base.pool[i][s] = self.check(
+                        s,
+                        self.base.pool[i][s]
+                            + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
+                    );
                 }
             }
             self.base.fitness(i);
@@ -85,8 +91,12 @@ impl<F: ObjFunc> FA<F> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for FA<F> {
-    fn base(&self) -> &AlgorithmBase<F> { &self.base }
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+    fn base(&self) -> &AlgorithmBase<F> {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
+        &mut self.base
+    }
     fn generation(&mut self) {
         self.move_fireflies();
         self.find_best();
@@ -96,8 +106,8 @@ impl<F: ObjFunc> Algorithm<F> for FA<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        {FA, FASetting, Setting, Task},
         tests::{test, TestObj},
+        {FASetting, Setting, Task, FA},
     };
 
     #[test]

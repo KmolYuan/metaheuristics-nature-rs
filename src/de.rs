@@ -71,10 +71,12 @@ impl<F: ObjFunc> DE<F> {
                 Strategy::S5 | Strategy::S10 => Self::f5,
             },
             setter: match settings.strategy {
-                Strategy::S1 | Strategy::S2 | Strategy::S3
-                | Strategy::S4 | Strategy::S5 => Self::s1,
-                Strategy::S6 | Strategy::S7 | Strategy::S8
-                | Strategy::S9 | Strategy::S10 => Self::s2,
+                Strategy::S1 | Strategy::S2 | Strategy::S3 | Strategy::S4 | Strategy::S5 => {
+                    Self::s1
+                }
+                Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
+                    Self::s2
+                }
             },
             base,
         }
@@ -88,26 +90,29 @@ impl<F: ObjFunc> DE<F> {
         }
     }
     fn f1(&self, n: usize) -> f64 {
-        self.base.best[n] + self.f
-            * (self.base.pool[self.v[0]][n] - self.base.pool[self.v[1]][n])
+        self.base.best[n] + self.f * (self.base.pool[self.v[0]][n] - self.base.pool[self.v[1]][n])
     }
     fn f2(&self, n: usize) -> f64 {
-        self.base.pool[self.v[0]][n] + self.f
-            * (self.base.pool[self.v[1]][n] - self.base.pool[self.v[3]][n])
+        self.base.pool[self.v[0]][n]
+            + self.f * (self.base.pool[self.v[1]][n] - self.base.pool[self.v[3]][n])
     }
     fn f3(&self, n: usize) -> f64 {
-        self.tmp[n] + self.f * (self.base.best[n] - self.tmp[n]
-            + self.base.pool[self.v[0]][n] - self.base.pool[self.v[1]][n])
+        self.tmp[n]
+            + self.f
+                * (self.base.best[n] - self.tmp[n] + self.base.pool[self.v[0]][n]
+                    - self.base.pool[self.v[1]][n])
     }
     fn f4(&self, n: usize) -> f64 {
-        self.base.best[n] + self.f
-            * (self.base.pool[self.v[0]][n] + self.base.pool[self.v[1]][n]
-            - self.base.pool[self.v[2]][n] - self.base.pool[self.v[3]][n])
+        self.base.best[n] + self.f45(n)
     }
     fn f5(&self, n: usize) -> f64 {
-        self.base.pool[self.v[4]][n] + self.f
-            * (self.base.pool[self.v[0]][n] + self.base.pool[self.v[1]][n]
-            - self.base.pool[self.v[2]][n] - self.base.pool[self.v[3]][n])
+        self.base.pool[self.v[4]][n] + self.f45(n)
+    }
+    fn f45(&self, n: usize) -> f64 {
+        (self.base.pool[self.v[0]][n] + self.base.pool[self.v[1]][n]
+            - self.base.pool[self.v[2]][n]
+            - self.base.pool[self.v[3]][n])
+            * self.f
     }
     fn s1(&mut self, mut n: usize) {
         for _ in 0..self.base.dim {
@@ -133,8 +138,12 @@ impl<F: ObjFunc> DE<F> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for DE<F> {
-    fn base(&self) -> &AlgorithmBase<F> { &self.base }
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+    fn base(&self) -> &AlgorithmBase<F> {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
+        &mut self.base
+    }
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
             self.vector(i);
@@ -156,8 +165,8 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        {DE, DESetting, Setting, Task},
         tests::{test, TestObj},
+        {DESetting, Setting, Task, DE},
     };
 
     #[test]

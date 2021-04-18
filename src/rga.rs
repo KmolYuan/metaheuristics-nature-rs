@@ -59,8 +59,14 @@ impl<F: ObjFunc> RGA<F> {
             }
             for s in 0..self.base.dim {
                 self.tmp[0][s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
-                self.tmp[1][s] = self.check(s, 1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s]);
-                self.tmp[2][s] = self.check(s, -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s]);
+                self.tmp[1][s] = self.check(
+                    s,
+                    1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s],
+                );
+                self.tmp[2][s] = self.check(
+                    s,
+                    -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s],
+                );
             }
             for j in 0..3 {
                 self.f_tmp[j] = self.base.func.fitness(self.base.gen, &self.tmp[j]);
@@ -116,14 +122,22 @@ impl<F: ObjFunc> RGA<F> {
             }
             self.base.fitness = self.new_fitness.clone();
             self.base.pool = self.new_pool.clone();
-            self.assign_from(rand!(0, self.base.pop_num), self.base.best_f, self.base.best.clone());
+            self.assign_from(
+                rand!(0, self.base.pop_num),
+                self.base.best_f,
+                self.base.best.clone(),
+            );
         }
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for RGA<F> {
-    fn base(&self) -> &AlgorithmBase<F> { &self.base }
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
+    fn base(&self) -> &AlgorithmBase<F> {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
+        &mut self.base
+    }
     fn generation(&mut self) {
         self.select();
         self.crossover();
@@ -132,15 +146,17 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
             rand!(self.lb(s), self.ub(s))
-        } else { v }
+        } else {
+            v
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        {RGA, RGASetting, Setting, Task},
         tests::{test, TestObj},
+        {RGASetting, Setting, Task, RGA},
     };
 
     #[test]
