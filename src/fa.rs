@@ -102,25 +102,3 @@ impl<F: ObjFunc> Algorithm<F> for FA<F> {
         self.find_best();
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        tests::{test, TestObj},
-        {FASetting, Setting, Task, FA},
-    };
-
-    #[test]
-    fn fa() {
-        test(FA::new(
-            TestObj::new(),
-            FASetting {
-                base: Setting {
-                    task: Task::MinFit(1e-20),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ));
-    }
-}

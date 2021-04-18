@@ -161,25 +161,3 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
         self.find_best();
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        tests::{test, TestObj},
-        {DESetting, Setting, Task, DE},
-    };
-
-    #[test]
-    fn de() {
-        test(DE::new(
-            TestObj::new(),
-            DESetting {
-                base: Setting {
-                    task: Task::MinFit(1e-20),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ));
-    }
-}

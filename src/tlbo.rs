@@ -82,22 +82,3 @@ impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        tests::{test, TestObj},
-        {TLBOSetting, Task, TLBO},
-    };
-
-    #[test]
-    fn tlbo() {
-        test(TLBO::new(
-            TestObj::new(),
-            TLBOSetting {
-                task: Task::MinFit(1e-20),
-                ..Default::default()
-            },
-        ));
-    }
-}

@@ -151,25 +151,3 @@ impl<F: ObjFunc> Algorithm<F> for RGA<F> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        tests::{test, TestObj},
-        {RGASetting, Setting, Task, RGA},
-    };
-
-    #[test]
-    fn rga() {
-        test(RGA::new(
-            TestObj::new(),
-            RGASetting {
-                base: Setting {
-                    task: Task::MinFit(1e-20),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ));
-    }
-}

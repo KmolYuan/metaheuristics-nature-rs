@@ -80,25 +80,3 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        tests::{test, TestObj},
-        {PSOSetting, Setting, Task, PSO},
-    };
-
-    #[test]
-    fn pso() {
-        test(PSO::new(
-            TestObj::new(),
-            PSOSetting {
-                base: Setting {
-                    task: Task::MinFit(1e-20),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ));
-    }
-}
