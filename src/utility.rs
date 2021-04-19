@@ -92,7 +92,7 @@ impl Default for Setting {
 }
 
 /// The base class of algorithms.
-/// Please see [Algorithm](trait.Algorithm.html) for more information.
+/// Please see [`Algorithm`] for more information.
 pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     pub dim: usize,
@@ -244,7 +244,7 @@ pub trait Algorithm<F: ObjFunc> {
     }
 }
 
-/// The public API for [Algorithm](trait.Algorithm.html).
+/// The public API for [`Algorithm`].
 pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Get the history for plotting.
     fn history(&self) -> Vec<Report> {

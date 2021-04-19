@@ -2,7 +2,7 @@ use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 use ndarray::{s, Array1};
 
 /// Teaching Learning Based Optimization settings.
-/// This is a type alias to [Setting](struct.Setting.html).
+/// This is a type alias to [`Setting`].
 pub type TLBOSetting = Setting;
 
 /// Teaching Learning Based Optimization type.
