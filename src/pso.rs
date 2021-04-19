@@ -1,9 +1,10 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use ndarray::{s, Array1, Array2};
 
 setting_builder! {
     /// Particle Swarm Optimization settings.
     pub struct PSOSetting {
-        @base: Setting,
+        @base,
         cognition: f64,
         social: f64,
         velocity: f64,
@@ -26,8 +27,8 @@ pub struct PSO<F: ObjFunc> {
     cognition: f64,
     social: f64,
     velocity: f64,
-    best_past: Vec<Vec<f64>>,
-    best_f_past: Vec<f64>,
+    best_past: Array2<f64>,
+    best_f_past: Array1<f64>,
     base: AlgorithmBase<F>,
 }
 
@@ -38,8 +39,8 @@ impl<F: ObjFunc> PSO<F> {
             cognition: settings.cognition,
             social: settings.social,
             velocity: settings.velocity,
-            best_past: vec![],
-            best_f_past: vec![],
+            best_past: Array2::zeros((base.pop_num, base.dim)),
+            best_f_past: Array1::zeros(base.pop_num),
             base,
         }
     }
@@ -61,16 +62,18 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
             let alpha = rand!(0., self.cognition);
             let beta = rand!(0., self.social);
             for s in 0..self.base.dim {
-                self.base.pool[i][s] = self.check(
+                self.base.pool[[i, s]] = self.check(
                     s,
-                    self.velocity * self.base.pool[i][s]
-                        + alpha * (self.best_past[i][s] - self.base.pool[i][s])
-                        + beta * (self.base.best[s] - self.base.pool[i][s]),
+                    self.velocity * self.base.pool[[i, s]]
+                        + alpha * (self.best_past[[i, s]] - self.base.pool[[i, s]])
+                        + beta * (self.base.best[s] - self.base.pool[[i, s]]),
                 );
             }
             self.base.fitness(i);
             if self.base.fitness[i] < self.best_f_past[i] {
-                self.best_past[i] = self.base.pool[i].clone();
+                self.best_past
+                    .slice_mut(s![i, ..])
+                    .assign(&self.base.pool.slice(s![i, ..]));
                 self.best_f_past[i] = self.base.fitness[i].clone();
             }
             if self.base.fitness[i] < self.base.best_f {

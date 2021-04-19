@@ -1,9 +1,10 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting, Task};
+use ndarray::{s, Array1, Array2};
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.
     pub struct RGASetting {
-        @base: Setting,
+        @base,
         cross: f64,
         mutate: f64,
         win: f64,
@@ -29,10 +30,10 @@ pub struct RGA<F: ObjFunc> {
     mutate: f64,
     win: f64,
     delta: f64,
-    new_fitness: Vec<f64>,
-    tmp: Vec<Vec<f64>>,
-    f_tmp: Vec<f64>,
-    new_pool: Vec<Vec<f64>>,
+    new_fitness: Array1<f64>,
+    tmp: Array2<f64>,
+    f_tmp: Array1<f64>,
+    new_pool: Array2<f64>,
     base: AlgorithmBase<F>,
 }
 
@@ -44,10 +45,10 @@ impl<F: ObjFunc> RGA<F> {
             mutate: settings.mutate,
             win: settings.win,
             delta: settings.delta,
-            new_fitness: zeros!(base.pop_num),
-            tmp: zeros!(3, base.dim),
-            f_tmp: zeros!(3),
-            new_pool: zeros!(base.pop_num, base.dim),
+            new_fitness: Array1::zeros(base.pop_num),
+            tmp: Array2::zeros((3, base.dim)),
+            f_tmp: Array1::zeros(3),
+            new_pool: Array2::zeros((base.pop_num, base.dim)),
             base,
         }
     }
@@ -57,33 +58,46 @@ impl<F: ObjFunc> RGA<F> {
                 continue;
             }
             for s in 0..self.base.dim {
-                self.tmp[0][s] = 0.5 * self.base.pool[i][s] + 0.5 * self.base.pool[i + 1][s];
-                self.tmp[1][s] = self.check(
+                self.tmp[[0, s]] = 0.5 * self.base.pool[[i, s]] + 0.5 * self.base.pool[[i + 1, s]];
+                self.tmp[[1, s]] = self.check(
                     s,
-                    1.5 * self.base.pool[i][s] - 0.5 * self.base.pool[i + 1][s],
+                    1.5 * self.base.pool[[i, s]] - 0.5 * self.base.pool[[i + 1, s]],
                 );
-                self.tmp[2][s] = self.check(
+                self.tmp[[2, s]] = self.check(
                     s,
-                    -0.5 * self.base.pool[i][s] + 1.5 * self.base.pool[i + 1][s],
+                    -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]],
                 );
             }
             for j in 0..3 {
-                self.f_tmp[j] = self.base.func.fitness(self.base.gen, &self.tmp[j]);
+                self.f_tmp[j] = self
+                    .base
+                    .func
+                    .fitness(self.base.gen, self.tmp.slice(s![j, ..]));
             }
             if self.f_tmp[0] > self.f_tmp[1] {
                 self.f_tmp.swap(0, 1);
-                self.tmp.swap(0, 1);
+                for j in 0..2 {
+                    self.tmp.swap([0, j], [1, j]);
+                }
             }
             if self.f_tmp[0] > self.f_tmp[2] {
                 self.f_tmp.swap(0, 2);
-                self.tmp.swap(0, 2);
+                for j in 0..2 {
+                    self.tmp.swap([0, j], [2, j]);
+                }
             }
             if self.f_tmp[1] > self.f_tmp[2] {
                 self.f_tmp.swap(1, 2);
-                self.tmp.swap(1, 2);
+                for j in 0..2 {
+                    self.tmp.swap([1, j], [2, j]);
+                }
             }
-            self.assign_from(i, self.f_tmp[0], self.tmp[0].clone());
-            self.assign_from(i + 1, self.f_tmp[1], self.tmp[1].clone());
+            self.assign_from(i, self.f_tmp[0], &self.tmp.slice(s![0, ..]).into_owned());
+            self.assign_from(
+                i + 1,
+                self.f_tmp[1],
+                &self.tmp.slice(s![1, ..]).into_owned(),
+            );
         }
     }
     fn get_delta(&self, y: f64) -> f64 {
@@ -100,9 +114,9 @@ impl<F: ObjFunc> RGA<F> {
             }
             let s = rand!(0, self.base.dim);
             if maybe!(0.5) {
-                self.base.pool[i][s] += self.get_delta(self.ub(s) - self.base.pool[i][s]);
+                self.base.pool[[i, s]] += self.get_delta(self.ub(s) - self.base.pool[[i, s]]);
             } else {
-                self.base.pool[i][s] -= self.get_delta(self.base.pool[i][s] - self.lb(s));
+                self.base.pool[[i, s]] -= self.get_delta(self.base.pool[[i, s]] - self.lb(s));
             }
             self.base.fitness(i);
         }
@@ -114,17 +128,21 @@ impl<F: ObjFunc> RGA<F> {
             let k = rand!(0, self.base.pop_num);
             if self.base.fitness[j] > self.base.fitness[k] && maybe!(self.win) {
                 self.new_fitness[i] = self.base.fitness[k];
-                self.new_pool[i] = self.base.pool[k].clone();
+                self.new_pool
+                    .slice_mut(s![i, ..])
+                    .assign(&self.base.pool.slice(s![k, ..]));
             } else {
                 self.new_fitness[i] = self.base.fitness[j];
-                self.new_pool[i] = self.base.pool[j].clone();
+                self.new_pool
+                    .slice_mut(s![i, ..])
+                    .assign(&self.base.pool.slice(s![j, ..]));
             }
-            self.base.fitness = self.new_fitness.clone();
-            self.base.pool = self.new_pool.clone();
+            self.base.fitness.assign(&self.new_fitness);
+            self.base.pool.assign(&self.new_pool);
             self.assign_from(
                 rand!(0, self.base.pop_num),
                 self.base.best_f,
-                self.base.best.clone(),
+                &self.base.best.clone(),
             );
         }
     }

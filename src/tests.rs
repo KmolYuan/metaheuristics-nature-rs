@@ -2,35 +2,42 @@ use crate::{
     ObjFunc, Solver, Task, {DESetting, DE}, {FASetting, FA}, {PSOSetting, PSO}, {RGASetting, RGA},
     {TLBOSetting, TLBO},
 };
+use ndarray::{Array1, ArrayView1, AsArray};
 
-struct TestObj(Vec<f64>, Vec<f64>);
+struct TestObj(Array1<f64>, Array1<f64>);
 
 impl TestObj {
     fn new() -> Self {
-        Self(vec![0.; 4], vec![50.; 4])
+        Self(Array1::zeros(4), Array1::ones(4) * 50.)
     }
 }
 
 impl ObjFunc for TestObj {
     type Result = f64;
-    fn fitness(&self, _gen: u32, v: &Vec<f64>) -> f64 {
+    fn fitness<'a, A>(&self, _gen: u32, v: A) -> f64
+    where
+        A: AsArray<'a, f64>,
+    {
+        let v = v.into();
         v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
-    fn result(&self, v: &Vec<f64>) -> f64 {
+    fn result<'a, A>(&self, v: A) -> f64
+    where
+        A: AsArray<'a, f64>,
+    {
         self.fitness(0, v)
     }
-    fn ub(&self) -> &Vec<f64> {
-        &self.1
+    fn ub(&self) -> ArrayView1<f64> {
+        self.1.view()
     }
-    fn lb(&self) -> &Vec<f64> {
-        &self.0
+    fn lb(&self) -> ArrayView1<f64> {
+        self.0.view()
     }
 }
 
-fn test<F, S>(mut a: S)
+fn test<S>(mut a: S)
 where
-    F: ObjFunc<Result = f64>,
-    S: Solver<F>,
+    S: Solver<TestObj>,
 {
     let ans = a.run();
     let (x, y) = a.result();

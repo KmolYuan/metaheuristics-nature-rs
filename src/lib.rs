@@ -12,7 +12,6 @@
 //!     let reports: Vec<Report> = a.history();  // Get the history reports.
 //! }
 //! ```
-
 pub use crate::{de::*, fa::*, pso::*, rga::*, tlbo::*, utility::*};
 
 /// Generate random values between [0., 1.) or by range.
@@ -36,25 +35,18 @@ macro_rules! maybe {
     }};
 }
 
-/// Make a multi-dimension array of the floating point zeros.
-#[macro_export]
-macro_rules! zeros {
-    () => { 0. };
-    ($w:expr $(, $h:expr)* $(,)?) => { vec![zeros!($($h,)*); $w] };
-}
-
 /// Define a data structure and its builder functions.
 ///
 /// Use `@` to denote the base settings, such as population number, task category
 /// or reporting interval.
 /// ```
-/// use metaheuristics_nature::{setting_builder, Setting};
+/// use metaheuristics_nature::setting_builder;
 ///
 /// setting_builder! {
 ///     /// Real-coded Genetic Algorithm settings.
 ///     #[derive(Default)]
 ///     pub struct GASetting {
-///         @base: Setting,
+///         @base,
 ///         cross: f64,
 ///         mutate: f64,
 ///         win: f64,
@@ -70,13 +62,13 @@ macro_rules! setting_builder {
     (
         $(#[$attr:meta])*
         $v:vis struct $name:ident {
-            $(@$base:ident: $base_type:ty,)?
+            $(@$base:ident,)?
             $($field:ident: $field_type:ty,)+
         }
     ) => {
         $(#[$attr])*
         $v struct $name {
-            $($base: $base_type,)?
+            $($base: $crate::Setting,)?
             $($field: $field_type,)+
         }
         impl $name {

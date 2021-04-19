@@ -1,4 +1,5 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use ndarray::{s, Array1};
 
 /// Teaching Learning Based Optimization settings.
 /// This is a type alias to [Setting](struct.Setting.html).
@@ -6,7 +7,7 @@ pub type TLBOSetting = Setting;
 
 /// Teaching Learning Based Optimization type.
 pub struct TLBO<F: ObjFunc> {
-    tmp: Vec<f64>,
+    tmp: Array1<f64>,
     base: AlgorithmBase<F>,
 }
 
@@ -14,14 +15,14 @@ impl<F: ObjFunc> TLBO<F> {
     pub fn new(func: F, settings: TLBOSetting) -> Self {
         let base = AlgorithmBase::new(func, settings);
         Self {
-            tmp: zeros!(base.dim),
+            tmp: Array1::zeros(base.dim),
             base,
         }
     }
     fn register(&mut self, i: usize) {
         let f_new = self.base.func.fitness(self.base.gen, &self.tmp);
         if f_new < self.base.fitness[i] {
-            self.base.pool[i] = self.tmp.clone();
+            self.base.pool.slice_mut(s![i, ..]).assign(&self.tmp);
             self.base.fitness[i] = f_new;
         }
         if f_new < self.base.best_f {
@@ -33,12 +34,12 @@ impl<F: ObjFunc> TLBO<F> {
         for s in 0..self.base.dim {
             let mut mean = 0.;
             for j in 0..self.base.pop_num {
-                mean += self.base.pool[j][s];
+                mean += self.base.pool[[j, s]];
             }
             mean /= self.base.dim as f64;
             self.tmp[s] = self.check(
                 s,
-                self.base.pool[i][s]
+                self.base.pool[[i, s]]
                     + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean),
             );
         }
@@ -55,13 +56,13 @@ impl<F: ObjFunc> TLBO<F> {
         };
         for s in 0..self.base.dim {
             let diff = if self.base.fitness[j] < self.base.fitness[i] {
-                self.base.pool[i][s] - self.base.pool[j][s]
+                self.base.pool[[i, s]] - self.base.pool[[j, s]]
             } else {
-                self.base.pool[j][s] - self.base.pool[i][s]
+                self.base.pool[[j, s]] - self.base.pool[[i, s]]
             };
             self.tmp[s] = self.check(
                 s,
-                self.base.pool[i][s] + rand!(1., self.base.dim as f64) * diff,
+                self.base.pool[[i, s]] + rand!(1., self.base.dim as f64) * diff,
             );
         }
         self.register(i);

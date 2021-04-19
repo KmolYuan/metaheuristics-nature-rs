@@ -11,4 +11,4 @@ keywords = ["metaheuristic", "algorithm", "optimization"]
 
 [dependencies]
 rand = "0.8.3"
-#ndarray = "0.15.1"
+ndarray = "0.15.1"

@@ -1,9 +1,10 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use ndarray::{s, AsArray};
 
 setting_builder! {
     /// Firefly Algorithm settings.
     pub struct FASetting {
-        @base: Setting,
+        @base,
         alpha: f64,
         beta_min: f64,
         gamma: f64,
@@ -23,7 +24,12 @@ impl Default for FASetting {
     }
 }
 
-fn distance(me: &Vec<f64>, she: &Vec<f64>) -> f64 {
+fn distance<'a, A>(me: A, she: A) -> f64
+where
+    A: AsArray<'a, f64>,
+{
+    let me = me.into();
+    let she = she.into();
     let mut dist = 0.;
     for s in 0..me.len() {
         let diff = me[s] - she[s];
@@ -53,14 +59,17 @@ impl<F: ObjFunc> FA<F> {
         }
     }
     fn move_firefly(&mut self, me: usize, she: usize) {
-        let r = distance(&self.base.pool[me], &self.base.pool[she]);
+        let r = distance(
+            self.base.pool.slice(s![me, ..]),
+            self.base.pool.slice(s![she, ..]),
+        );
         self.beta0 -= self.beta_min;
         let beta = self.beta0 * (-self.gamma * r).exp() + self.beta_min;
         for s in 0..self.base.dim {
-            self.base.pool[me][s] = self.check(
+            self.base.pool[[me, s]] = self.check(
                 s,
-                self.base.pool[me][s]
-                    + beta * (self.base.pool[she][s] - self.base.pool[me][s])
+                self.base.pool[[me, s]]
+                    + beta * (self.base.pool[[she, s]] - self.base.pool[[me, s]])
                     + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
             );
         }
@@ -77,9 +86,9 @@ impl<F: ObjFunc> FA<F> {
             }
             if !moved {
                 for s in 0..self.base.dim {
-                    self.base.pool[i][s] = self.check(
+                    self.base.pool[[i, s]] = self.check(
                         s,
-                        self.base.pool[i][s]
+                        self.base.pool[[i, s]]
                             + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
                     );
                 }

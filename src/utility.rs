@@ -1,3 +1,4 @@
+use ndarray::{s, Array1, Array2, ArrayView1, AsArray};
 use std::time::Instant;
 
 /// The terminal condition of the algorithm setting.
@@ -25,18 +26,28 @@ pub struct Report {
 /// For example:
 /// ```
 /// use metaheuristics_nature::ObjFunc;
-/// struct MyFunc(Vec<f64>, Vec<f64>);
+/// use ndarray::{AsArray, ArrayView1, Array1};
+/// struct MyFunc(Array1<f64>, Array1<f64>);
 /// impl MyFunc {
-///     fn new() -> Self { Self(vec![0.; 3], vec![50.; 3]) }
+///     fn new() -> Self { Self(Array1::zeros(3), Array1::ones(3) * 50.) }
 /// }
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
-///     fn fitness(&self, _gen: u32, v: &Vec<f64>) -> f64 {
+///     fn fitness<'a, A>(&self, gen: u32, v: A) -> f64
+///     where
+///         A: AsArray<'a, f64>,
+///     {
+///         let v = v.into();
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
-///     fn result(&self, v: &Vec<f64>) -> f64 { self.fitness(0, v) }
-///     fn ub(&self) -> &Vec<f64> { &self.1 }
-///     fn lb(&self) -> &Vec<f64> { &self.0 }
+///     fn result<'a, A>(&self, v: A) -> Self::Result
+///     where
+///         A: AsArray<'a, f64>
+///     {
+///         self.fitness(0, v)
+///     }
+///     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
+///     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
 /// }
 /// ```
 /// The objective function returns fitness value that used to evaluate the objective.
@@ -48,13 +59,17 @@ pub trait ObjFunc {
     /// The result type.
     type Result;
     /// Return fitness, the smaller value represents good.
-    fn fitness(&self, gen: u32, v: &Vec<f64>) -> f64;
+    fn fitness<'a, A>(&self, gen: u32, v: A) -> f64
+    where
+        A: AsArray<'a, f64>;
     /// Return the final result of the problem.
-    fn result(&self, v: &Vec<f64>) -> Self::Result;
+    fn result<'a, A>(&self, v: A) -> Self::Result
+    where
+        A: AsArray<'a, f64>;
     /// Get upper bound.
-    fn ub(&self) -> &Vec<f64>;
+    fn ub(&self) -> ArrayView1<f64>;
     /// Get lower bound.
-    fn lb(&self) -> &Vec<f64>;
+    fn lb(&self) -> ArrayView1<f64>;
 }
 
 setting_builder! {
@@ -85,9 +100,9 @@ pub struct AlgorithmBase<F: ObjFunc> {
     rpt: u32,
     pub task: Task,
     pub best_f: f64,
-    pub best: Vec<f64>,
-    pub fitness: Vec<f64>,
-    pub pool: Vec<Vec<f64>>,
+    pub best: Array1<f64>,
+    pub fitness: Array1<f64>,
+    pub pool: Array2<f64>,
     time_start: Instant,
     reports: Vec<Report>,
     pub func: F,
@@ -108,9 +123,9 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             rpt: settings.rpt,
             task: settings.task,
             best_f: f64::INFINITY,
-            best: zeros!(dim),
-            fitness: zeros!(settings.pop_num),
-            pool: zeros!(settings.pop_num, dim),
+            best: Array1::zeros(dim),
+            fitness: Array1::zeros(settings.pop_num),
+            pool: Array2::zeros((settings.pop_num, dim)),
             time_start: Instant::now(),
             reports: vec![],
             func,
@@ -118,7 +133,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
     }
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.fitness[i] = self.func.fitness(self.gen, &self.pool[i]);
+        self.fitness[i] = self.func.fitness(self.gen, self.pool.slice(s![i, ..]));
     }
     /// Record the performance.
     fn report(&mut self) {
@@ -174,16 +189,19 @@ pub trait Algorithm<F: ObjFunc> {
         self.base().func.ub()[i]
     }
     /// Assign from source.
-    fn assign_from(&mut self, i: usize, f: f64, v: Vec<f64>) {
+    fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
+    where
+        A: AsArray<'a, f64>,
+    {
         let b = self.base_mut();
         b.fitness[i] = f;
-        b.pool[i] = v;
+        b.pool.slice_mut(s![i, ..]).assign(&v.into());
     }
     /// Set the index to best.
     fn set_best(&mut self, i: usize) {
         let b = self.base_mut();
         b.best_f = b.fitness[i];
-        b.best = b.pool[i].clone();
+        b.best.assign(&b.pool.slice(s![i, ..]));
     }
     /// Find the best, and set it globally.
     fn find_best(&mut self) {
@@ -203,7 +221,7 @@ pub trait Algorithm<F: ObjFunc> {
         let mut best = 0;
         for i in 0..self.base().pop_num {
             for s in 0..self.base().dim {
-                self.base_mut().pool[i][s] = rand!(self.lb(s), self.ub(s));
+                self.base_mut().pool[[i, s]] = rand!(self.lb(s), self.ub(s));
             }
             self.base_mut().fitness(i);
             if self.base().fitness[i] < self.base().fitness[best] {
@@ -234,7 +252,7 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     }
     /// Return the x and y of function.
     /// The algorithm must be executed once.
-    fn result(&self) -> (Vec<f64>, f64) {
+    fn result(&self) -> (Array1<f64>, f64) {
         let b = self.base();
         (b.best.clone(), b.best_f)
     }
