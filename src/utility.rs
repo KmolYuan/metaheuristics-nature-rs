@@ -57,7 +57,7 @@ pub trait ObjFunc {
     fn lb(&self) -> &Vec<f64>;
 }
 
-with_builder! {
+setting_builder! {
     /// Base settings.
     pub struct Setting {
         task: Task,

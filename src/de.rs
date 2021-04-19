@@ -16,10 +16,10 @@ pub enum Strategy {
     S10,
 }
 
-with_builder! {
+setting_builder! {
     /// Differential Evolution settings.
     pub struct DESetting {
-        base: Setting,
+        @base: Setting,
         strategy: Strategy,
         f: f64,
         cr: f64,

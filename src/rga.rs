@@ -1,9 +1,9 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting, Task};
 
-with_builder! {
+setting_builder! {
     /// Real-coded Genetic Algorithm settings.
     pub struct RGASetting {
-        base: Setting,
+        @base: Setting,
         cross: f64,
         mutate: f64,
         win: f64,

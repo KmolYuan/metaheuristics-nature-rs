@@ -1,6 +1,6 @@
 use crate::{
-    ObjFunc, Setting, Solver, Task, {DESetting, DE}, {FASetting, FA}, {PSOSetting, PSO},
-    {RGASetting, RGA}, {TLBOSetting, TLBO},
+    ObjFunc, Solver, Task, {DESetting, DE}, {FASetting, FA}, {PSOSetting, PSO}, {RGASetting, RGA},
+    {TLBOSetting, TLBO},
 };
 
 struct TestObj(Vec<f64>, Vec<f64>);
@@ -47,7 +47,7 @@ where
 fn de() {
     test(DE::new(
         TestObj::new(),
-        DESetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
+        DESetting::default().task(Task::MinFit(1e-20)),
     ));
 }
 
@@ -55,7 +55,7 @@ fn de() {
 fn pso() {
     test(PSO::new(
         TestObj::new(),
-        PSOSetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
+        PSOSetting::default().task(Task::MinFit(1e-20)),
     ));
 }
 
@@ -63,7 +63,7 @@ fn pso() {
 fn fa() {
     test(FA::new(
         TestObj::new(),
-        FASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
+        FASetting::default().task(Task::MinFit(1e-20)),
     ));
 }
 
@@ -71,7 +71,7 @@ fn fa() {
 fn rga() {
     test(RGA::new(
         TestObj::new(),
-        RGASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
+        RGASetting::default().task(Task::MinFit(1e-20)),
     ));
 }
 

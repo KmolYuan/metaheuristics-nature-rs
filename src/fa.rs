@@ -1,9 +1,9 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
-with_builder! {
+setting_builder! {
     /// Firefly Algorithm settings.
     pub struct FASetting {
-        base: Setting,
+        @base: Setting,
         alpha: f64,
         beta_min: f64,
         gamma: f64,

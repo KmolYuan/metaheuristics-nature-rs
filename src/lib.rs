@@ -5,11 +5,11 @@
 //! fn main() {
 //!     let mut a = RGA::new(
 //!         MyObj::new(),
-//!         RGASetting::default().base(Setting::default().task(Task::MinFit(1e-20))),
+//!         RGASetting::default().task(Task::MinFit(1e-20)),
 //!     );
 //!     let ans = a.run();  // Run and get the final result
 //!     let (x, y): (Vec<f64>, f64) = a.result();  // Get the optimized XY value of your function
-//!     let reports: Vec<Report> = a.history();
+//!     let reports: Vec<Report> = a.history();  // Get the history reports.
 //! }
 //! ```
 
@@ -43,18 +43,61 @@ macro_rules! zeros {
     ($w:expr $(, $h:expr)* $(,)?) => { vec![zeros!($($h,)*); $w] };
 }
 
+/// Define a data structure and its builder functions.
+///
+/// Use `@` to denote the base settings, such as population number, task category
+/// or reporting interval.
+/// ```
+/// use metaheuristics_nature::{setting_builder, Setting};
+///
+/// setting_builder! {
+///     /// Real-coded Genetic Algorithm settings.
+///     #[derive(Default)]
+///     pub struct GASetting {
+///         @base: Setting,
+///         cross: f64,
+///         mutate: f64,
+///         win: f64,
+///         delta: f64,
+///     }
+/// }
+/// fn test() {
+///     let s = GASetting::default().pop_num(300).cross(0.9);
+/// }
+/// ```
 #[macro_export]
-macro_rules! with_builder {
-    ($(#[$attr:meta])* $v:vis struct $name:ident { $($field:ident: $field_type:ty,)+ }) => {
+macro_rules! setting_builder {
+    (
+        $(#[$attr:meta])*
+        $v:vis struct $name:ident {
+            $(@$base:ident: $base_type:ty,)?
+            $($field:ident: $field_type:ty,)+
+        }
+    ) => {
         $(#[$attr])*
-        $v struct $name { $($field: $field_type,)+ }
+        $v struct $name {
+            $($base: $base_type,)?
+            $($field: $field_type,)+
+        }
         impl $name {
-            $(pub fn $field<'a>(mut self, $field: $field_type) -> Self {
+            $(setting_builder! {
+                @$base,
+                task: $crate::Task,
+                pop_num: usize,
+                rpt: u32,
+            })?
+            $(pub fn $field(mut self, $field: $field_type) -> Self {
                 self.$field = $field;
                 self
             })+
         }
     };
+    (@$base:ident, $($field:ident: $field_type:ty,)+) => {
+        $(pub fn $field(mut self, $field: $field_type) -> Self {
+            self.$base = self.$base.$field($field);
+            self
+        })+
+    }
 }
 
 mod de;

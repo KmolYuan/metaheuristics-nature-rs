@@ -1,9 +1,9 @@
 use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
 
-with_builder! {
+setting_builder! {
     /// Particle Swarm Optimization settings.
     pub struct PSOSetting {
-        base: Setting,
+        @base: Setting,
         cognition: f64,
         social: f64,
         velocity: f64,
