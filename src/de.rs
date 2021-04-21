@@ -1,4 +1,4 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use crate::{Algorithm, AlgorithmBase, ObjFunc};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
@@ -21,20 +21,10 @@ setting_builder! {
     /// Differential Evolution settings.
     pub struct DESetting {
         @base,
-        strategy: Strategy,
-        f: f64,
-        cr: f64,
-    }
-}
-
-impl Default for DESetting {
-    fn default() -> Self {
-        Self {
-            base: Setting::default().pop_num(400),
-            strategy: Strategy::S1,
-            f: 0.6,
-            cr: 0.9,
-        }
+        @pop_num = 400,
+        strategy: Strategy = Strategy::S1,
+        f: f64 = 0.6,
+        cr: f64 = 0.9,
     }
 }
 

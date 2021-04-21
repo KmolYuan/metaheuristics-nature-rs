@@ -47,10 +47,11 @@ macro_rules! maybe {
 ///     #[derive(Default)]
 ///     pub struct GASetting {
 ///         @base,
-///         cross: f64,
-///         mutate: f64,
-///         win: f64,
-///         delta: f64,
+///         @pop_num = 500,
+///         cross: f64 = 0.95,
+///         mutate: f64 = 0.05,
+///         win: f64 = 0.95,
+///         delta: f64 = 5.,
 ///     }
 /// }
 /// fn test() {
@@ -62,8 +63,8 @@ macro_rules! setting_builder {
     (
         $(#[$attr:meta])*
         $v:vis struct $name:ident {
-            $(@$base:ident,)?
-            $($field:ident: $field_type:ty,)+
+            $(@$base:ident, $(@$base_field:ident = $base_default:expr,)*)?
+            $($(#[$field_attr:meta])* $field:ident: $field_type:ty = $field_default:expr,)+
         }
     ) => {
         $(#[$attr])*
@@ -78,10 +79,18 @@ macro_rules! setting_builder {
                 pop_num: usize,
                 rpt: u32,
             })?
-            $(pub fn $field(mut self, $field: $field_type) -> Self {
+            $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
                 self.$field = $field;
                 self
             })+
+        }
+        impl Default for $name {
+            fn default() -> Self {
+                Self {
+                    $($base: $crate::Setting::default()$(.$base_field($base_default))*,)?
+                    $($field: $field_default,)+
+                }
+            }
         }
     };
     (@$base:ident, $($field:ident: $field_type:ty,)+) => {

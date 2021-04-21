@@ -1,26 +1,15 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use crate::{Algorithm, AlgorithmBase, ObjFunc};
 use ndarray::{s, AsArray};
 
 setting_builder! {
     /// Firefly Algorithm settings.
     pub struct FASetting {
         @base,
-        alpha: f64,
-        beta_min: f64,
-        gamma: f64,
-        beta0: f64,
-    }
-}
-
-impl Default for FASetting {
-    fn default() -> Self {
-        Self {
-            base: Setting::default().pop_num(80),
-            alpha: 0.01,
-            beta_min: 0.2,
-            gamma: 1.,
-            beta0: 1.,
-        }
+        @pop_num = 80,
+        alpha: f64 = 0.01,
+        beta_min: f64 = 0.2,
+        gamma: f64 = 1.,
+        beta0: f64 = 1.,
     }
 }
 

@@ -1,26 +1,15 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting, Task};
+use crate::{Algorithm, AlgorithmBase, ObjFunc, Task};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.
     pub struct RGASetting {
         @base,
-        cross: f64,
-        mutate: f64,
-        win: f64,
-        delta: f64,
-    }
-}
-
-impl Default for RGASetting {
-    fn default() -> Self {
-        Self {
-            base: Setting::default().pop_num(500),
-            cross: 0.95,
-            mutate: 0.05,
-            win: 0.95,
-            delta: 5.,
-        }
+        @pop_num = 500,
+        cross: f64 = 0.95,
+        mutate: f64 = 0.05,
+        win: f64 = 0.95,
+        delta: f64 = 5.,
     }
 }
 

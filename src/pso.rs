@@ -1,24 +1,14 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use crate::{Algorithm, AlgorithmBase, ObjFunc};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
     /// Particle Swarm Optimization settings.
     pub struct PSOSetting {
         @base,
-        cognition: f64,
-        social: f64,
-        velocity: f64,
-    }
-}
-
-impl Default for PSOSetting {
-    fn default() -> Self {
-        Self {
-            base: Setting::default().pop_num(200),
-            cognition: 2.05,
-            social: 2.05,
-            velocity: 1.3,
-        }
+        @pop_num = 200,
+        cognition: f64 = 2.05,
+        social: f64 = 2.05,
+        velocity: f64 = 1.3,
     }
 }
 

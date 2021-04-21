@@ -75,19 +75,9 @@ pub trait ObjFunc {
 setting_builder! {
     /// Base settings.
     pub struct Setting {
-        task: Task,
-        pop_num: usize,
-        rpt: u32,
-    }
-}
-
-impl Default for Setting {
-    fn default() -> Self {
-        Self {
-            task: Task::MaxGen(200),
-            pop_num: 200,
-            rpt: 50,
-        }
+        task: Task = Task::MaxGen(200),
+        pop_num: usize = 200,
+        rpt: u32 = 50,
     }
 }
 
