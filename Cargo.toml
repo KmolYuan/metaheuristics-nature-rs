@@ -9,6 +9,10 @@ readme = "README.md"
 repository = "https://github.com/KmolYuan/metaheuristics-nature-rs"
 keywords = ["metaheuristic", "algorithm", "optimization"]
 
+[features]
+cli = ["indicatif"]
+
 [dependencies]
-rand = "0.8.3"
-ndarray = "0.15.1"
+indicatif = { version = "0.16", optional = true }
+rand = "0.8"
+ndarray = "0.15"
