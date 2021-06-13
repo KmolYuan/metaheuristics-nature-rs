@@ -12,6 +12,10 @@
 //!     let reports: Vec<Report> = a.history();  // Get the history reports.
 //! }
 //! ```
+//!
+//! # Features
+//!
+//! + `cli`: Enable progress bar for CLI.
 pub use crate::{de::*, fa::*, pso::*, rga::*, tlbo::*, utility::*};
 
 /// Generate random values between [0., 1.) or by range.
