@@ -16,7 +16,7 @@ pub enum Task {
 }
 
 /// The data of generation sampling.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Report {
     pub gen: u32,
     pub fitness: f64,
@@ -161,10 +161,12 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             func,
         }
     }
+
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
         self.fitness[i] = self.func.fitness(self.gen, self.pool.slice(s![i, ..]));
     }
+
     /// Record the performance.
     fn report(&mut self) {
         self.reports.push(Report {
@@ -204,20 +206,26 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 pub trait Algorithm<F: ObjFunc> {
     /// Return a base handle.
     fn base(&self) -> &AlgorithmBase<F>;
+
     /// Return a mutable base handle.
     fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
+
     /// Initialization implementation.
     fn init(&mut self) {}
+
     /// Processing implementation of each generation.
     fn generation(&mut self);
+
     /// Get lower bound with index.
     fn lb(&self, i: usize) -> f64 {
         self.base().func.lb()[i]
     }
+
     /// Get upper bound with index.
     fn ub(&self, i: usize) -> f64 {
         self.base().func.ub()[i]
     }
+
     /// Assign from source.
     fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
     where
@@ -227,12 +235,14 @@ pub trait Algorithm<F: ObjFunc> {
         b.fitness[i] = f;
         b.pool.slice_mut(s![i, ..]).assign(&v.into());
     }
+
     /// Set the index to best.
     fn set_best(&mut self, i: usize) {
         let b = self.base_mut();
         b.best_f = b.fitness[i];
         b.best.assign(&b.pool.slice(s![i, ..]));
     }
+
     /// Find the best, and set it globally.
     fn find_best(&mut self) {
         let b = self.base_mut();
@@ -246,6 +256,7 @@ pub trait Algorithm<F: ObjFunc> {
             self.set_best(best);
         }
     }
+
     /// Initialize population.
     fn init_pop(&mut self) {
         let mut best = 0;
@@ -262,6 +273,7 @@ pub trait Algorithm<F: ObjFunc> {
             self.set_best(best);
         }
     }
+
     /// Check the bounds.
     fn check(&self, s: usize, v: f64) -> f64 {
         if v > self.ub(s) {
@@ -280,12 +292,14 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     fn history(&self) -> Vec<Report> {
         self.base().reports.clone()
     }
+
     /// Return the x and y of function.
     /// The algorithm must be executed once.
     fn result(&self) -> (Array1<f64>, f64) {
         let b = self.base();
         (b.best.clone(), b.best_f)
     }
+
     /// Start the algorithm and return the final result.
     fn run(&mut self) -> F::Result {
         self.base_mut().gen = 0;

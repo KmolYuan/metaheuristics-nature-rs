@@ -11,7 +11,10 @@ pub struct TLBO<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> TLBO<F> {
+impl<F> TLBO<F>
+where
+    F: ObjFunc,
+{
     pub fn new(func: F, settings: TLBOSetting) -> Self {
         let base = AlgorithmBase::new(func, settings);
         Self {
@@ -19,6 +22,7 @@ impl<F: ObjFunc> TLBO<F> {
             base,
         }
     }
+
     fn register(&mut self, i: usize) {
         let f_new = self.base.func.fitness(self.base.gen, &self.tmp);
         if f_new < self.base.fitness[i] {
@@ -29,6 +33,7 @@ impl<F: ObjFunc> TLBO<F> {
             self.set_best(i);
         }
     }
+
     fn teaching(&mut self, i: usize) {
         let tf = f64::round(rand!() + 1.);
         for s in 0..self.base.dim {
@@ -45,6 +50,7 @@ impl<F: ObjFunc> TLBO<F> {
         }
         self.register(i);
     }
+
     fn learning(&mut self, i: usize) {
         let j = {
             let j = rand!(0, self.base.pop_num - 1);
@@ -69,13 +75,18 @@ impl<F: ObjFunc> TLBO<F> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
+impl<F> Algorithm<F> for TLBO<F>
+where
+    F: ObjFunc,
+{
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
             self.teaching(i);

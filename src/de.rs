@@ -3,7 +3,7 @@ use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
 /// Each strategy has different formula on recombination.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum Strategy {
     S1,
     S2,
@@ -39,7 +39,10 @@ pub struct DE<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> DE<F> {
+impl<F> DE<F>
+where
+    F: ObjFunc,
+{
     pub fn new(func: F, settings: DESetting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         let num = match settings.strategy {
@@ -71,6 +74,7 @@ impl<F: ObjFunc> DE<F> {
             base,
         }
     }
+
     fn vector(&mut self, i: usize) {
         for j in 0..self.v.len() {
             self.v[j] = i;
@@ -79,32 +83,39 @@ impl<F: ObjFunc> DE<F> {
             }
         }
     }
+
     fn f1(&self, n: usize) -> f64 {
         self.base.best[n]
             + self.f * (self.base.pool[[self.v[0], n]] - self.base.pool[[self.v[1], n]])
     }
+
     fn f2(&self, n: usize) -> f64 {
         self.base.pool[[self.v[0], n]]
             + self.f * (self.base.pool[[self.v[1], n]] - self.base.pool[[self.v[3], n]])
     }
+
     fn f3(&self, n: usize) -> f64 {
         self.tmp[n]
             + self.f
                 * (self.base.best[n] - self.tmp[n] + self.base.pool[[self.v[0], n]]
                     - self.base.pool[[self.v[1], n]])
     }
+
     fn f4(&self, n: usize) -> f64 {
         self.base.best[n] + self.f45(n)
     }
+
     fn f5(&self, n: usize) -> f64 {
         self.base.pool[[self.v[4], n]] + self.f45(n)
     }
+
     fn f45(&self, n: usize) -> f64 {
         (self.base.pool[[self.v[0], n]] + self.base.pool[[self.v[1], n]]
             - self.base.pool[[self.v[2], n]]
             - self.base.pool[[self.v[3], n]])
             * self.f
     }
+
     fn s1(&mut self, mut n: usize) {
         for _ in 0..self.base.dim {
             self.tmp[n] = (self.formula)(self, n);
@@ -114,6 +125,7 @@ impl<F: ObjFunc> DE<F> {
             }
         }
     }
+
     fn s2(&mut self, mut n: usize) {
         for lv in 0..self.base.dim {
             if !maybe!(self.cr) || lv == self.base.dim - 1 {
@@ -122,19 +134,25 @@ impl<F: ObjFunc> DE<F> {
             n = (n + 1) % self.base.dim;
         }
     }
+
     fn recombination(&mut self, i: usize) {
         self.tmp.assign(&self.base.pool.slice(s![i, ..]));
         (self.setter)(self, rand!(0, self.base.dim));
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for DE<F> {
+impl<F> Algorithm<F> for DE<F>
+where
+    F: ObjFunc,
+{
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
             self.vector(i);

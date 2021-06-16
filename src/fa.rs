@@ -36,7 +36,10 @@ pub struct FA<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> FA<F> {
+impl<F> FA<F>
+where
+    F: ObjFunc,
+{
     pub fn new(func: F, settings: FASetting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
@@ -47,6 +50,7 @@ impl<F: ObjFunc> FA<F> {
             base,
         }
     }
+
     fn move_firefly(&mut self, me: usize, she: usize) {
         let r = distance(
             self.base.pool.slice(s![me, ..]),
@@ -63,6 +67,7 @@ impl<F: ObjFunc> FA<F> {
             );
         }
     }
+
     fn move_fireflies(&mut self) {
         for i in 0..self.base.pop_num {
             let mut moved = false;
@@ -87,7 +92,10 @@ impl<F: ObjFunc> FA<F> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for FA<F> {
+impl<F> Algorithm<F> for FA<F>
+where
+    F: ObjFunc,
+{
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }

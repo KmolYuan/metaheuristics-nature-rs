@@ -22,7 +22,10 @@ pub struct PSO<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> PSO<F> {
+impl<F> PSO<F>
+where
+    F: ObjFunc,
+{
     pub fn new(func: F, settings: PSOSetting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
@@ -36,17 +39,23 @@ impl<F: ObjFunc> PSO<F> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for PSO<F> {
+impl<F> Algorithm<F> for PSO<F>
+where
+    F: ObjFunc,
+{
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
     fn init(&mut self) {
         self.best_past = self.base.pool.clone();
         self.best_f_past = self.base.fitness.clone();
     }
+
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
             let alpha = rand!(0., self.cognition);

@@ -26,7 +26,10 @@ pub struct RGA<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> RGA<F> {
+impl<F> RGA<F>
+where
+    F: ObjFunc,
+{
     pub fn new(func: F, settings: RGASetting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
@@ -41,6 +44,7 @@ impl<F: ObjFunc> RGA<F> {
             base,
         }
     }
+
     fn crossover(&mut self) {
         for i in (0..(self.base.pop_num - 1)).step_by(2) {
             if !maybe!(self.cross) {
@@ -89,6 +93,7 @@ impl<F: ObjFunc> RGA<F> {
             );
         }
     }
+
     fn get_delta(&self, y: f64) -> f64 {
         let r = match self.base.task {
             Task::MaxGen(v) if v > 0 => self.base.gen as f64 / v as f64,
@@ -96,6 +101,7 @@ impl<F: ObjFunc> RGA<F> {
         };
         y * rand!() * (1. - r).powf(self.delta)
     }
+
     fn mutate(&mut self) {
         for i in 0..self.base.pop_num {
             if !maybe!(self.mutate) {
@@ -111,6 +117,7 @@ impl<F: ObjFunc> RGA<F> {
         }
         self.find_best();
     }
+
     fn select(&mut self) {
         for i in 0..self.base.pop_num {
             let j = rand!(0, self.base.pop_num);
@@ -137,18 +144,24 @@ impl<F: ObjFunc> RGA<F> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for RGA<F> {
+impl<F> Algorithm<F> for RGA<F>
+where
+    F: ObjFunc,
+{
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
     fn generation(&mut self) {
         self.select();
         self.crossover();
         self.mutate();
     }
+
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
             rand!(self.lb(s), self.ub(s))
