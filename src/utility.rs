@@ -19,9 +19,22 @@ pub enum Task {
 /// The data of generation sampling.
 #[derive(Clone)]
 pub struct Report {
+    /// Generation.
     pub gen: u32,
-    pub fitness: f64,
+    /// Best fitness.
+    pub best_f: f64,
+    /// Time duration.
     pub time: f64,
+}
+
+impl Report {
+    pub fn new(gen: u32, best_f: f64, time_start: Instant) -> Self {
+        Self {
+            gen,
+            best_f,
+            time: (Instant::now() - time_start).as_secs_f64(),
+        }
+    }
 }
 
 setting_builder! {
@@ -119,11 +132,8 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 
     /// Record the performance.
     fn report(&mut self) {
-        self.reports.push(Report {
-            gen: self.gen,
-            fitness: self.best_f,
-            time: (Instant::now() - self.time_start).as_secs_f64(),
-        });
+        self.reports
+            .push(Report::new(self.gen, self.best_f, self.time_start));
     }
 }
 
