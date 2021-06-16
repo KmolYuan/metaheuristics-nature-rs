@@ -20,8 +20,6 @@ pub struct RGA<F: ObjFunc> {
     win: f64,
     delta: f64,
     new_fitness: Array1<f64>,
-    tmp: Array2<f64>,
-    f_tmp: Array1<f64>,
     new_pool: Array2<f64>,
     base: AlgorithmBase<F>,
 }
@@ -38,8 +36,6 @@ where
             win: settings.win,
             delta: settings.delta,
             new_fitness: Array1::zeros(base.pop_num),
-            tmp: Array2::zeros((3, base.dim)),
-            f_tmp: Array1::zeros(3),
             new_pool: Array2::zeros((base.pop_num, base.dim)),
             base,
         }
@@ -50,47 +46,42 @@ where
             if !maybe!(self.cross) {
                 continue;
             }
+            let mut tmp = Array2::zeros((3, self.base.dim));
+            let mut f_tmp = Array1::zeros(3);
             for s in 0..self.base.dim {
-                self.tmp[[0, s]] = 0.5 * self.base.pool[[i, s]] + 0.5 * self.base.pool[[i + 1, s]];
-                self.tmp[[1, s]] = self.check(
+                tmp[[0, s]] = 0.5 * self.base.pool[[i, s]] + 0.5 * self.base.pool[[i + 1, s]];
+                tmp[[1, s]] = self.check(
                     s,
                     1.5 * self.base.pool[[i, s]] - 0.5 * self.base.pool[[i + 1, s]],
                 );
-                self.tmp[[2, s]] = self.check(
+                tmp[[2, s]] = self.check(
                     s,
                     -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]],
                 );
             }
             for j in 0..3 {
-                self.f_tmp[j] = self
-                    .base
-                    .func
-                    .fitness(self.base.gen, self.tmp.slice(s![j, ..]));
+                f_tmp[j] = self.base.func.fitness(self.base.gen, tmp.slice(s![j, ..]));
             }
-            if self.f_tmp[0] > self.f_tmp[1] {
-                self.f_tmp.swap(0, 1);
+            if f_tmp[0] > f_tmp[1] {
+                f_tmp.swap(0, 1);
                 for j in 0..2 {
-                    self.tmp.swap([0, j], [1, j]);
+                    tmp.swap([0, j], [1, j]);
                 }
             }
-            if self.f_tmp[0] > self.f_tmp[2] {
-                self.f_tmp.swap(0, 2);
+            if f_tmp[0] > f_tmp[2] {
+                f_tmp.swap(0, 2);
                 for j in 0..2 {
-                    self.tmp.swap([0, j], [2, j]);
+                    tmp.swap([0, j], [2, j]);
                 }
             }
-            if self.f_tmp[1] > self.f_tmp[2] {
-                self.f_tmp.swap(1, 2);
+            if f_tmp[1] > f_tmp[2] {
+                f_tmp.swap(1, 2);
                 for j in 0..2 {
-                    self.tmp.swap([1, j], [2, j]);
+                    tmp.swap([1, j], [2, j]);
                 }
             }
-            self.assign_from(i, self.f_tmp[0], &self.tmp.slice(s![0, ..]).into_owned());
-            self.assign_from(
-                i + 1,
-                self.f_tmp[1],
-                &self.tmp.slice(s![1, ..]).into_owned(),
-            );
+            self.assign_from(i, f_tmp[0], &tmp.slice(s![0, ..]).into_owned());
+            self.assign_from(i + 1, f_tmp[1], &tmp.slice(s![1, ..]).into_owned());
         }
     }
 
