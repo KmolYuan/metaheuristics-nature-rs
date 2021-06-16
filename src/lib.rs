@@ -16,7 +16,13 @@
 //! # Features
 //!
 //! + `cli`: Enable progress bar for CLI.
-pub use crate::{de::*, fa::*, pso::*, rga::*, tlbo::*, utility::*};
+pub use crate::de::*;
+pub use crate::fa::*;
+pub use crate::obj_func::*;
+pub use crate::pso::*;
+pub use crate::rga::*;
+pub use crate::tlbo::*;
+pub use crate::utility::*;
 
 /// Generate random values between [0., 1.) or by range.
 #[macro_export]
@@ -107,6 +113,7 @@ macro_rules! setting_builder {
 
 mod de;
 mod fa;
+mod obj_func;
 mod pso;
 mod rga;
 #[cfg(test)]

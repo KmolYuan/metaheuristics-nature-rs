@@ -1,4 +1,4 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc};
+use crate::*;
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {

@@ -1,7 +1,4 @@
-use crate::{
-    ObjFunc, Solver, Task, {DESetting, DE}, {FASetting, FA}, {PSOSetting, PSO}, {RGASetting, RGA},
-    {TLBOSetting, TLBO},
-};
+use crate::*;
 use ndarray::{Array1, ArrayView1, AsArray};
 
 struct TestObj(Array1<f64>, Array1<f64>);

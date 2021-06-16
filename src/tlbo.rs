@@ -1,4 +1,4 @@
-use crate::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+use crate::*;
 use ndarray::{s, Array1};
 
 /// Teaching Learning Based Optimization settings.
