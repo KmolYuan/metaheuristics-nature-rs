@@ -36,7 +36,7 @@ fn test<S>(mut a: S)
 where
     S: Solver<TestObj>,
 {
-    let ans = a.run();
+    let ans = a.run(|| {});
     let (x, y) = a.result();
     let history = a.history();
     assert!(history.len() > 0, "{}", history.len());

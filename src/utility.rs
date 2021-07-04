@@ -1,6 +1,4 @@
 use crate::*;
-#[cfg(feature = "cli")]
-use indicatif::ProgressBar;
 use ndarray::{s, Array1, Array2, AsArray};
 use std::time::Instant;
 
@@ -46,45 +44,12 @@ setting_builder! {
     }
 }
 
-#[cfg(feature = "cli")]
-struct PB(Option<ProgressBar>);
-#[cfg(not(feature = "cli"))]
-struct PB;
-
-impl PB {
-    fn new(_len: u32) -> Self {
-        #[cfg(feature = "cli")]
-        if _len > 0 {
-            Self(Some(ProgressBar::new(_len as u64)))
-        } else {
-            Self(None)
-        }
-        #[cfg(not(feature = "cli"))]
-        Self
-    }
-
-    fn inc(&self) {
-        #[cfg(feature = "cli")]
-        if let Some(pb) = &self.0 {
-            pb.inc(1);
-        }
-    }
-
-    fn finish(&self) {
-        #[cfg(feature = "cli")]
-        if let Some(pb) = &self.0 {
-            pb.finish();
-        }
-    }
-}
-
 /// The base class of algorithms.
 /// Please see [`Algorithm`] for more information.
 pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     pub dim: usize,
     pub gen: u32,
-    pb: PB,
     rpt: u32,
     pub task: Task,
     pub best_f: f64,
@@ -104,15 +69,10 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             assert_eq!(lb.len(), ub.len(), "different dimension of the variables!");
             lb.len()
         };
-        let pb_gen = match settings.task {
-            Task::MaxGen(gen) if cfg!(feature = "cli") => gen,
-            _ => 0,
-        };
         Self {
             pop_num: settings.pop_num,
             dim,
             gen: 0,
-            pb: PB::new(pb_gen),
             rpt: settings.rpt,
             task: settings.task,
             best_f: f64::INFINITY,
@@ -261,7 +221,10 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     }
 
     /// Start the algorithm and return the final result.
-    fn run(&mut self) -> F::Result {
+    ///
+    /// Support a callback function, such as progress bar.
+    /// To suppress it, just using a empty lambda `|| {}`.
+    fn run(&mut self, callback: impl Fn()) -> F::Result {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
         self.init_pop();
@@ -281,7 +244,7 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
             let b = self.base_mut();
             match b.task {
                 Task::MaxGen(v) => {
-                    b.pb.inc();
+                    callback();
                     if b.gen >= v {
                         break;
                     }
@@ -305,7 +268,6 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
                 }
             }
         }
-        self.base().pb.finish();
         self.base_mut().report();
         self.base().func.result(&self.base().best)
     }

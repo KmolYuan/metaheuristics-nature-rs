@@ -1,21 +1,37 @@
 //! A collection of nature-inspired metaheuristic algorithms.
-//! ```ignore
-//! use metaheuristics_nature::{Report, RGA, RGASetting, Setting, Solver, Task};
-//!
-//! fn main() {
-//!     let mut a = RGA::new(
-//!         MyObj::new(),
-//!         RGASetting::default().task(Task::MinFit(1e-20)),
-//!     );
-//!     let ans = a.run();  // Run and get the final result
-//!     let (x, y): (Vec<f64>, f64) = a.result();  // Get the optimized XY value of your function
-//!     let reports: Vec<Report> = a.history();  // Get the history reports.
-//! }
 //! ```
-//!
-//! # Features
-//!
-//! + `cli`: Enable progress bar for CLI.
+//! use metaheuristics_nature::{Report, RGA, RGASetting, Setting, Solver, Task, ObjFunc};
+//! # use ndarray::{Array1, AsArray, ArrayView1};
+//! # struct MyFunc(Array1<f64>, Array1<f64>);
+//! # impl MyFunc {
+//! #     fn new() -> Self { Self(Array1::zeros(3), Array1::ones(3) * 50.) }
+//! # }
+//! # impl ObjFunc for MyFunc {
+//! #     type Result = f64;
+//! #     fn fitness<'a, A>(&self, gen: u32, v: A) -> f64
+//! #     where
+//! #         A: AsArray<'a, f64>,
+//! #     {
+//! #         let v = v.into();
+//! #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+//! #     }
+//! #     fn result<'a, A>(&self, v: A) -> Self::Result
+//! #     where
+//! #         A: AsArray<'a, f64>
+//! #     {
+//! #         self.fitness(0, v)
+//! #     }
+//! #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
+//! #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
+//! # }
+//! let mut a = RGA::new(
+//!     MyFunc::new(),
+//!     RGASetting::default().task(Task::MinFit(1e-20)),
+//! );
+//! let ans = a.run(|| {});  // Run without callback, and get the final result
+//! let (x, y): (Array1<f64>, f64) = a.result();  // Get the optimized XY value of your function
+//! let reports: Vec<Report> = a.history();  // Get the history reports
+//! ```
 pub use crate::de::*;
 pub use crate::fa::*;
 pub use crate::obj_func::*;
@@ -54,7 +70,6 @@ macro_rules! maybe {
 ///
 /// setting_builder! {
 ///     /// Real-coded Genetic Algorithm settings.
-///     #[derive(Default)]
 ///     pub struct GASetting {
 ///         @base,
 ///         @pop_num = 500,
@@ -64,9 +79,7 @@ macro_rules! maybe {
 ///         delta: f64 = 5.,
 ///     }
 /// }
-/// fn test() {
-///     let s = GASetting::default().pop_num(300).cross(0.9);
-/// }
+/// let s = GASetting::default().pop_num(300).cross(0.9);
 /// ```
 #[macro_export]
 macro_rules! setting_builder {
