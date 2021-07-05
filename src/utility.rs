@@ -107,16 +107,15 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 ///     tmp: Vec<f64>,
 ///     base: AlgorithmBase<F>,
 /// }
-/// impl<F: ObjFunc> MyAlgorithm<F> {
-///     fn new(func: F, settings: Setting) -> Self {
+/// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
+///     type Setting = Setting;
+///     fn new(func: F, settings: Self::Setting) -> Self {
 ///         let base = AlgorithmBase::new(func, settings);
 ///         Self {
 ///             tmp: vec![],
 ///             base,
 ///         }
 ///     }
-/// }
-/// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
 ///     fn base(&self) -> &AlgorithmBase<F> { &self.base }
 ///     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
 ///     fn generation(&mut self) { unimplemented!() }
@@ -124,6 +123,12 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// ```
 /// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
 pub trait Algorithm<F: ObjFunc> {
+    /// The setting type of the algorithm.
+    type Setting;
+
+    /// Create the task.
+    fn new(func: F, settings: Self::Setting) -> Self;
+
     /// Return a base handle.
     fn base(&self) -> &AlgorithmBase<F>;
 

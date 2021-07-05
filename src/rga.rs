@@ -28,19 +28,6 @@ impl<F> RGA<F>
 where
     F: ObjFunc,
 {
-    pub fn new(func: F, settings: RGASetting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
-        Self {
-            cross: settings.cross,
-            mutate: settings.mutate,
-            win: settings.win,
-            delta: settings.delta,
-            new_fitness: Array1::zeros(base.pop_num),
-            new_pool: Array2::zeros((base.pop_num, base.dim)),
-            base,
-        }
-    }
-
     fn crossover(&mut self) {
         for i in (0..(self.base.pop_num - 1)).step_by(2) {
             if !maybe!(self.cross) {
@@ -139,20 +126,30 @@ impl<F> Algorithm<F> for RGA<F>
 where
     F: ObjFunc,
 {
+    type Setting = RGASetting;
+    fn new(func: F, settings: Self::Setting) -> Self {
+        let base = AlgorithmBase::new(func, settings.base);
+        Self {
+            cross: settings.cross,
+            mutate: settings.mutate,
+            win: settings.win,
+            delta: settings.delta,
+            new_fitness: Array1::zeros(base.pop_num),
+            new_pool: Array2::zeros((base.pop_num, base.dim)),
+            base,
+        }
+    }
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
-
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
-
     fn generation(&mut self) {
         self.select();
         self.crossover();
         self.mutate();
     }
-
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
             rand!(self.lb(s), self.ub(s))

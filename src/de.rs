@@ -43,38 +43,6 @@ impl<F> DE<F>
 where
     F: ObjFunc,
 {
-    pub fn new(func: F, settings: DESetting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
-        let num = match settings.strategy {
-            Strategy::S1 | Strategy::S3 | Strategy::S6 | Strategy::S8 => 2,
-            Strategy::S2 | Strategy::S7 => 3,
-            Strategy::S4 | Strategy::S9 => 4,
-            Strategy::S5 | Strategy::S10 => 5,
-        };
-        Self {
-            f: settings.f,
-            cr: settings.cr,
-            v: Array1::zeros(num),
-            tmp: Array1::zeros(base.dim),
-            formula: match settings.strategy {
-                Strategy::S1 | Strategy::S6 => Self::f1,
-                Strategy::S2 | Strategy::S7 => Self::f2,
-                Strategy::S3 | Strategy::S8 => Self::f3,
-                Strategy::S4 | Strategy::S9 => Self::f4,
-                Strategy::S5 | Strategy::S10 => Self::f5,
-            },
-            setter: match settings.strategy {
-                Strategy::S1 | Strategy::S2 | Strategy::S3 | Strategy::S4 | Strategy::S5 => {
-                    Self::s1
-                }
-                Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
-                    Self::s2
-                }
-            },
-            base,
-        }
-    }
-
     fn vector(&mut self, i: usize) {
         for j in 0..self.v.len() {
             self.v[j] = i;
@@ -145,14 +113,44 @@ impl<F> Algorithm<F> for DE<F>
 where
     F: ObjFunc,
 {
+    type Setting = DESetting;
+    fn new(func: F, settings: Self::Setting) -> Self {
+        let base = AlgorithmBase::new(func, settings.base);
+        let num = match settings.strategy {
+            Strategy::S1 | Strategy::S3 | Strategy::S6 | Strategy::S8 => 2,
+            Strategy::S2 | Strategy::S7 => 3,
+            Strategy::S4 | Strategy::S9 => 4,
+            Strategy::S5 | Strategy::S10 => 5,
+        };
+        Self {
+            f: settings.f,
+            cr: settings.cr,
+            v: Array1::zeros(num),
+            tmp: Array1::zeros(base.dim),
+            formula: match settings.strategy {
+                Strategy::S1 | Strategy::S6 => Self::f1,
+                Strategy::S2 | Strategy::S7 => Self::f2,
+                Strategy::S3 | Strategy::S8 => Self::f3,
+                Strategy::S4 | Strategy::S9 => Self::f4,
+                Strategy::S5 | Strategy::S10 => Self::f5,
+            },
+            setter: match settings.strategy {
+                Strategy::S1 | Strategy::S2 | Strategy::S3 | Strategy::S4 | Strategy::S5 => {
+                    Self::s1
+                }
+                Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
+                    Self::s2
+                }
+            },
+            base,
+        }
+    }
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
-
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
-
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
             self.vector(i);

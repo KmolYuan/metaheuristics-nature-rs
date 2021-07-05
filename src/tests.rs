@@ -32,10 +32,11 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test<S>(mut a: S)
+fn test<S>(obj: TestObj, setting: S::Setting)
 where
     S: Solver<TestObj>,
 {
+    let mut a = S::new(obj, setting);
     let ans = a.run(|| {});
     let (x, y) = a.result();
     let history = a.history();
@@ -49,40 +50,40 @@ where
 
 #[test]
 fn de() {
-    test(DE::new(
+    test::<DE<_>>(
         TestObj::new(),
         DESetting::default().task(Task::MinFit(1e-20)),
-    ));
+    );
 }
 
 #[test]
 fn pso() {
-    test(PSO::new(
+    test::<PSO<_>>(
         TestObj::new(),
         PSOSetting::default().task(Task::MinFit(1e-20)),
-    ));
+    );
 }
 
 #[test]
 fn fa() {
-    test(FA::new(
+    test::<FA<_>>(
         TestObj::new(),
         FASetting::default().task(Task::MinFit(1e-20)),
-    ));
+    );
 }
 
 #[test]
 fn rga() {
-    test(RGA::new(
+    test::<RGA<_>>(
         TestObj::new(),
         RGASetting::default().task(Task::MinFit(1e-20)),
-    ));
+    );
 }
 
 #[test]
 fn tlbo() {
-    test(TLBO::new(
+    test::<TLBO<_>>(
         TestObj::new(),
         TLBOSetting::default().task(Task::MinFit(1e-20)),
-    ));
+    );
 }

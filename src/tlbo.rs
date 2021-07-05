@@ -15,14 +15,6 @@ impl<F> TLBO<F>
 where
     F: ObjFunc,
 {
-    pub fn new(func: F, settings: TLBOSetting) -> Self {
-        let base = AlgorithmBase::new(func, settings);
-        Self {
-            tmp: Array1::zeros(base.dim),
-            base,
-        }
-    }
-
     fn register(&mut self, i: usize) {
         let f_new = self.base.func.fitness(self.base.gen, &self.tmp);
         if f_new < self.base.fitness[i] {
@@ -79,14 +71,20 @@ impl<F> Algorithm<F> for TLBO<F>
 where
     F: ObjFunc,
 {
+    type Setting = TLBOSetting;
+    fn new(func: F, settings: Self::Setting) -> Self {
+        let base = AlgorithmBase::new(func, settings);
+        Self {
+            tmp: Array1::zeros(base.dim),
+            base,
+        }
+    }
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
-
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
-
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
             self.teaching(i);

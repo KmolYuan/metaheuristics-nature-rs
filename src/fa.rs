@@ -40,17 +40,6 @@ impl<F> FA<F>
 where
     F: ObjFunc,
 {
-    pub fn new(func: F, settings: FASetting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
-        Self {
-            alpha: settings.alpha,
-            beta_min: settings.beta_min,
-            gamma: settings.gamma,
-            beta0: settings.beta0,
-            base,
-        }
-    }
-
     fn move_firefly(&mut self, me: usize, she: usize) {
         let r = distance(
             self.base.pool.slice(s![me, ..]),
@@ -96,6 +85,17 @@ impl<F> Algorithm<F> for FA<F>
 where
     F: ObjFunc,
 {
+    type Setting = FASetting;
+    fn new(func: F, settings: Self::Setting) -> Self {
+        let base = AlgorithmBase::new(func, settings.base);
+        Self {
+            alpha: settings.alpha,
+            beta_min: settings.beta_min,
+            gamma: settings.gamma,
+            beta0: settings.beta0,
+            base,
+        }
+    }
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
