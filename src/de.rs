@@ -114,7 +114,8 @@ where
     F: ObjFunc,
 {
     type Setting = DESetting;
-    fn new(func: F, settings: Self::Setting) -> Self {
+
+    fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         let num = match settings.strategy {
             Strategy::S1 | Strategy::S3 | Strategy::S6 | Strategy::S8 => 2,
@@ -145,12 +146,14 @@ where
             base,
         }
     }
+
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
             self.vector(i);

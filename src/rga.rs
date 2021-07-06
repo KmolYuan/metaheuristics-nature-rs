@@ -127,7 +127,8 @@ where
     F: ObjFunc,
 {
     type Setting = RGASetting;
-    fn new(func: F, settings: Self::Setting) -> Self {
+
+    fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
             cross: settings.cross,
@@ -139,6 +140,7 @@ where
             base,
         }
     }
+
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }

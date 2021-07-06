@@ -27,7 +27,8 @@ where
     F: ObjFunc,
 {
     type Setting = PSOSetting;
-    fn new(func: F, settings: Self::Setting) -> Self {
+
+    fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
             cognition: settings.cognition,
@@ -38,6 +39,7 @@ where
             base,
         }
     }
+
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
@@ -48,6 +50,7 @@ where
         self.best_past = self.base.pool.clone();
         self.best_f_past = self.base.fitness.clone();
     }
+
     fn generation(&mut self) {
         for i in 0..self.base.pop_num {
             let alpha = rand!(0., self.cognition);

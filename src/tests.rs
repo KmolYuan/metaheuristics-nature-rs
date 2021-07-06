@@ -3,14 +3,15 @@ use ndarray::{Array1, ArrayView1, AsArray};
 
 struct TestObj(Array1<f64>, Array1<f64>);
 
-impl TestObj {
-    fn new() -> Self {
+impl Default for TestObj {
+    fn default() -> Self {
         Self(Array1::zeros(4), Array1::ones(4) * 50.)
     }
 }
 
 impl ObjFunc for TestObj {
     type Result = f64;
+
     fn fitness<'a, A>(&self, _gen: u32, v: A) -> f64
     where
         A: AsArray<'a, f64>,
@@ -18,12 +19,14 @@ impl ObjFunc for TestObj {
         let v = v.into();
         v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
-    fn result<'a, A>(&self, v: A) -> f64
+
+    fn result<'a, V>(&self, v: V) -> f64
     where
-        A: AsArray<'a, f64>,
+        V: AsArray<'a, f64>,
     {
         self.fitness(0, v)
     }
+
     fn ub(&self) -> ArrayView1<f64> {
         self.1.view()
     }
@@ -36,9 +39,9 @@ fn test<S>(obj: TestObj, setting: S::Setting)
 where
     S: Solver<TestObj>,
 {
-    let mut a = S::new(obj, setting);
-    let ans = a.run(|| {});
-    let (x, y) = a.result();
+    let a = S::solve(obj, setting, || {});
+    let ans = a.result();
+    let (x, y) = a.parameters();
     let history = a.history();
     assert!(history.len() > 0, "{}", history.len());
     assert!(ans.abs() < 1e-20, "{}", ans);
@@ -51,7 +54,7 @@ where
 #[test]
 fn de() {
     test::<DE<_>>(
-        TestObj::new(),
+        TestObj::default(),
         DESetting::default().task(Task::MinFit(1e-20)),
     );
 }
@@ -59,7 +62,7 @@ fn de() {
 #[test]
 fn pso() {
     test::<PSO<_>>(
-        TestObj::new(),
+        TestObj::default(),
         PSOSetting::default().task(Task::MinFit(1e-20)),
     );
 }
@@ -67,7 +70,7 @@ fn pso() {
 #[test]
 fn fa() {
     test::<FA<_>>(
-        TestObj::new(),
+        TestObj::default(),
         FASetting::default().task(Task::MinFit(1e-20)),
     );
 }
@@ -75,7 +78,7 @@ fn fa() {
 #[test]
 fn rga() {
     test::<RGA<_>>(
-        TestObj::new(),
+        TestObj::default(),
         RGASetting::default().task(Task::MinFit(1e-20)),
     );
 }
@@ -83,7 +86,7 @@ fn rga() {
 #[test]
 fn tlbo() {
     test::<TLBO<_>>(
-        TestObj::new(),
+        TestObj::default(),
         TLBOSetting::default().task(Task::MinFit(1e-20)),
     );
 }

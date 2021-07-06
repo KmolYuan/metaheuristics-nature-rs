@@ -86,7 +86,8 @@ where
     F: ObjFunc,
 {
     type Setting = FASetting;
-    fn new(func: F, settings: Self::Setting) -> Self {
+
+    fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         Self {
             alpha: settings.alpha,
@@ -96,6 +97,7 @@ where
             base,
         }
     }
+
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }

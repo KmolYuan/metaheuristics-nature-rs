@@ -109,7 +109,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// }
 /// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
 ///     type Setting = Setting;
-///     fn new(func: F, settings: Self::Setting) -> Self {
+///     fn create(func: F, settings: Self::Setting) -> Self {
 ///         let base = AlgorithmBase::new(func, settings);
 ///         Self {
 ///             tmp: vec![],
@@ -122,12 +122,12 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// }
 /// ```
 /// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
-pub trait Algorithm<F: ObjFunc> {
+pub trait Algorithm<F: ObjFunc>: Sized {
     /// The setting type of the algorithm.
     type Setting;
 
     /// Create the task.
-    fn new(func: F, settings: Self::Setting) -> Self;
+    fn create(func: F, settings: Self::Setting) -> Self;
 
     /// Return a base handle.
     fn base(&self) -> &AlgorithmBase<F>;
@@ -199,7 +199,7 @@ pub trait Algorithm<F: ObjFunc> {
         }
     }
 
-    /// Check the bounds.
+    /// Check the bounds of the index `s` with the value `v`.
     fn check(&self, s: usize, v: f64) -> f64 {
         if v > self.ub(s) {
             self.ub(s)
@@ -209,27 +209,12 @@ pub trait Algorithm<F: ObjFunc> {
             v
         }
     }
-}
 
-/// The public API for [`Algorithm`].
-pub trait Solver<F: ObjFunc>: Algorithm<F> {
-    /// Get the history for plotting.
-    fn history(&self) -> Vec<Report> {
-        self.base().reports.clone()
-    }
-
-    /// Return the x and y of function.
-    /// The algorithm must be executed once.
-    fn result(&self) -> (Array1<f64>, f64) {
-        let b = self.base();
-        (b.best.clone(), b.best_f)
-    }
-
-    /// Start the algorithm and return the final result.
+    /// Start the algorithm process.
     ///
     /// Support a callback function, such as progress bar.
     /// To suppress it, just using a empty lambda `|| {}`.
-    fn run(&mut self, callback: impl Fn()) -> F::Result {
+    fn run(mut self, callback: impl Fn()) -> Self {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
         self.init_pop();
@@ -274,7 +259,33 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
             }
         }
         self.base_mut().report();
-        self.base().func.result(&self.base().best)
+        self
+    }
+}
+
+/// The public API for [`Algorithm`].
+pub trait Solver<F: ObjFunc>: Algorithm<F> {
+    /// Create the task and calling [`Algorithm::run`].
+    fn solve(func: F, settings: Self::Setting, callback: impl Fn()) -> Self {
+        Self::create(func, settings).run(callback)
+    }
+
+    /// Get the history for plotting.
+    fn history(&self) -> Vec<Report> {
+        self.base().reports.clone()
+    }
+
+    /// Return the x and y of function.
+    /// The algorithm must be executed once.
+    fn parameters(&self) -> (Array1<f64>, f64) {
+        let b = self.base();
+        (b.best.clone(), b.best_f)
+    }
+
+    /// Get the result of the objective function.
+    fn result(&self) -> F::Result {
+        let b = self.base();
+        b.func.result(&b.best)
     }
 }
 

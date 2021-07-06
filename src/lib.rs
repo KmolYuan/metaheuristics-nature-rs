@@ -1,6 +1,6 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
-//! use metaheuristics_nature::{Report, RGA, RGASetting, Setting, Solver, Task, ObjFunc};
+//! use metaheuristics_nature::{Report, RGA, RGASetting, Solver, Task, ObjFunc};
 //! # use ndarray::{Array1, AsArray, ArrayView1};
 //! # struct MyFunc(Array1<f64>, Array1<f64>);
 //! # impl MyFunc {
@@ -15,23 +15,39 @@
 //! #         let v = v.into();
 //! #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 //! #     }
-//! #     fn result<'a, A>(&self, v: A) -> Self::Result
+//! #     fn result<'a, V>(&self, v: V) -> Self::Result
 //! #     where
-//! #         A: AsArray<'a, f64>
+//! #         V: AsArray<'a, f64>
 //! #     {
 //! #         self.fitness(0, v)
 //! #     }
 //! #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
 //! #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
 //! # }
-//! let mut a = RGA::new(
+//! let a = RGA::solve(
 //!     MyFunc::new(),
 //!     RGASetting::default().task(Task::MinFit(1e-20)),
+//!     || {} // Run without callback
 //! );
-//! let ans = a.run(|| {});  // Run without callback, and get the final result
-//! let (x, y): (Array1<f64>, f64) = a.result();  // Get the optimized XY value of your function
-//! let reports: Vec<Report> = a.history();  // Get the history reports
+//! let ans: f64 = a.result(); // Get the result from objective function
+//! let (x, y): (Array1<f64>, f64) = a.parameters(); // Get the optimized XY value of your function
+//! let history: Vec<Report> = a.history(); // Get the history reports
 //! ```
+//!
+//! There are two traits [`Algorithm`] and [`Solver`].
+//! The previous is used to design the optimization method,
+//! and the latter is a simple interface for obtaining the solution, or analyzing the result.
+//!
+//! `Solver` will automatically implement for the type which implements `Algorithm`.
+//!
+//! # Objective Function
+//!
+//! You can define your question as a objective function through implementing [`ObjFunc`].
+//!
+//! First of all, the array types are [`ndarray::ArrayBase`].
+//! And then you should define the upper bound, lower bound, and objective function [`ObjFunc::fitness`] by yourself.
+//!
+//! The final answer is [`ObjFunc::result`], which is generated from the design parameters.
 pub use crate::de::*;
 pub use crate::fa::*;
 pub use crate::obj_func::*;

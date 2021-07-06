@@ -72,13 +72,15 @@ where
     F: ObjFunc,
 {
     type Setting = TLBOSetting;
-    fn new(func: F, settings: Self::Setting) -> Self {
+
+    fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings);
         Self {
             tmp: Array1::zeros(base.dim),
             base,
         }
     }
+
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
