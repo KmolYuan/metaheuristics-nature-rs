@@ -91,9 +91,10 @@ impl<F: ObjFunc> AlgorithmBase<F> {
     }
 
     /// Record the performance.
-    fn report(&mut self) {
-        self.reports
-            .push(Report::new(self.gen, self.best_f, self.time_start));
+    fn report<C>(&mut self, callback: &impl Callback<C>) {
+        let report = Report::new(self.gen, self.best_f, self.time_start);
+        callback.call(&report);
+        self.reports.push(report);
     }
 }
 
@@ -213,13 +214,13 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Start the algorithm process.
     ///
     /// Support a callback function, such as progress bar.
-    /// To suppress it, just using a empty lambda `|| {}`.
-    fn run(mut self, callback: impl Fn()) -> Self {
+    /// To suppress it, just using a empty type `()`.
+    fn run<C>(mut self, callback: impl Callback<C>) -> Self {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
         self.init_pop();
         self.init();
-        self.base_mut().report();
+        self.base_mut().report(&callback);
         let mut last_diff = 0.;
         loop {
             let best_f = {
@@ -229,12 +230,11 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             };
             self.generation();
             if self.base().gen % self.base().rpt == 0 {
-                self.base_mut().report();
+                self.base_mut().report(&callback);
             }
             let b = self.base_mut();
             match b.task {
                 Task::MaxGen(v) => {
-                    callback();
                     if b.gen >= v {
                         break;
                     }
@@ -258,15 +258,17 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                 }
             }
         }
-        self.base_mut().report();
+        self.base_mut().report(&callback);
         self
     }
 }
 
-/// The public API for [`Algorithm`].
+/// A public API for [`Algorithm`].
+///
+/// Users can simply obtain their solution and see the result.
 pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Create the task and calling [`Algorithm::run`].
-    fn solve(func: F, settings: Self::Setting, callback: impl Fn()) -> Self {
+    fn solve<C>(func: F, settings: Self::Setting, callback: impl Callback<C>) -> Self {
         Self::create(func, settings).run(callback)
     }
 
@@ -294,4 +296,32 @@ where
     F: ObjFunc,
     T: Algorithm<F>,
 {
+}
+
+/// A trait for fitting different callback functions.
+///
+/// + Empty callback `()`.
+/// + None argument callback `Fn()`.
+/// + One argument callback `Fn(&Report)`.
+pub trait Callback<C> {
+    fn call(&self, report: &Report);
+}
+
+impl Callback<()> for () {
+    #[inline(always)]
+    fn call(&self, _report: &Report) {}
+}
+
+impl<T: Fn()> Callback<()> for T {
+    #[inline(always)]
+    fn call(&self, _report: &Report) {
+        self();
+    }
+}
+
+impl<T: Fn(&Report)> Callback<Report> for T {
+    #[inline(always)]
+    fn call(&self, report: &Report) {
+        self(report);
+    }
 }

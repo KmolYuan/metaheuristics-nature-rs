@@ -39,7 +39,7 @@ fn test<S>(obj: TestObj, setting: S::Setting)
 where
     S: Solver<TestObj>,
 {
-    let a = S::solve(obj, setting, || {});
+    let a = S::solve(obj, setting, ());
     let ans = a.result();
     let (x, y) = a.parameters();
     let history = a.history();
