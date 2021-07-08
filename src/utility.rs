@@ -2,18 +2,6 @@ use crate::*;
 use ndarray::{s, Array1, Array2, AsArray};
 use std::time::Instant;
 
-/// The terminal condition of the algorithm setting.
-pub enum Task {
-    /// Max generation.
-    MaxGen(u32),
-    /// Minimum fitness.
-    MinFit(f64),
-    /// Max time in second.
-    MaxTime(f32),
-    /// Minimum delta value.
-    SlowDown(f64),
-}
-
 /// The data of generation sampling.
 #[derive(Clone)]
 pub struct Report {
@@ -36,15 +24,27 @@ impl Default for Report {
 }
 
 impl Report {
-    /// Update time by a starting point.
-    pub fn update_time(&mut self, time: Instant) {
-        self.time = (Instant::now() - time).as_secs_f64();
-    }
-
     /// Go into next generation.
     pub fn next_gen(&mut self) {
         self.gen += 1;
     }
+
+    /// Update time by a starting point.
+    pub fn update_time(&mut self, time: Instant) {
+        self.time = (Instant::now() - time).as_secs_f64();
+    }
+}
+
+/// The terminal condition of the algorithm setting.
+pub enum Task {
+    /// Max generation.
+    MaxGen(u32),
+    /// Minimum fitness.
+    MinFit(f64),
+    /// Max time in second.
+    MaxTime(f32),
+    /// Minimum delta value.
+    SlowDown(f64),
 }
 
 setting_builder! {
