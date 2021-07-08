@@ -70,7 +70,7 @@ where
                     .assign(&self.base.pool.slice(s![i, ..]));
                 self.best_f_past[i] = self.base.fitness[i].clone();
             }
-            if self.base.fitness[i] < self.base.best_f {
+            if self.base.fitness[i] < self.base.report.best_f {
                 self.set_best(i);
             }
         }

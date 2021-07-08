@@ -21,7 +21,7 @@ where
             self.base.pool.slice_mut(s![i, ..]).assign(&self.tmp);
             self.base.fitness[i] = f_new;
         }
-        if f_new < self.base.best_f {
+        if f_new < self.base.report.best_f {
             self.set_best(i);
         }
     }

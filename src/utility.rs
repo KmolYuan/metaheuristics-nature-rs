@@ -19,7 +19,7 @@ pub enum Task {
 pub struct Report {
     /// Generation.
     pub gen: u32,
-    /// Best fitness.
+    /// The best fitness.
     pub best_f: f64,
     /// Time duration.
     pub time: f64,
@@ -66,8 +66,6 @@ pub struct AlgorithmBase<F: ObjFunc> {
     rpt: u32,
     /// Termination condition.
     pub task: Task,
-    /// The best fitness.
-    pub best_f: f64,
     /// The best variables.
     pub best: Array1<f64>,
     /// Current fitness of all individuals.
@@ -94,7 +92,6 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             dim,
             rpt: settings.rpt,
             task: settings.task,
-            best_f: f64::INFINITY,
             best: Array1::zeros(dim),
             fitness: Array1::zeros(settings.pop_num),
             pool: Array2::zeros((settings.pop_num, dim)),
@@ -182,7 +179,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Set the index to best.
     fn set_best(&mut self, i: usize) {
         let b = self.base_mut();
-        b.best_f = b.fitness[i];
+        b.report.best_f = b.fitness[i];
         b.best.assign(&b.pool.slice(s![i, ..]));
     }
 
@@ -195,7 +192,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                 best = i;
             }
         }
-        if b.fitness[best] < b.best_f {
+        if b.fitness[best] < b.report.best_f {
             self.set_best(best);
         }
     }
@@ -212,7 +209,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                 best = i;
             }
         }
-        if self.base().fitness[best] < self.base().best_f {
+        if self.base().fitness[best] < self.base().report.best_f {
             self.set_best(best);
         }
     }
@@ -242,10 +239,10 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         let mut last_diff = 0.;
         loop {
             let best_f = {
-                let b = self.base_mut();
-                b.report.next_gen();
-                b.report.update_time(time_start);
-                b.best_f
+                let r = &mut self.base_mut().report;
+                r.next_gen();
+                r.update_time(time_start);
+                r.best_f
             };
             self.generation();
             let b = self.base_mut();
@@ -260,7 +257,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                     }
                 }
                 Task::MinFit(v) => {
-                    if b.best_f <= v {
+                    if b.report.best_f <= v {
                         break;
                     }
                 }
@@ -270,7 +267,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                     }
                 }
                 Task::SlowDown(v) => {
-                    let diff = best_f - b.best_f;
+                    let diff = best_f - b.report.best_f;
                     if last_diff > 0. && diff / last_diff >= v {
                         break;
                     }
@@ -300,7 +297,7 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// The algorithm must be executed once.
     fn parameters(&self) -> (Array1<f64>, f64) {
         let b = self.base();
-        (b.best.clone(), b.best_f)
+        (b.best.clone(), b.report.best_f)
     }
 
     /// Get the result of the objective function.

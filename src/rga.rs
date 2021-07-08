@@ -118,7 +118,7 @@ where
             self.base.pool.assign(&self.new_pool);
             self.assign_from(
                 rand!(0, self.base.pop_num),
-                self.base.best_f,
+                self.base.report.best_f,
                 &self.base.best.clone(),
             );
         }
