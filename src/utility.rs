@@ -157,11 +157,13 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     fn generation(&mut self);
 
     /// Get lower bound with index.
+    #[inline(always)]
     fn lb(&self, i: usize) -> f64 {
         self.base().func.lb()[i]
     }
 
     /// Get upper bound with index.
+    #[inline(always)]
     fn ub(&self, i: usize) -> f64 {
         self.base().func.ub()[i]
     }
