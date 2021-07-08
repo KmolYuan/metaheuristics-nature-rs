@@ -233,7 +233,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Start the algorithm process.
     ///
     /// Support a callback function, such as progress bar.
-    /// To suppress it, just using a empty type `()`.
+    /// To suppress it, just using a unit type `()`.
     fn run<C>(mut self, callback: impl Callback<C>) -> Self {
         let time_start = Instant::now();
         self.init_pop();
