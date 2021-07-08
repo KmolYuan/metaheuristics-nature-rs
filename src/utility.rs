@@ -50,8 +50,11 @@ pub enum Task {
 setting_builder! {
     /// Base settings.
     pub struct Setting {
+        /// Termination condition.
         task: Task = Task::MaxGen(200),
+        /// Population number.
         pop_num: usize = 200,
+        /// The report frequency. (per generation)
         rpt: u32 = 50,
     }
 }

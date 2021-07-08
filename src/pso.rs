@@ -6,8 +6,11 @@ setting_builder! {
     pub struct PSOSetting {
         @base,
         @pop_num = 200,
+        /// Cognition factor.
         cognition: f64 = 2.05,
+        /// Social factor.
         social: f64 = 2.05,
+        /// Moving velocity.
         velocity: f64 = 1.3,
     }
 }

@@ -6,9 +6,13 @@ setting_builder! {
     pub struct RGASetting {
         @base,
         @pop_num = 500,
+        /// Crossing probability.
         cross: f64 = 0.95,
+        /// Mutation probability.
         mutate: f64 = 0.05,
+        /// Winning probability.
         win: f64 = 0.95,
+        /// Delta factor.
         delta: f64 = 5.,
     }
 }

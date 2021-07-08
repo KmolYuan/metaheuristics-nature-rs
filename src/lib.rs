@@ -114,8 +114,11 @@ macro_rules! setting_builder {
         impl $name {
             $(setting_builder! {
                 @$base,
+                /// Termination condition.
                 task: $crate::Task,
+                /// Population number.
                 pop_num: usize,
+                /// The report frequency. (per generation)
                 rpt: u32,
             })?
             $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
@@ -132,8 +135,8 @@ macro_rules! setting_builder {
             }
         }
     };
-    (@$base:ident, $($field:ident: $field_type:ty,)+) => {
-        $(pub fn $field(mut self, $field: $field_type) -> Self {
+    (@$base:ident, $($(#[$field_attr:meta])* $field:ident: $field_type:ty,)+) => {
+        $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
             self.$base = self.$base.$field($field);
             self
         })+

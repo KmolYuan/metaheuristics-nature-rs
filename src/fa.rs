@@ -6,9 +6,13 @@ setting_builder! {
     pub struct FASetting {
         @base,
         @pop_num = 80,
+        /// Alpha factor.
         alpha: f64 = 0.01,
+        /// Minimum beta factor.
         beta_min: f64 = 0.2,
+        /// Gamma factor.
         gamma: f64 = 1.,
+        /// Initial beta factor.
         beta0: f64 = 1.,
     }
 }

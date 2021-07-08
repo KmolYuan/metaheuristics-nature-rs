@@ -22,16 +22,19 @@ setting_builder! {
     pub struct DESetting {
         @base,
         @pop_num = 400,
+        /// Strategy of the formula.
         strategy: Strategy = Strategy::S1,
+        /// F factor.
         f: f64 = 0.6,
-        cr: f64 = 0.9,
+        /// Crossing probability.
+        cross: f64 = 0.9,
     }
 }
 
 /// Differential Evolution type.
 pub struct DE<F: ObjFunc> {
     f: f64,
-    cr: f64,
+    cross: f64,
     v: Array1<usize>,
     tmp: Array1<f64>,
     formula: fn(&Self, usize) -> f64,
@@ -88,7 +91,7 @@ where
         for _ in 0..self.base.dim {
             self.tmp[n] = (self.formula)(self, n);
             n = (n + 1) % self.base.dim;
-            if !maybe!(self.cr) {
+            if !maybe!(self.cross) {
                 break;
             }
         }
@@ -96,7 +99,7 @@ where
 
     fn s2(&mut self, mut n: usize) {
         for lv in 0..self.base.dim {
-            if !maybe!(self.cr) || lv == self.base.dim - 1 {
+            if !maybe!(self.cross) || lv == self.base.dim - 1 {
                 self.tmp[n] = (self.formula)(self, n);
             }
             n = (n + 1) % self.base.dim;
@@ -125,7 +128,7 @@ where
         };
         Self {
             f: settings.f,
-            cr: settings.cr,
+            cross: settings.cross,
             v: Array1::zeros(num),
             tmp: Array1::zeros(base.dim),
             formula: match settings.strategy {
