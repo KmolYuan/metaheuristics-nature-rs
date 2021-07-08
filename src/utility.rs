@@ -3,7 +3,7 @@ use ndarray::{s, Array1, Array2, AsArray};
 use std::time::Instant;
 
 /// The data of generation sampling.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Report {
     /// Generation.
     pub gen: u32,
