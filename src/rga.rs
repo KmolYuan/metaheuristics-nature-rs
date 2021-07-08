@@ -77,7 +77,7 @@ where
 
     fn get_delta(&self, y: f64) -> f64 {
         let r = match self.base.task {
-            Task::MaxGen(v) if v > 0 => self.base.gen as f64 / v as f64,
+            Task::MaxGen(v) if v > 0 => self.base.report.gen as f64 / v as f64,
             _ => 1.,
         };
         y * rand!() * (1. - r).powf(self.delta)

@@ -15,7 +15,7 @@ pub enum Task {
 }
 
 /// The data of generation sampling.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct Report {
     /// Generation.
     pub gen: u32,
@@ -25,13 +25,25 @@ pub struct Report {
     pub time: f64,
 }
 
-impl Report {
-    pub fn new(gen: u32, best_f: f64, time_start: Instant) -> Self {
+impl Default for Report {
+    fn default() -> Self {
         Self {
-            gen,
-            best_f,
-            time: (Instant::now() - time_start).as_secs_f64(),
+            gen: 0,
+            best_f: f64::INFINITY,
+            time: 0.,
         }
+    }
+}
+
+impl Report {
+    /// Update time by a starting point.
+    pub fn update_time(&mut self, time: Instant) {
+        self.time = (Instant::now() - time).as_secs_f64();
+    }
+
+    /// Go into next generation.
+    pub fn next_gen(&mut self) {
+        self.gen += 1;
     }
 }
 
@@ -51,8 +63,6 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pub pop_num: usize,
     /// Dimension, the variable number of the problem.
     pub dim: usize,
-    /// Current generation.
-    pub gen: u32,
     rpt: u32,
     /// Termination condition.
     pub task: Task,
@@ -64,7 +74,6 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pub fitness: Array1<f64>,
     /// Current variables of all individuals.
     pub pool: Array2<f64>,
-    time_start: Instant,
     /// The current information of the algorithm.
     pub report: Report,
     reports: Vec<Report>,
@@ -83,15 +92,13 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         Self {
             pop_num: settings.pop_num,
             dim,
-            gen: 0,
             rpt: settings.rpt,
             task: settings.task,
             best_f: f64::INFINITY,
             best: Array1::zeros(dim),
             fitness: Array1::zeros(settings.pop_num),
             pool: Array2::zeros((settings.pop_num, dim)),
-            time_start: Instant::now(),
-            report: Report::new(0, f64::INFINITY, Instant::now()),
+            report: Report::default(),
             reports: vec![],
             func,
         }
@@ -226,13 +233,9 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Support a callback function, such as progress bar.
     /// To suppress it, just using a empty type `()`.
     fn run<C>(mut self, callback: impl Callback<C>) -> Self {
-        self.base_mut().gen = 0;
-        self.base_mut().time_start = Instant::now();
+        let time_start = Instant::now();
         self.init_pop();
-        {
-            let b = self.base_mut();
-            b.report = Report::new(b.gen, b.best_f, b.time_start);
-        }
+        self.base_mut().report.update_time(time_start);
         self.init();
         callback.call(&self.base().report);
         self.base_mut().report();
@@ -240,19 +243,19 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         loop {
             let best_f = {
                 let b = self.base_mut();
-                b.report = Report::new(b.gen, b.best_f, b.time_start);
-                b.gen += 1;
+                b.report.next_gen();
+                b.report.update_time(time_start);
                 b.best_f
             };
             self.generation();
             let b = self.base_mut();
-            if b.gen % b.rpt == 0 {
+            if b.report.gen % b.rpt == 0 {
                 callback.call(&b.report);
                 b.report();
             }
             match b.task {
                 Task::MaxGen(v) => {
-                    if b.gen >= v {
+                    if b.report.gen >= v {
                         break;
                     }
                 }
@@ -262,7 +265,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                     }
                 }
                 Task::MaxTime(v) => {
-                    if (Instant::now() - b.time_start).as_secs_f32() >= v {
+                    if (Instant::now() - time_start).as_secs_f32() >= v {
                         break;
                     }
                 }
