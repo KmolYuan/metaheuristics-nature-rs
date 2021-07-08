@@ -1,5 +1,7 @@
 # metaheuristics-nature
 
+[![dependency status](https://deps.rs/repo/github/KmolYuan/metaheuristics-nature-rs/status.svg)](https://deps.rs/crate/metaheuristics-nature/)
+
 A collection of nature-inspired metaheuristic algorithms. Provides objective function trait,
 well-known methods, and tool functions let you implement your own searching method.
 
