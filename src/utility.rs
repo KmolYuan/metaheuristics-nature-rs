@@ -128,10 +128,9 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
 ///     type Setting = Setting;
 ///     fn create(func: F, settings: Self::Setting) -> Self {
-///         let base = AlgorithmBase::new(func, settings);
 ///         Self {
 ///             tmp: vec![],
-///             base,
+///             base: AlgorithmBase::new(func, settings),
 ///         }
 ///     }
 ///     fn base(&self) -> &AlgorithmBase<F> { &self.base }
