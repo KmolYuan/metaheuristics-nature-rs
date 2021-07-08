@@ -15,7 +15,7 @@ pub enum Task {
 }
 
 /// The data of generation sampling.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Report {
     /// Generation.
     pub gen: u32,
@@ -47,17 +47,28 @@ setting_builder! {
 /// The base class of algorithms.
 /// Please see [`Algorithm`] for more information.
 pub struct AlgorithmBase<F: ObjFunc> {
+    /// Population number.
     pub pop_num: usize,
+    /// Dimension, the variable number of the problem.
     pub dim: usize,
+    /// Current generation.
     pub gen: u32,
     rpt: u32,
+    /// Termination condition.
     pub task: Task,
+    /// The best fitness.
     pub best_f: f64,
+    /// The best variables.
     pub best: Array1<f64>,
+    /// Current fitness of all individuals.
     pub fitness: Array1<f64>,
+    /// Current variables of all individuals.
     pub pool: Array2<f64>,
     time_start: Instant,
+    /// The current information of the algorithm.
+    pub report: Report,
     reports: Vec<Report>,
+    /// The objective function.
     pub func: F,
 }
 
@@ -80,6 +91,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             fitness: Array1::zeros(settings.pop_num),
             pool: Array2::zeros((settings.pop_num, dim)),
             time_start: Instant::now(),
+            report: Report::new(0, f64::INFINITY, Instant::now()),
             reports: vec![],
             func,
         }
@@ -87,14 +99,12 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.fitness[i] = self.func.fitness(self.gen, self.pool.slice(s![i, ..]));
+        self.fitness[i] = self.func.fitness(self.pool.slice(s![i, ..]), &self.report);
     }
 
     /// Record the performance.
-    fn report<C>(&mut self, callback: &impl Callback<C>) {
-        let report = Report::new(self.gen, self.best_f, self.time_start);
-        callback.call(&report);
-        self.reports.push(report);
+    fn report(&mut self) {
+        self.reports.push(self.report.clone());
     }
 }
 
@@ -219,20 +229,27 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         self.base_mut().gen = 0;
         self.base_mut().time_start = Instant::now();
         self.init_pop();
+        {
+            let b = self.base_mut();
+            b.report = Report::new(b.gen, b.best_f, b.time_start);
+        }
         self.init();
-        self.base_mut().report(&callback);
+        callback.call(&self.base().report);
+        self.base_mut().report();
         let mut last_diff = 0.;
         loop {
             let best_f = {
                 let b = self.base_mut();
+                b.report = Report::new(b.gen, b.best_f, b.time_start);
                 b.gen += 1;
                 b.best_f
             };
             self.generation();
-            if self.base().gen % self.base().rpt == 0 {
-                self.base_mut().report(&callback);
-            }
             let b = self.base_mut();
+            if b.gen % b.rpt == 0 {
+                callback.call(&b.report);
+                b.report();
+            }
             match b.task {
                 Task::MaxGen(v) => {
                     if b.gen >= v {
@@ -258,7 +275,6 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                 }
             }
         }
-        self.base_mut().report(&callback);
         self
     }
 }

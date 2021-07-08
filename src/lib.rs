@@ -8,7 +8,7 @@
 //! # }
 //! # impl ObjFunc for MyFunc {
 //! #     type Result = f64;
-//! #     fn fitness<'a, A>(&self, gen: u32, v: A) -> f64
+//! #     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
 //! #     where
 //! #         A: AsArray<'a, f64>,
 //! #     {
@@ -19,7 +19,7 @@
 //! #     where
 //! #         V: AsArray<'a, f64>
 //! #     {
-//! #         self.fitness(0, v)
+//! #         self.fitness(v, &Default::default())
 //! #     }
 //! #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
 //! #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }

@@ -16,7 +16,7 @@ where
     F: ObjFunc,
 {
     fn register(&mut self, i: usize) {
-        let f_new = self.base.func.fitness(self.base.gen, &self.tmp);
+        let f_new = self.base.func.fitness(&self.tmp, &self.base.report);
         if f_new < self.base.fitness[i] {
             self.base.pool.slice_mut(s![i, ..]).assign(&self.tmp);
             self.base.fitness[i] = f_new;

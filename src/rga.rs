@@ -47,7 +47,10 @@ where
                 );
             }
             for j in 0..3 {
-                f_tmp[j] = self.base.func.fitness(self.base.gen, tmp.slice(s![j, ..]));
+                f_tmp[j] = self
+                    .base
+                    .func
+                    .fitness(tmp.slice(s![j, ..]), &self.base.report);
             }
             if f_tmp[0] > f_tmp[1] {
                 f_tmp.swap(0, 1);

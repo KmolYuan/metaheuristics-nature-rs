@@ -12,7 +12,7 @@ impl Default for TestObj {
 impl ObjFunc for TestObj {
     type Result = f64;
 
-    fn fitness<'a, A>(&self, _gen: u32, v: A) -> f64
+    fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
     where
         A: AsArray<'a, f64>,
     {
@@ -24,7 +24,7 @@ impl ObjFunc for TestObj {
     where
         V: AsArray<'a, f64>,
     {
-        self.fitness(0, v)
+        self.fitness(v, &Default::default())
     }
 
     fn ub(&self) -> ArrayView1<f64> {

@@ -1,10 +1,11 @@
+use crate::Report;
 use ndarray::{ArrayView1, AsArray};
 
 /// The base of the objective function.
 ///
 /// For example:
 /// ```
-/// use metaheuristics_nature::ObjFunc;
+/// use metaheuristics_nature::{ObjFunc, Report};
 /// use ndarray::{AsArray, ArrayView1, Array1};
 ///
 /// struct MyFunc(Array1<f64>, Array1<f64>);
@@ -16,7 +17,7 @@ use ndarray::{ArrayView1, AsArray};
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
 ///
-///     fn fitness<'a, A>(&self, _gen: u32, v: A) -> f64
+///     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
 ///     where
 ///         A: AsArray<'a, f64>,
 ///     {
@@ -28,7 +29,7 @@ use ndarray::{ArrayView1, AsArray};
 ///     where
 ///         V: AsArray<'a, f64>
 ///     {
-///         self.fitness(0, v)
+///         self.fitness(v, &Default::default())
 ///     }
 ///
 ///     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
@@ -71,7 +72,7 @@ pub trait ObjFunc {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness<'a, A>(&self, gen: u32, v: A) -> f64
+    fn fitness<'a, A>(&self, v: A, report: &Report) -> f64
     where
         A: AsArray<'a, f64>;
 

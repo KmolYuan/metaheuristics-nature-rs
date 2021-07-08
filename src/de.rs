@@ -163,7 +163,7 @@ where
                     continue 'a;
                 }
             }
-            let tmp_f = self.base.func.fitness(self.base.gen, &self.tmp);
+            let tmp_f = self.base.func.fitness(&self.tmp, &self.base.report);
             if tmp_f < self.base.fitness[i] {
                 self.assign_from(i, tmp_f, &self.tmp.clone());
             }
