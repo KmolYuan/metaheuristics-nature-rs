@@ -3,18 +3,45 @@ use crate::*;
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
-/// Each strategy has different formula on recombination.
+/// Each strategy has different formulas on the recombination.
+///
+/// # Variable formula
+///
+/// This formula decide how to generate new variable *n*.
+/// Where *vi* is the random indicator on the individuals,
+/// they are different from each other.
+///
+/// + *f1*: best{n} + F * (v0{n} - v1{n})
+/// + *f2*: v0{n} + F * (v1{n} - v2{n})
+/// + *f3*: self{n} + F * (best{n} - self{n} + v0{n} - v1{n})
+/// + *f4*: best{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
+/// + *f5*: v4{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
+///
+/// # Crossing formula
+///
+/// + *c1*: Continue crossing with the variables order until failure.
+/// + *c2*: Each variable has independent probability.
 #[derive(Clone)]
 pub enum Strategy {
+    /// *f1* + *c1*
     S1,
+    /// *f2* + *c1*
     S2,
+    /// *f3* + *c1*
     S3,
+    /// *f4* + *c1*
     S4,
+    /// *f5* + *c1*
     S5,
+    /// *f1* + *c2*
     S6,
+    /// *f2* + *c2*
     S7,
+    /// *f3* + *c2*
     S8,
+    /// *f4* + *c2*
     S9,
+    /// *f5* + *c2*
     S10,
 }
 
@@ -63,7 +90,7 @@ where
 
     fn f2(&self, n: usize) -> f64 {
         self.base.pool[[self.v[0], n]]
-            + self.f * (self.base.pool[[self.v[1], n]] - self.base.pool[[self.v[3], n]])
+            + self.f * (self.base.pool[[self.v[1], n]] - self.base.pool[[self.v[2], n]])
     }
 
     fn f3(&self, n: usize) -> f64 {
@@ -88,7 +115,7 @@ where
             * self.f
     }
 
-    fn s1(&mut self, mut n: usize) {
+    fn c1(&mut self, mut n: usize) {
         for _ in 0..self.base.dim {
             self.tmp[n] = (self.formula)(self, n);
             n = (n + 1) % self.base.dim;
@@ -98,7 +125,7 @@ where
         }
     }
 
-    fn s2(&mut self, mut n: usize) {
+    fn c2(&mut self, mut n: usize) {
         for lv in 0..self.base.dim {
             if !maybe!(self.cross) || lv == self.base.dim - 1 {
                 self.tmp[n] = (self.formula)(self, n);
@@ -140,8 +167,8 @@ where
                 S5 | S10 => Self::f5,
             },
             setter: match settings.strategy {
-                S1 | S2 | S3 | S4 | S5 => Self::s1,
-                S6 | S7 | S8 | S9 | S10 => Self::s2,
+                S1 | S2 | S3 | S4 | S5 => Self::c1,
+                S6 | S7 | S8 | S9 | S10 => Self::c2,
             },
             base,
         }
