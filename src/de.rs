@@ -1,3 +1,4 @@
+use self::Strategy::*;
 use crate::*;
 use ndarray::{s, Array1};
 
@@ -23,7 +24,7 @@ setting_builder! {
         @base,
         @pop_num = 400,
         /// Strategy of the formula.
-        strategy: Strategy = Strategy::S1,
+        strategy: Strategy = S1,
         /// F factor.
         f: f64 = 0.6,
         /// Crossing probability.
@@ -121,10 +122,10 @@ where
     fn create(func: F, settings: Self::Setting) -> Self {
         let base = AlgorithmBase::new(func, settings.base);
         let num = match settings.strategy {
-            Strategy::S1 | Strategy::S3 | Strategy::S6 | Strategy::S8 => 2,
-            Strategy::S2 | Strategy::S7 => 3,
-            Strategy::S4 | Strategy::S9 => 4,
-            Strategy::S5 | Strategy::S10 => 5,
+            S1 | S3 | S6 | S8 => 2,
+            S2 | S7 => 3,
+            S4 | S9 => 4,
+            S5 | S10 => 5,
         };
         Self {
             f: settings.f,
@@ -132,19 +133,15 @@ where
             v: Array1::zeros(num),
             tmp: Array1::zeros(base.dim),
             formula: match settings.strategy {
-                Strategy::S1 | Strategy::S6 => Self::f1,
-                Strategy::S2 | Strategy::S7 => Self::f2,
-                Strategy::S3 | Strategy::S8 => Self::f3,
-                Strategy::S4 | Strategy::S9 => Self::f4,
-                Strategy::S5 | Strategy::S10 => Self::f5,
+                S1 | S6 => Self::f1,
+                S2 | S7 => Self::f2,
+                S3 | S8 => Self::f3,
+                S4 | S9 => Self::f4,
+                S5 | S10 => Self::f5,
             },
             setter: match settings.strategy {
-                Strategy::S1 | Strategy::S2 | Strategy::S3 | Strategy::S4 | Strategy::S5 => {
-                    Self::s1
-                }
-                Strategy::S6 | Strategy::S7 | Strategy::S8 | Strategy::S9 | Strategy::S10 => {
-                    Self::s2
-                }
+                S1 | S2 | S3 | S4 | S5 => Self::s1,
+                S6 | S7 | S8 | S9 | S10 => Self::s2,
             },
             base,
         }
