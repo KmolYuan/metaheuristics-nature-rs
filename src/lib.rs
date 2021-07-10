@@ -48,6 +48,7 @@
 //! And then you should define the upper bound, lower bound, and objective function [`ObjFunc::fitness`] by yourself.
 //!
 //! The final answer is [`ObjFunc::result`], which is generated from the design parameters.
+pub use crate::callback::*;
 pub use crate::de::*;
 pub use crate::fa::*;
 pub use crate::obj_func::*;
@@ -143,6 +144,7 @@ macro_rules! setting_builder {
     }
 }
 
+mod callback;
 mod de;
 mod fa;
 mod obj_func;

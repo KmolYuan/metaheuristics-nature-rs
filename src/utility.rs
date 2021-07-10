@@ -238,7 +238,9 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         self.init_pop();
         self.base_mut().report.update_time(time_start);
         self.init();
-        callback.call(&self.base().report);
+        if callback.call(&self.base().report) {
+            return self;
+        }
         self.base_mut().report();
         let mut last_diff = 0.;
         loop {
@@ -251,7 +253,9 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             self.generation();
             let b = self.base_mut();
             if b.report.gen % b.rpt == 0 {
-                callback.call(&b.report);
+                if callback.call(&b.report) {
+                    break;
+                }
                 b.report();
             }
             match b.task {
@@ -316,32 +320,4 @@ where
     F: ObjFunc,
     T: Algorithm<F>,
 {
-}
-
-/// A trait for fitting different callback functions.
-///
-/// + Empty callback `()`.
-/// + None argument callback `Fn()`.
-/// + One argument callback `Fn(&Report)`.
-pub trait Callback<C> {
-    fn call(&self, report: &Report);
-}
-
-impl Callback<()> for () {
-    #[inline(always)]
-    fn call(&self, _report: &Report) {}
-}
-
-impl<T: Fn()> Callback<()> for T {
-    #[inline(always)]
-    fn call(&self, _report: &Report) {
-        self();
-    }
-}
-
-impl<T: Fn(&Report)> Callback<Report> for T {
-    #[inline(always)]
-    fn call(&self, report: &Report) {
-        self(report);
-    }
 }
