@@ -1,4 +1,4 @@
-use crate::*;
+use crate::Report;
 
 /// A trait for fitting different callback functions.
 ///
