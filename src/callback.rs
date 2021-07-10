@@ -2,9 +2,21 @@ use crate::*;
 
 /// A trait for fitting different callback functions.
 ///
+/// The function that returns boolean "true" can interrupt the algorithm manually.
+///
 /// + Empty callback `()`.
 /// + None argument callback `Fn()`.
 /// + One argument callback `Fn(&Report)`.
+/// + None argument callback `Fn() -> bool`.
+/// + One argument callback `Fn(&Report) -> bool`.
+///
+/// When using this trait, please use a generic parameter to keep the variability of
+/// callback signature. For example:
+///
+/// ```
+/// use metaheuristics_nature::Callback;
+/// fn test<C>(_callback: impl Callback<C>) {}
+/// ```
 pub trait Callback<C> {
     #[must_use]
     fn call(&self, report: &Report) -> bool;
