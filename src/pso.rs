@@ -43,12 +43,17 @@ where
         }
     }
 
+    #[inline(always)]
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
+    #[inline(always)]
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
+    #[inline(always)]
     fn init(&mut self) {
         self.best_past = self.base.pool.clone();
         self.best_f_past = self.base.fitness.clone();

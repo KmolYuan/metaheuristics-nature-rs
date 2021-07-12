@@ -148,17 +148,24 @@ where
         }
     }
 
+    #[inline(always)]
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
+    #[inline(always)]
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
+    #[inline(always)]
     fn generation(&mut self) {
         self.select();
         self.crossover();
         self.mutate();
     }
+
+    #[inline(always)]
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
             rand!(self.lb(s), self.ub(s))

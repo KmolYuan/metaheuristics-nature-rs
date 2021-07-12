@@ -102,12 +102,17 @@ where
         }
     }
 
+    #[inline(always)]
     fn base(&self) -> &AlgorithmBase<F> {
         &self.base
     }
+
+    #[inline(always)]
     fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
         &mut self.base
     }
+
+    #[inline(always)]
     fn generation(&mut self) {
         self.move_fireflies();
         self.find_best();
