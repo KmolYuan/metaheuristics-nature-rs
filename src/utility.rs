@@ -1,6 +1,5 @@
 use crate::*;
 use ndarray::{s, Array1, Array2, AsArray};
-use std::thread::spawn;
 use std::{sync::Arc, time::Instant};
 
 /// The data of generation sampling.
@@ -214,35 +213,36 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Initialize population.
     fn init_pop(&mut self) {
         let b = self.base_mut();
+        #[cfg(feature = "parallel")]
         let mut tasks = vec![];
         let mut best = 0;
         for i in 0..b.pop_num {
             for s in 0..b.dim {
                 b.pool[[i, s]] = rand!(b.lb(s), b.ub(s));
             }
-            if cfg!(feature = "parallel") {
+            #[cfg(feature = "parallel")]
+            {
                 let obj = b.func.clone();
                 let r = b.report.clone();
                 let v = b.pool.slice(s![i, ..]).to_owned();
-                tasks.push(spawn(move || obj.fitness(&v, &r)));
-            } else {
+                tasks.push(std::thread::spawn(move || obj.fitness(&v, &r)));
+            }
+            #[cfg(not(feature = "parallel"))]
+            {
                 b.fitness(i);
                 if b.fitness[i] < b.fitness[best] {
                     best = i;
                 }
             }
         }
-        if cfg!(feature = "parallel") {
-            for (i, h) in tasks.into_iter().enumerate() {
-                b.fitness[i] = h.join().unwrap();
-                if b.fitness[i] < b.fitness[best] {
-                    best = i;
-                }
+        #[cfg(feature = "parallel")]
+        for (i, h) in tasks.into_iter().enumerate() {
+            b.fitness[i] = h.join().unwrap();
+            if b.fitness[i] < b.fitness[best] {
+                best = i;
             }
         }
-        if b.fitness[best] < b.report.best_f {
-            b.set_best(best);
-        }
+        b.set_best(best);
     }
 
     /// Check the bounds of the index `s` with the value `v`.
