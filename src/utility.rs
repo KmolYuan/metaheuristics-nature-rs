@@ -257,12 +257,12 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     }
 
     #[doc(hidden)]
-    fn run<C>(mut self, callback: impl Callback<C>) -> Self {
+    fn run<C>(mut self, mut callback: impl Callback<C>) -> Self {
         let time_start = Instant::now();
         self.init_pop();
         self.base_mut().report.update_time(time_start);
         self.init();
-        if callback.call(&self.base().report) {
+        if callback.call(self.base().report.clone()) {
             return self;
         }
         self.base_mut().report();
@@ -277,7 +277,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             self.generation();
             let b = self.base_mut();
             if b.report.gen % b.rpt == 0 {
-                if callback.call(&b.report) {
+                if callback.call(b.report.clone()) {
                     break;
                 }
                 b.report();

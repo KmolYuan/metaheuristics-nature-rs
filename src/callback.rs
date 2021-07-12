@@ -5,10 +5,10 @@ use crate::Report;
 /// The function that returns boolean "true" can interrupt the algorithm manually.
 ///
 /// + Empty callback `()`.
-/// + None argument callback `Fn()`.
-/// + One argument callback `Fn(&Report)`.
-/// + None argument callback `Fn() -> bool`.
-/// + One argument callback `Fn(&Report) -> bool`.
+/// + None argument callback `FnMut()`.
+/// + One argument callback `FnMut(&Report)`.
+/// + None argument callback `FnMut() -> bool`.
+/// + One argument callback `FnMut(&Report) -> bool`.
 ///
 /// When using this trait, please use a generic parameter to keep the variability of
 /// callback signature. For example:
@@ -19,42 +19,42 @@ use crate::Report;
 /// ```
 pub trait Callback<C> {
     #[must_use]
-    fn call(&self, report: &Report) -> bool;
+    fn call(&mut self, report: Report) -> bool;
 }
 
 impl Callback<()> for () {
     #[inline(always)]
-    fn call(&self, _: &Report) -> bool {
+    fn call(&mut self, _: Report) -> bool {
         false
     }
 }
 
-impl<T: Fn()> Callback<()> for T {
+impl<T: FnMut()> Callback<()> for T {
     #[inline(always)]
-    fn call(&self, _: &Report) -> bool {
+    fn call(&mut self, _: Report) -> bool {
         self();
         false
     }
 }
 
-impl<T: Fn(&Report)> Callback<Report> for T {
+impl<T: FnMut(Report)> Callback<Report> for T {
     #[inline(always)]
-    fn call(&self, report: &Report) -> bool {
+    fn call(&mut self, report: Report) -> bool {
         self(report);
         false
     }
 }
 
-impl<T: Fn() -> bool> Callback<bool> for T {
+impl<T: FnMut() -> bool> Callback<bool> for T {
     #[inline(always)]
-    fn call(&self, _: &Report) -> bool {
+    fn call(&mut self, _: Report) -> bool {
         self()
     }
 }
 
-impl<T: Fn(&Report) -> bool> Callback<(Report, bool)> for T {
+impl<T: FnMut(Report) -> bool> Callback<(Report, bool)> for T {
     #[inline(always)]
-    fn call(&self, report: &Report) -> bool {
+    fn call(&mut self, report: Report) -> bool {
         self(report)
     }
 }
