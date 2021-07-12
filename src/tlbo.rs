@@ -22,7 +22,7 @@ where
             self.base.fitness[i] = f_new;
         }
         if f_new < self.base.report.best_f {
-            self.set_best(i);
+            self.base.set_best(i);
         }
     }
 

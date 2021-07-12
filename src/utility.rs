@@ -104,9 +104,25 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         }
     }
 
+    #[inline(always)]
+    pub fn lb(&self, i: usize) -> f64 {
+        self.func.lb()[i]
+    }
+
+    #[inline(always)]
+    pub fn ub(&self, i: usize) -> f64 {
+        self.func.ub()[i]
+    }
+
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
         self.fitness[i] = self.func.fitness(self.pool.slice(s![i, ..]), &self.report);
+    }
+
+    /// Set the index to best.
+    pub fn set_best(&mut self, i: usize) {
+        self.report.best_f = self.fitness[i];
+        self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
     /// Record the performance.
@@ -161,13 +177,13 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Get lower bound with index.
     #[inline(always)]
     fn lb(&self, i: usize) -> f64 {
-        self.base().func.lb()[i]
+        self.base().lb(i)
     }
 
     /// Get upper bound with index.
     #[inline(always)]
     fn ub(&self, i: usize) -> f64 {
-        self.base().func.ub()[i]
+        self.base().ub(i)
     }
 
     /// Assign from source.
@@ -180,13 +196,6 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         b.pool.slice_mut(s![i, ..]).assign(&v.into());
     }
 
-    /// Set the index to best.
-    fn set_best(&mut self, i: usize) {
-        let b = self.base_mut();
-        b.report.best_f = b.fitness[i];
-        b.best.assign(&b.pool.slice(s![i, ..]));
-    }
-
     /// Find the best, and set it globally.
     fn find_best(&mut self) {
         let b = self.base_mut();
@@ -197,24 +206,25 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             }
         }
         if b.fitness[best] < b.report.best_f {
-            self.set_best(best);
+            b.set_best(best);
         }
     }
 
     /// Initialize population.
     fn init_pop(&mut self) {
+        let b = self.base_mut();
         let mut best = 0;
-        for i in 0..self.base().pop_num {
-            for s in 0..self.base().dim {
-                self.base_mut().pool[[i, s]] = rand!(self.lb(s), self.ub(s));
+        for i in 0..b.pop_num {
+            for s in 0..b.dim {
+                b.pool[[i, s]] = rand!(b.lb(s), b.ub(s));
             }
-            self.base_mut().fitness(i);
-            if self.base().fitness[i] < self.base().fitness[best] {
+            b.fitness(i);
+            if b.fitness[i] < b.fitness[best] {
                 best = i;
             }
         }
-        if self.base().fitness[best] < self.base().report.best_f {
-            self.set_best(best);
+        if b.fitness[best] < b.report.best_f {
+            b.set_best(best);
         }
     }
 

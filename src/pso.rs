@@ -79,7 +79,7 @@ where
                 self.best_f_past[i] = self.base.fitness[i].clone();
             }
             if self.base.fitness[i] < self.base.report.best_f {
-                self.set_best(i);
+                self.base.set_best(i);
             }
         }
     }
