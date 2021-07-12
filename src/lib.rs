@@ -48,6 +48,13 @@
 //! And then you should define the upper bound, lower bound, and objective function [`ObjFunc::fitness`] by yourself.
 //!
 //! The final answer is [`ObjFunc::result`], which is generated from the design parameters.
+//!
+//! # Features
+//!
+//! + `parallel`: Enable parallel function, let objective function running without ordered,
+//!   uses [`std::thread::spawn`].
+//!   Disable it for the platform that doesn't supported threading,
+//!   or if your objective function is not complicate enough.
 pub use crate::callback::*;
 pub use crate::de::*;
 pub use crate::fa::*;

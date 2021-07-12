@@ -1,6 +1,7 @@
 use crate::*;
 use ndarray::{s, Array1, Array2, AsArray};
-use std::time::Instant;
+use std::thread::spawn;
+use std::{sync::Arc, time::Instant};
 
 /// The data of generation sampling.
 #[derive(Clone, Debug)]
@@ -79,7 +80,7 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pub report: Report,
     reports: Vec<Report>,
     /// The objective function.
-    pub func: F,
+    pub func: Arc<F>,
 }
 
 impl<F: ObjFunc> AlgorithmBase<F> {
@@ -98,9 +99,9 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             best: Array1::zeros(dim),
             fitness: Array1::zeros(settings.pop_num),
             pool: Array2::zeros((settings.pop_num, dim)),
-            report: Report::default(),
+            report: Default::default(),
             reports: vec![],
-            func,
+            func: Arc::new(func),
         }
     }
 
@@ -213,14 +214,30 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Initialize population.
     fn init_pop(&mut self) {
         let b = self.base_mut();
+        let mut tasks = vec![];
         let mut best = 0;
         for i in 0..b.pop_num {
             for s in 0..b.dim {
                 b.pool[[i, s]] = rand!(b.lb(s), b.ub(s));
             }
-            b.fitness(i);
-            if b.fitness[i] < b.fitness[best] {
-                best = i;
+            if cfg!(feature = "parallel") {
+                let obj = b.func.clone();
+                let r = b.report.clone();
+                let v = b.pool.slice(s![i, ..]).to_owned();
+                tasks.push(spawn(move || obj.fitness(&v, &r)));
+            } else {
+                b.fitness(i);
+                if b.fitness[i] < b.fitness[best] {
+                    best = i;
+                }
+            }
+        }
+        if cfg!(feature = "parallel") {
+            for (i, h) in tasks.into_iter().enumerate() {
+                b.fitness[i] = h.join().unwrap();
+                if b.fitness[i] < b.fitness[best] {
+                    best = i;
+                }
             }
         }
         if b.fitness[best] < b.report.best_f {
@@ -239,10 +256,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         }
     }
 
-    /// Start the algorithm process.
-    ///
-    /// Support a callback function, such as progress bar.
-    /// To suppress it, just using a unit type `()`.
+    #[doc(hidden)]
     fn run<C>(mut self, callback: impl Callback<C>) -> Self {
         let time_start = Instant::now();
         self.init_pop();

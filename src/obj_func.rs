@@ -41,7 +41,7 @@ use ndarray::{ArrayView1, AsArray};
 /// The lower bound and upper bound represents the number of variables at the same time.
 ///
 /// This trait is designed as immutable.
-pub trait ObjFunc {
+pub trait ObjFunc: Sync + Send + 'static {
     /// The result type.
     type Result;
 
