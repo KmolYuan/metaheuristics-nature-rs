@@ -41,14 +41,10 @@ where
             let mut f_tmp = Array1::zeros(3);
             for s in 0..self.base.dim {
                 tmp[[0, s]] = 0.5 * self.base.pool[[i, s]] + 0.5 * self.base.pool[[i + 1, s]];
-                tmp[[1, s]] = self.check(
-                    s,
-                    1.5 * self.base.pool[[i, s]] - 0.5 * self.base.pool[[i + 1, s]],
-                );
-                tmp[[2, s]] = self.check(
-                    s,
-                    -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]],
-                );
+                let v = 1.5 * self.base.pool[[i, s]] - 0.5 * self.base.pool[[i + 1, s]];
+                tmp[[1, s]] = self.check(s, v);
+                let v = -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]];
+                tmp[[2, s]] = self.check(s, v);
             }
             for j in 0..3 {
                 f_tmp[j] = self

@@ -52,12 +52,10 @@ where
         self.beta0 -= self.beta_min;
         let beta = self.beta0 * (-self.gamma * r).exp() + self.beta_min;
         for s in 0..self.base.dim {
-            self.base.pool[[me, s]] = self.check(
-                s,
-                self.base.pool[[me, s]]
-                    + beta * (self.base.pool[[she, s]] - self.base.pool[[me, s]])
-                    + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
-            );
+            let v = self.base.pool[[me, s]]
+                + beta * (self.base.pool[[she, s]] - self.base.pool[[me, s]])
+                + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
+            self.base.pool[[me, s]] = self.check(s, v);
         }
     }
 
@@ -71,16 +69,15 @@ where
                 self.move_firefly(i, j);
                 moved = true;
             }
-            if !moved {
+            if moved {
+                self.base.fitness(i);
+            } else {
                 for s in 0..self.base.dim {
-                    self.base.pool[[i, s]] = self.check(
-                        s,
-                        self.base.pool[[i, s]]
-                            + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5),
-                    );
+                    let v = self.base.pool[[i, s]]
+                        + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
+                    self.base.pool[[i, s]] = self.check(s, v);
                 }
             }
-            self.base.fitness(i);
         }
     }
 }

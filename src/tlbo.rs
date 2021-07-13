@@ -34,11 +34,9 @@ where
                 mean += self.base.pool[[j, s]];
             }
             mean /= self.base.dim as f64;
-            self.tmp[s] = self.check(
-                s,
-                self.base.pool[[i, s]]
-                    + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean),
-            );
+            let v = self.base.pool[[i, s]]
+                + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean);
+            self.tmp[s] = self.check(s, v);
         }
         self.register(i);
     }
@@ -58,10 +56,8 @@ where
             } else {
                 self.base.pool[[j, s]] - self.base.pool[[i, s]]
             };
-            self.tmp[s] = self.check(
-                s,
-                self.base.pool[[i, s]] + rand!(1., self.base.dim as f64) * diff,
-            );
+            let v = self.base.pool[[i, s]] + rand!(1., self.base.dim as f64) * diff;
+            self.tmp[s] = self.check(s, v);
         }
         self.register(i);
     }

@@ -17,6 +17,7 @@ impl ObjFunc for TestObj {
         A: AsArray<'a, f64>,
     {
         let v = v.into();
+        // std::thread::sleep(std::time::Duration::from_millis(100));
         v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
 
