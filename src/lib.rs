@@ -24,6 +24,7 @@
 //! #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
 //! #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
 //! # }
+//!
 //! let a = RGA::solve(
 //!     MyFunc::new(),
 //!     RGASetting::default().task(Task::MinFit(1e-20)),
@@ -153,5 +154,5 @@ mod obj_func;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "parallel")]
-mod thread_pool;
+pub mod thread_pool;
 mod utility;

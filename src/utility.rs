@@ -137,10 +137,12 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// Create a structure and store a `AlgorithmBase` member to implement it.
 /// ```
 /// use metaheuristics_nature::{AlgorithmBase, Algorithm, ObjFunc, Setting};
+///
 /// struct MyAlgorithm<F: ObjFunc> {
 ///     tmp: Vec<f64>,
 ///     base: AlgorithmBase<F>,
 /// }
+///
 /// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
 ///     type Setting = Setting;
 ///     fn create(func: F, settings: Self::Setting) -> Self {
