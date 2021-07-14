@@ -152,4 +152,6 @@ mod methods;
 mod obj_func;
 #[cfg(test)]
 mod tests;
+#[cfg(feature = "parallel")]
+mod thread_pool;
 mod utility;

@@ -214,19 +214,14 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     fn init_pop(&mut self) {
         let b = self.base_mut();
         #[cfg(feature = "parallel")]
-        let mut tasks = vec![];
+        let mut tasks = crate::thread_pool::ThreadPool::new();
         let mut best = 0;
         for i in 0..b.pop_num {
             for s in 0..b.dim {
                 b.pool[[i, s]] = rand!(b.lb(s), b.ub(s));
             }
             #[cfg(feature = "parallel")]
-            {
-                let obj = b.func.clone();
-                let r = b.report.clone();
-                let v = b.pool.slice(s![i, ..]).to_owned();
-                tasks.push(std::thread::spawn(move || obj.fitness(&v, &r)));
-            }
+            tasks.insert(i, b.func.clone(), b.report.clone(), b.pool.slice(s![i, ..]));
             #[cfg(not(feature = "parallel"))]
             {
                 b.fitness(i);
@@ -236,8 +231,8 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             }
         }
         #[cfg(feature = "parallel")]
-        for (i, h) in tasks.into_iter().enumerate() {
-            b.fitness[i] = h.join().unwrap();
+        for (i, f) in tasks {
+            b.fitness[i] = f;
             if b.fitness[i] < b.fitness[best] {
                 best = i;
             }

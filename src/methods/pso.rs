@@ -74,7 +74,7 @@ where
 
     fn generation(&mut self) {
         #[cfg(feature = "parallel")]
-        let mut tasks = vec![];
+        let mut tasks = crate::thread_pool::ThreadPool::new();
         for i in 0..self.base.pop_num {
             let alpha = rand!(0., self.cognition);
             let beta = rand!(0., self.social);
@@ -85,12 +85,12 @@ where
                 self.base.pool[[i, s]] = self.check(s, v);
             }
             #[cfg(feature = "parallel")]
-            {
-                let obj = self.base.func.clone();
-                let r = self.base.report.clone();
-                let v = self.base.pool.slice(s![i, ..]).to_owned();
-                tasks.push(std::thread::spawn(move || obj.fitness(&v, &r)));
-            }
+            tasks.insert(
+                i,
+                self.base.func.clone(),
+                self.base.report.clone(),
+                self.base.pool.slice(s![i, ..]),
+            );
             #[cfg(not(feature = "parallel"))]
             {
                 self.base.fitness(i);
@@ -103,8 +103,8 @@ where
             }
         }
         #[cfg(feature = "parallel")]
-        for (i, h) in tasks.into_iter().enumerate() {
-            self.base.fitness[i] = h.join().unwrap();
+        for (i, f) in tasks {
+            self.base.fitness[i] = f;
             if self.base.fitness[i] < self.best_f_past[i] {
                 self.set_past(i);
             }
