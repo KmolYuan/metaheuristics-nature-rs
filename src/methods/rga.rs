@@ -46,11 +46,27 @@ where
                 let v = -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]];
                 tmp[[2, s]] = self.check(s, v);
             }
+            #[cfg(feature = "parallel")]
+            let mut tasks = crate::thread_pool::ThreadPool::new();
             for j in 0..3 {
-                f_tmp[j] = self
-                    .base
-                    .func
-                    .fitness(tmp.slice(s![j, ..]), &self.base.report);
+                #[cfg(feature = "parallel")]
+                tasks.insert(
+                    j,
+                    self.base.func.clone(),
+                    self.base.report.clone(),
+                    tmp.slice(s![j, ..]),
+                );
+                #[cfg(not(feature = "parallel"))]
+                {
+                    f_tmp[j] = self
+                        .base
+                        .func
+                        .fitness(tmp.slice(s![j, ..]), &self.base.report);
+                }
+            }
+            #[cfg(feature = "parallel")]
+            for (j, f) in tasks {
+                f_tmp[j] = f;
             }
             if f_tmp[0] > f_tmp[1] {
                 f_tmp.swap(0, 1);
