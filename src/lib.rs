@@ -56,12 +56,8 @@
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
 pub use crate::callback::*;
-pub use crate::de::*;
-pub use crate::fa::*;
+pub use crate::methods::*;
 pub use crate::obj_func::*;
-pub use crate::pso::*;
-pub use crate::rga::*;
-pub use crate::tlbo::*;
 pub use crate::utility::*;
 
 /// Generate random values between [0., 1.) or by range.
@@ -152,12 +148,8 @@ macro_rules! setting_builder {
 }
 
 mod callback;
-mod de;
-mod fa;
+mod methods;
 mod obj_func;
-mod pso;
-mod rga;
 #[cfg(test)]
 mod tests;
-mod tlbo;
 mod utility;
