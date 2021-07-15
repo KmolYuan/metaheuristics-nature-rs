@@ -86,8 +86,8 @@ where
                     tmp.swap([1, j], [2, j]);
                 }
             }
-            self.assign_from(i, f_tmp[0], &tmp.slice(s![0, ..]).into_owned());
-            self.assign_from(i + 1, f_tmp[1], &tmp.slice(s![1, ..]).into_owned());
+            self.assign_from(i, f_tmp[0], tmp.slice(s![0, ..]));
+            self.assign_from(i + 1, f_tmp[1], tmp.slice(s![1, ..]));
         }
     }
 

@@ -1,5 +1,5 @@
 use crate::*;
-use ndarray::{s, AsArray};
+use ndarray::{s, Array1, AsArray};
 
 setting_builder! {
     /// Firefly Algorithm settings.
@@ -7,13 +7,11 @@ setting_builder! {
         @base,
         @pop_num = 80,
         /// Alpha factor.
-        alpha: f64 = 0.01,
+        alpha: f64 = 0.2,
         /// Minimum beta factor.
         beta_min: f64 = 0.2,
         /// Gamma factor.
         gamma: f64 = 1.,
-        /// Initial beta factor.
-        beta0: f64 = 1.,
     }
 }
 
@@ -44,38 +42,27 @@ impl<F> FA<F>
 where
     F: ObjFunc,
 {
-    fn move_firefly(&mut self, me: usize, she: usize) {
-        let r = distance(
-            self.base.pool.slice(s![me, ..]),
-            self.base.pool.slice(s![she, ..]),
-        );
-        self.beta0 -= self.beta_min;
-        let beta = self.beta0 * (-self.gamma * r).exp() + self.beta_min;
-        for s in 0..self.base.dim {
-            let v = self.base.pool[[me, s]]
-                + beta * (self.base.pool[[she, s]] - self.base.pool[[me, s]])
-                + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
-            self.base.pool[[me, s]] = self.check(s, v);
-        }
-    }
-
     fn move_fireflies(&mut self) {
         for i in 0..self.base.pop_num {
-            let mut moved = false;
             for j in 0..self.base.pop_num {
                 if i == j || self.base.fitness[i] <= self.base.fitness[j] {
                     continue;
                 }
-                self.move_firefly(i, j);
-                moved = true;
-            }
-            if moved {
-                self.base.fitness(i);
-            } else {
+                let mut tmp = Array1::zeros(self.base.dim);
+                let r = distance(
+                    self.base.pool.slice(s![i, ..]),
+                    self.base.pool.slice(s![j, ..]),
+                );
+                let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
                 for s in 0..self.base.dim {
                     let v = self.base.pool[[i, s]]
+                        + beta * (self.base.pool[[j, s]] - self.base.pool[[i, s]])
                         + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
-                    self.base.pool[[i, s]] = self.check(s, v);
+                    tmp[s] = self.check(s, v);
+                }
+                let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
+                if tmp_f < self.base.fitness[i] {
+                    self.assign_from(i, tmp_f, &tmp);
                 }
             }
         }
@@ -94,7 +81,7 @@ where
             alpha: settings.alpha,
             beta_min: settings.beta_min,
             gamma: settings.gamma,
-            beta0: settings.beta0,
+            beta0: 1.,
             base,
         }
     }
