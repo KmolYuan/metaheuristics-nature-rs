@@ -1,10 +1,13 @@
 use crate::*;
 use ndarray::{Array1, ArrayView1, AsArray};
 
+const MINI: f64 = 0.;
+
 struct TestObj(Array1<f64>, Array1<f64>);
 
 impl Default for TestObj {
     fn default() -> Self {
+        // Self(Array1::ones(4) * -50., Array1::ones(4) * 50.)
         Self(Array1::zeros(4), Array1::ones(4) * 50.)
     }
 }
@@ -17,8 +20,8 @@ impl ObjFunc for TestObj {
         A: AsArray<'a, f64>,
     {
         let v = v.into();
-        // std::thread::sleep(std::time::Duration::from_millis(100));
-        v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
+        // std::thread::sleep(std::time::Duration::from_millis(10));
+        MINI + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
 
     fn result<'a, V>(&self, v: V) -> f64
@@ -45,7 +48,7 @@ where
     let (x, y) = a.parameters();
     let history = a.history();
     assert!(history.len() > 0, "{}", history.len());
-    assert!(ans.abs() < 1e-20, "{}", ans);
+    assert!((ans - MINI).abs() < 1e-20, "{}", ans);
     for i in 0..4 {
         assert!(x[i].abs() < 1e-10, "x{} = {}", i, x[i]);
     }

@@ -51,7 +51,7 @@ where
             social: settings.social,
             velocity: settings.velocity,
             best_past: Array2::zeros((base.pop_num, base.dim)),
-            best_f_past: Array1::zeros(base.pop_num),
+            best_f_past: Array1::ones(base.pop_num) * f64::INFINITY,
             base,
         }
     }

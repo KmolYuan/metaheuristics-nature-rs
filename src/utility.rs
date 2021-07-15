@@ -96,7 +96,7 @@ impl<F: ObjFunc> AlgorithmBase<F> {
             rpt: settings.rpt,
             task: settings.task,
             best: Array1::zeros(dim),
-            fitness: Array1::zeros(settings.pop_num),
+            fitness: Array1::ones(settings.pop_num) * f64::INFINITY,
             pool: Array2::zeros((settings.pop_num, dim)),
             report: Default::default(),
             reports: vec![],
@@ -202,7 +202,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     fn find_best(&mut self) {
         let b = self.base_mut();
         let mut best = 0;
-        for i in 0..b.pop_num {
+        for i in 1..b.pop_num {
             if b.fitness[i] < b.fitness[best] {
                 best = i;
             }

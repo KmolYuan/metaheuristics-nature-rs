@@ -45,18 +45,20 @@ where
     fn move_fireflies(&mut self) {
         for i in 0..self.base.pop_num {
             for j in 0..self.base.pop_num {
-                if i == j || self.base.fitness[i] <= self.base.fitness[j] {
+                if self.base.fitness[i] <= self.base.fitness[j] {
                     continue;
                 }
                 let mut tmp = Array1::zeros(self.base.dim);
-                let r = distance(
-                    self.base.pool.slice(s![i, ..]),
-                    self.base.pool.slice(s![j, ..]),
-                );
+                let pool_j = if i == j {
+                    self.base.best.view()
+                } else {
+                    self.base.pool.slice(s![j, ..])
+                };
+                let r = distance(self.base.pool.slice(s![i, ..]), pool_j);
                 let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
                 for s in 0..self.base.dim {
                     let v = self.base.pool[[i, s]]
-                        + beta * (self.base.pool[[j, s]] - self.base.pool[[i, s]])
+                        + beta * (pool_j[s] - self.base.pool[[i, s]])
                         + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
                     tmp[s] = self.check(s, v);
                 }

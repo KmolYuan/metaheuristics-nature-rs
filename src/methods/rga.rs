@@ -154,7 +154,7 @@ where
             mutate: settings.mutate,
             win: settings.win,
             delta: settings.delta,
-            new_fitness: Array1::zeros(base.pop_num),
+            new_fitness: Array1::ones(base.pop_num) * f64::INFINITY,
             new_pool: Array2::zeros((base.pop_num, base.dim)),
             base,
         }
