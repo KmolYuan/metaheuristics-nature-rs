@@ -1,7 +1,7 @@
 use crate::*;
 use ndarray::{Array1, ArrayView1, AsArray};
 
-const MINI: f64 = 0.;
+const OFFSET: f64 = 7.;
 
 struct TestObj(Array1<f64>, Array1<f64>);
 
@@ -21,7 +21,7 @@ impl ObjFunc for TestObj {
     {
         let v = v.into();
         // std::thread::sleep(std::time::Duration::from_millis(10));
-        MINI + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
+        OFFSET + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
 
     fn result<'a, V>(&self, v: V) -> f64
@@ -48,9 +48,9 @@ where
     let (x, y) = a.parameters();
     let history = a.history();
     assert!(history.len() > 0, "{}", history.len());
-    assert!((ans - MINI).abs() < 1e-20, "{}", ans);
+    assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
     for i in 0..4 {
-        assert!(x[i].abs() < 1e-10, "x{} = {}", i, x[i]);
+        assert!(x[i].abs() < 1e-6, "x{} = {}", i, x[i]);
     }
     assert_eq!(y.abs(), ans);
 }
@@ -59,7 +59,7 @@ where
 fn de() {
     test::<DE<_>>(
         TestObj::default(),
-        DESetting::default().task(Task::MinFit(1e-20)),
+        DESetting::default().task(Task::MinFit(OFFSET)),
     );
 }
 
@@ -67,7 +67,7 @@ fn de() {
 fn pso() {
     test::<PSO<_>>(
         TestObj::default(),
-        PSOSetting::default().task(Task::MinFit(1e-20)),
+        PSOSetting::default().task(Task::MinFit(OFFSET)),
     );
 }
 
@@ -75,7 +75,7 @@ fn pso() {
 fn fa() {
     test::<FA<_>>(
         TestObj::default(),
-        FASetting::default().task(Task::MinFit(1e-20)),
+        FASetting::default().task(Task::MinFit(OFFSET)),
     );
 }
 
@@ -83,7 +83,7 @@ fn fa() {
 fn rga() {
     test::<RGA<_>>(
         TestObj::default(),
-        RGASetting::default().task(Task::MinFit(1e-20)),
+        RGASetting::default().task(Task::MinFit(OFFSET)),
     );
 }
 
@@ -91,6 +91,6 @@ fn rga() {
 fn tlbo() {
     test::<TLBO<_>>(
         TestObj::default(),
-        TLBOSetting::default().task(Task::MinFit(1e-20)),
+        TLBOSetting::default().task(Task::MinFit(OFFSET)),
     );
 }
