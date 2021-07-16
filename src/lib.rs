@@ -148,6 +148,18 @@ macro_rules! setting_builder {
     }
 }
 
+/// Product two iterators together.
+pub fn product<A, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, A)>
+where
+    A: Clone,
+    I1: IntoIterator<Item = A>,
+    I2: IntoIterator<Item = A> + Clone,
+{
+    iter1
+        .into_iter()
+        .flat_map(move |e: A| std::iter::repeat(e).zip(iter2.clone()))
+}
+
 mod callback;
 mod methods;
 mod obj_func;

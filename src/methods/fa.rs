@@ -7,7 +7,7 @@ setting_builder! {
         @base,
         @pop_num = 80,
         /// Alpha factor.
-        alpha: f64 = 0.2,
+        alpha: f64 = 0.05,
         /// Minimum beta factor.
         beta_min: f64 = 0.2,
         /// Gamma factor.
@@ -43,29 +43,27 @@ where
     F: ObjFunc,
 {
     fn move_fireflies(&mut self) {
-        for i in 0..self.base.pop_num {
-            for j in 0..self.base.pop_num {
-                if self.base.fitness[i] <= self.base.fitness[j] {
-                    continue;
-                }
-                let mut tmp = Array1::zeros(self.base.dim);
-                let pool_j = if i == j {
-                    self.base.best.view()
-                } else {
-                    self.base.pool.slice(s![j, ..])
-                };
-                let r = distance(self.base.pool.slice(s![i, ..]), pool_j);
-                let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
-                for s in 0..self.base.dim {
-                    let v = self.base.pool[[i, s]]
-                        + beta * (pool_j[s] - self.base.pool[[i, s]])
-                        + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
-                    tmp[s] = self.check(s, v);
-                }
-                let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
-                if tmp_f < self.base.fitness[i] {
-                    self.assign_from(i, tmp_f, &tmp);
-                }
+        for (i, j) in product(0..self.base.pop_num, 0..self.base.pop_num) {
+            if self.base.fitness[i] <= self.base.fitness[j] {
+                continue;
+            }
+            let mut tmp = Array1::zeros(self.base.dim);
+            let pool_j = if i == j {
+                self.base.best.view()
+            } else {
+                self.base.pool.slice(s![j, ..])
+            };
+            let r = distance(self.base.pool.slice(s![i, ..]), pool_j);
+            let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
+            for s in 0..self.base.dim {
+                let v = self.base.pool[[i, s]]
+                    + beta * (pool_j[s] - self.base.pool[[i, s]])
+                    + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
+                tmp[s] = self.check(s, v);
+            }
+            let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
+            if tmp_f < self.base.fitness[i] {
+                self.assign_from(i, tmp_f, &tmp);
             }
         }
     }
