@@ -63,10 +63,9 @@ setting_builder! {
 pub struct DE<F: ObjFunc> {
     f: f64,
     cross: f64,
-    v: Array1<usize>,
-    tmp: Array1<f64>,
-    formula: fn(&Self, usize) -> f64,
-    setter: fn(&mut Self, usize),
+    num: usize,
+    formula: fn(&Self, &Array1<f64>, &Array1<usize>, usize) -> f64,
+    setter: fn(&mut Self, &mut Array1<f64>, Array1<usize>, usize),
     base: AlgorithmBase<F>,
 }
 
@@ -74,50 +73,39 @@ impl<F> DE<F>
 where
     F: ObjFunc,
 {
-    fn vector(&mut self, i: usize) {
-        for j in 0..self.v.len() {
-            self.v[j] = i;
-            while self.v[j] == i || self.v.slice(s![..j]).iter().any(|&v| v == self.v[j]) {
-                self.v[j] = rand!(0, self.base.pop_num);
-            }
-        }
+    fn f1(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
+        self.base.best[n] + self.f * (self.base.pool[[v[0], n]] - self.base.pool[[v[1], n]])
     }
 
-    fn f1(&self, n: usize) -> f64 {
-        self.base.best[n]
-            + self.f * (self.base.pool[[self.v[0], n]] - self.base.pool[[self.v[1], n]])
+    fn f2(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
+        self.base.pool[[v[0], n]] + self.f * (self.base.pool[[v[1], n]] - self.base.pool[[v[2], n]])
     }
 
-    fn f2(&self, n: usize) -> f64 {
-        self.base.pool[[self.v[0], n]]
-            + self.f * (self.base.pool[[self.v[1], n]] - self.base.pool[[self.v[2], n]])
-    }
-
-    fn f3(&self, n: usize) -> f64 {
-        self.tmp[n]
+    fn f3(&self, tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
+        tmp[n]
             + self.f
-                * (self.base.best[n] - self.tmp[n] + self.base.pool[[self.v[0], n]]
-                    - self.base.pool[[self.v[1], n]])
+                * (self.base.best[n] - tmp[n] + self.base.pool[[v[0], n]]
+                    - self.base.pool[[v[1], n]])
     }
 
-    fn f4(&self, n: usize) -> f64 {
-        self.base.best[n] + self.f45(n)
+    fn f4(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
+        self.base.best[n] + self.f45(v, n)
     }
 
-    fn f5(&self, n: usize) -> f64 {
-        self.base.pool[[self.v[4], n]] + self.f45(n)
+    fn f5(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
+        self.base.pool[[v[4], n]] + self.f45(v, n)
     }
 
-    fn f45(&self, n: usize) -> f64 {
-        (self.base.pool[[self.v[0], n]] + self.base.pool[[self.v[1], n]]
-            - self.base.pool[[self.v[2], n]]
-            - self.base.pool[[self.v[3], n]])
+    fn f45(&self, v: &Array1<usize>, n: usize) -> f64 {
+        (self.base.pool[[v[0], n]] + self.base.pool[[v[1], n]]
+            - self.base.pool[[v[2], n]]
+            - self.base.pool[[v[3], n]])
             * self.f
     }
 
-    fn c1(&mut self, mut n: usize) {
+    fn c1(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
         for _ in 0..self.base.dim {
-            self.tmp[n] = (self.formula)(self, n);
+            tmp[n] = (self.formula)(self, tmp, &v, n);
             n = (n + 1) % self.base.dim;
             if !maybe!(self.cross) {
                 break;
@@ -125,18 +113,13 @@ where
         }
     }
 
-    fn c2(&mut self, mut n: usize) {
+    fn c2(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
         for lv in 0..self.base.dim {
             if !maybe!(self.cross) || lv == self.base.dim - 1 {
-                self.tmp[n] = (self.formula)(self, n);
+                tmp[n] = (self.formula)(self, tmp, &v, n);
             }
             n = (n + 1) % self.base.dim;
         }
-    }
-
-    fn recombination(&mut self, i: usize) {
-        self.tmp.assign(&self.base.pool.slice(s![i, ..]));
-        (self.setter)(self, rand!(0, self.base.dim));
     }
 }
 
@@ -157,8 +140,7 @@ where
         Self {
             f: settings.f,
             cross: settings.cross,
-            v: Array1::zeros(num),
-            tmp: Array1::zeros(base.dim),
+            num,
             formula: match settings.strategy {
                 S1 | S6 => Self::f1,
                 S2 | S7 => Self::f2,
@@ -186,16 +168,25 @@ where
 
     fn generation(&mut self) {
         'a: for i in 0..self.base.pop_num {
-            self.vector(i);
-            self.recombination(i);
+            // Generate Vector
+            let mut v = Array1::zeros(self.num);
+            for j in 0..self.num {
+                v[j] = i;
+                while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
+                    v[j] = rand!(0, self.base.pop_num);
+                }
+            }
+            // Recombination
+            let mut tmp = self.base.pool.slice(s![i, ..]).to_owned();
+            (self.setter)(self, &mut tmp, v, rand!(0, self.base.dim));
             for s in 0..self.base.dim {
-                if self.tmp[s] > self.ub(s) || self.tmp[s] < self.lb(s) {
+                if tmp[s] > self.ub(s) || tmp[s] < self.lb(s) {
                     continue 'a;
                 }
             }
-            let tmp_f = self.base.func.fitness(&self.tmp, &self.base.report);
+            let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
             if tmp_f < self.base.fitness[i] {
-                self.assign_from(i, tmp_f, &self.tmp.clone());
+                self.assign_from(i, tmp_f, &tmp.clone());
             }
         }
         self.find_best();
