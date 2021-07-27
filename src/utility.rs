@@ -254,12 +254,12 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     }
 
     #[doc(hidden)]
-    fn run<C>(mut self, mut callback: impl Callback<C>) -> Self {
+    fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
         let time_start = Instant::now();
         self.init_pop();
         self.base_mut().report.update_time(time_start);
         self.init();
-        if callback.call(self.base().report.clone()) {
+        if callback(self.base().report.clone()) {
             return self;
         }
         self.base_mut().report();
@@ -274,7 +274,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             self.generation();
             let b = self.base_mut();
             if b.report.gen % b.rpt == 0 {
-                if callback.call(b.report.clone()) {
+                if callback(b.report.clone()) {
                     break;
                 }
                 b.report();
@@ -313,7 +313,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
 /// Users can simply obtain their solution and see the result.
 pub trait Solver<F: ObjFunc>: Algorithm<F> {
     /// Create the task and calling [`Algorithm::run`].
-    fn solve<C>(func: F, settings: Self::Setting, callback: impl Callback<C>) -> Self {
+    fn solve(func: F, settings: Self::Setting, callback: impl FnMut(Report) -> bool) -> Self {
         Self::create(func, settings).run(callback)
     }
 

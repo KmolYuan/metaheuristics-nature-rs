@@ -56,7 +56,6 @@
 //!   uses [`std::thread::spawn`].
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
-pub use crate::callback::*;
 pub use crate::methods::*;
 pub use crate::obj_func::*;
 pub use crate::utility::*;
@@ -160,7 +159,6 @@ where
         .flat_map(move |e: A| std::iter::repeat(e).zip(iter2.clone()))
 }
 
-mod callback;
 mod methods;
 mod obj_func;
 #[cfg(test)]
