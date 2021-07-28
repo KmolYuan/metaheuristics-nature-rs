@@ -55,7 +55,7 @@ setting_builder! {
         /// Population number.
         pop_num: usize = 200,
         /// The report frequency. (per generation)
-        rpt: u32 = 50,
+        rpt: u32 = 1,
     }
 }
 
