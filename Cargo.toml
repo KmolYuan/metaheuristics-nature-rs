@@ -14,4 +14,4 @@ parallel = []
 
 [dependencies]
 rand = "0.8"
-ndarray = "0.15"
+ndarray = { version = "0.15", default-features = false }
