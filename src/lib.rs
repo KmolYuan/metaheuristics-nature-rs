@@ -60,27 +60,6 @@ pub use crate::methods::*;
 pub use crate::obj_func::*;
 pub use crate::utility::*;
 
-/// Generate random values between [0., 1.) or by range.
-#[macro_export]
-macro_rules! rand {
-    ($lb:expr, $ub:expr) => {{
-        use rand::Rng;
-        rand::thread_rng().gen_range($lb..$ub)
-    }};
-    () => {
-        rand!(0., 1.)
-    };
-}
-
-/// Generate random boolean by positive factor.
-#[macro_export]
-macro_rules! maybe {
-    ($v:expr) => {{
-        use rand::Rng;
-        rand::thread_rng().gen_bool($v)
-    }};
-}
-
 /// Define a data structure and its builder functions.
 ///
 /// Use `@` to denote the base settings, such as population number, task category
@@ -161,6 +140,7 @@ where
 
 mod methods;
 mod obj_func;
+pub mod random;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "parallel")]

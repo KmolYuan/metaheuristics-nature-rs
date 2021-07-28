@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{random::*, *};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
@@ -34,7 +34,7 @@ where
 {
     fn crossover(&mut self) {
         for i in (0..(self.base.pop_num - 1)).step_by(2) {
-            if !maybe!(self.cross) {
+            if !maybe(self.cross) {
                 continue;
             }
             let mut tmp = Array2::zeros((3, self.base.dim));
@@ -96,16 +96,16 @@ where
             Task::MaxGen(v) if v > 0 => self.base.report.gen as f64 / v as f64,
             _ => 1.,
         };
-        y * rand!() * (1. - r).powf(self.delta)
+        y * rand() * (1. - r).powf(self.delta)
     }
 
     fn mutate(&mut self) {
         for i in 0..self.base.pop_num {
-            if !maybe!(self.mutate) {
+            if !maybe(self.mutate) {
                 continue;
             }
-            let s = rand!(0, self.base.dim);
-            if maybe!(0.5) {
+            let s = rand_rng(0, self.base.dim);
+            if maybe(0.5) {
                 self.base.pool[[i, s]] += self.get_delta(self.ub(s) - self.base.pool[[i, s]]);
             } else {
                 self.base.pool[[i, s]] -= self.get_delta(self.base.pool[[i, s]] - self.lb(s));
@@ -117,9 +117,9 @@ where
 
     fn select(&mut self) {
         for i in 0..self.base.pop_num {
-            let j = rand!(0, self.base.pop_num);
-            let k = rand!(0, self.base.pop_num);
-            if self.base.fitness[j] > self.base.fitness[k] && maybe!(self.win) {
+            let j = rand_rng(0, self.base.pop_num);
+            let k = rand_rng(0, self.base.pop_num);
+            if self.base.fitness[j] > self.base.fitness[k] && maybe(self.win) {
                 self.new_fitness[i] = self.base.fitness[k];
                 self.new_pool
                     .slice_mut(s![i, ..])
@@ -133,7 +133,7 @@ where
             self.base.fitness.assign(&self.new_fitness);
             self.base.pool.assign(&self.new_pool);
             self.assign_from(
-                rand!(0, self.base.pop_num),
+                rand_rng(0, self.base.pop_num),
                 self.base.report.best_f,
                 &self.base.best.clone(),
             );
@@ -180,7 +180,7 @@ where
     #[inline(always)]
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
-            rand!(self.lb(s), self.ub(s))
+            rand_rng(self.lb(s), self.ub(s))
         } else {
             v
         }

@@ -1,5 +1,5 @@
 use self::Strategy::*;
-use crate::*;
+use crate::{random::*, *};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
@@ -107,7 +107,7 @@ where
         for _ in 0..self.base.dim {
             tmp[n] = (self.formula)(self, tmp, &v, n);
             n = (n + 1) % self.base.dim;
-            if !maybe!(self.cross) {
+            if !maybe(self.cross) {
                 break;
             }
         }
@@ -115,7 +115,7 @@ where
 
     fn c2(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
         for lv in 0..self.base.dim {
-            if !maybe!(self.cross) || lv == self.base.dim - 1 {
+            if !maybe(self.cross) || lv == self.base.dim - 1 {
                 tmp[n] = (self.formula)(self, tmp, &v, n);
             }
             n = (n + 1) % self.base.dim;
@@ -173,12 +173,12 @@ where
             for j in 0..self.num {
                 v[j] = i;
                 while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
-                    v[j] = rand!(0, self.base.pop_num);
+                    v[j] = rand_rng(0, self.base.pop_num);
                 }
             }
             // Recombination
             let mut tmp = self.base.pool.slice(s![i, ..]).to_owned();
-            (self.setter)(self, &mut tmp, v, rand!(0, self.base.dim));
+            (self.setter)(self, &mut tmp, v, rand_rng(0, self.base.dim));
             for s in 0..self.base.dim {
                 if tmp[s] > self.ub(s) || tmp[s] < self.lb(s) {
                     continue 'a;

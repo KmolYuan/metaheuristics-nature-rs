@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{random::*, *};
 use ndarray::{s, Array1, Array2, AsArray};
 use std::{sync::Arc, time::Instant};
 
@@ -220,7 +220,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         let mut best = 0;
         for i in 0..b.pop_num {
             for s in 0..b.dim {
-                b.pool[[i, s]] = rand!(b.lb(s), b.ub(s));
+                b.pool[[i, s]] = rand_rng(b.lb(s), b.ub(s));
             }
             #[cfg(feature = "parallel")]
             tasks.insert(i, b.func.clone(), b.report.clone(), b.pool.slice(s![i, ..]));

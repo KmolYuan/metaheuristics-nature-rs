@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{random::*, *};
 use ndarray::{s, Array1};
 
 /// Teaching Learning Based Optimization settings.
@@ -27,7 +27,7 @@ where
     }
 
     fn teaching(&mut self, i: usize) {
-        let tf = f64::round(rand!() + 1.);
+        let tf = f64::round(rand() + 1.);
         for s in 0..self.base.dim {
             let mut mean = 0.;
             for j in 0..self.base.pop_num {
@@ -35,7 +35,7 @@ where
             }
             mean /= self.base.dim as f64;
             let v = self.base.pool[[i, s]]
-                + rand!(1., self.base.dim as f64) * (self.base.best[s] - tf * mean);
+                + rand_rng(1., self.base.dim as f64) * (self.base.best[s] - tf * mean);
             self.tmp[s] = self.check(s, v);
         }
         self.register(i);
@@ -43,7 +43,7 @@ where
 
     fn learning(&mut self, i: usize) {
         let j = {
-            let j = rand!(0, self.base.pop_num - 1);
+            let j = rand_rng(0, self.base.pop_num - 1);
             if j >= i {
                 j + 1
             } else {
@@ -56,7 +56,7 @@ where
             } else {
                 self.base.pool[[j, s]] - self.base.pool[[i, s]]
             };
-            let v = self.base.pool[[i, s]] + rand!(1., self.base.dim as f64) * diff;
+            let v = self.base.pool[[i, s]] + rand_rng(1., self.base.dim as f64) * diff;
             self.tmp[s] = self.check(s, v);
         }
         self.register(i);

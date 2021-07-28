@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{random::*, *};
 use ndarray::{s, Array1, AsArray};
 
 setting_builder! {
@@ -58,7 +58,7 @@ where
             for s in 0..self.base.dim {
                 let v = self.base.pool[[i, s]]
                     + beta * (pool_j[s] - self.base.pool[[i, s]])
-                    + self.alpha * (self.ub(s) - self.lb(s)) * rand!(-0.5, 0.5);
+                    + self.alpha * (self.ub(s) - self.lb(s)) * rand_rng(-0.5, 0.5);
                 tmp[s] = self.check(s, v);
             }
             let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
