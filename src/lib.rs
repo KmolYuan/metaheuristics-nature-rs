@@ -28,7 +28,7 @@
 //! let a = RGA::solve(
 //!     MyFunc::new(),
 //!     RGASetting::default().task(Task::MinFit(1e-20)),
-//!     () // Run without callback
+//!     |_| true // Run without callback
 //! );
 //! let ans: f64 = a.result(); // Get the result from objective function
 //! let (x, y): (Array1<f64>, f64) = a.parameters(); // Get the optimized XY value of your function

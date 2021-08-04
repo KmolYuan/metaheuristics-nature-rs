@@ -259,7 +259,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         self.init_pop();
         self.base_mut().report.update_time(time_start);
         self.init();
-        if callback(self.base().report.clone()) {
+        if !callback(self.base().report.clone()) {
             return self;
         }
         self.base_mut().report();
@@ -274,7 +274,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             self.generation();
             let b = self.base_mut();
             if b.report.gen % b.rpt == 0 {
-                if callback(b.report.clone()) {
+                if !callback(b.report.clone()) {
                     break;
                 }
                 b.report();
@@ -312,7 +312,10 @@ pub trait Algorithm<F: ObjFunc>: Sized {
 ///
 /// Users can simply obtain their solution and see the result.
 pub trait Solver<F: ObjFunc>: Algorithm<F> {
-    /// Create the task and calling [`Algorithm::run`].
+    /// Create the task and run the algorithm.
+    ///
+    /// Argument `callback` is a progress feedback function,
+    /// returns true to keep algorithm running, same as the behavior of the while-loop.
     fn solve(func: F, settings: Self::Setting, callback: impl FnMut(Report) -> bool) -> Self {
         Self::create(func, settings).run(callback)
     }
