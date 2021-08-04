@@ -59,6 +59,8 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
+#[cfg(not(feature = "std"))]
+extern crate core as std;
 
 pub use crate::methods::*;
 pub use crate::obj_func::*;
