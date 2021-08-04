@@ -10,7 +10,10 @@ repository = "https://github.com/KmolYuan/metaheuristics-nature-rs"
 keywords = ["metaheuristic", "algorithm", "optimization"]
 
 [features]
-parallel = []
+default = ["std"]
+std = []
+wasm = ["getrandom/js"]
+parallel = ["std"]
 
 [dependencies]
 getrandom = "0.2"

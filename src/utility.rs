@@ -1,6 +1,7 @@
 use crate::{random::*, *};
-use alloc::sync::Arc;
+use alloc::{sync::Arc, vec, vec::Vec};
 use ndarray::{s, Array1, Array2, AsArray};
+#[cfg(feature = "std")]
 use std::time::Instant;
 
 /// The data of generation sampling.
@@ -31,6 +32,8 @@ impl Report {
     }
 
     /// Update time by a starting point.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     pub fn update_time(&mut self, time: Instant) {
         self.time = (Instant::now() - time).as_secs_f64();
     }
@@ -43,6 +46,8 @@ pub enum Task {
     /// Minimum fitness.
     MinFit(f64),
     /// Max time in second.
+    #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     MaxTime(f32),
     /// Minimum delta value.
     SlowDown(f64),
@@ -256,9 +261,13 @@ pub trait Algorithm<F: ObjFunc>: Sized {
 
     #[doc(hidden)]
     fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
+        #[cfg(feature = "std")]
         let time_start = Instant::now();
         self.init_pop();
-        self.base_mut().report.update_time(time_start);
+        #[cfg(feature = "std")]
+        {
+            self.base_mut().report.update_time(time_start);
+        }
         self.init();
         if !callback(self.base().report.clone()) {
             return self;
@@ -269,7 +278,10 @@ pub trait Algorithm<F: ObjFunc>: Sized {
             let best_f = {
                 let r = &mut self.base_mut().report;
                 r.next_gen();
-                r.update_time(time_start);
+                #[cfg(feature = "std")]
+                {
+                    r.update_time(time_start);
+                }
                 r.best_f
             };
             self.generation();
@@ -291,6 +303,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                         break;
                     }
                 }
+                #[cfg(feature = "std")]
                 Task::MaxTime(v) => {
                     if (Instant::now() - time_start).as_secs_f32() >= v {
                         break;

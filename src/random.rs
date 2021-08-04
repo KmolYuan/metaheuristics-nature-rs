@@ -1,8 +1,10 @@
 //! The random function for building algorithm.
-use core::{mem::size_of, sync::atomic::AtomicU64};
+use core::{
+    mem::size_of,
+    sync::atomic::{AtomicU64, Ordering},
+};
 use getrandom::getrandom;
 use oorandom::Rand32;
-use std::sync::atomic::Ordering;
 
 // Currently not support u128.
 static STATE1: AtomicU64 = AtomicU64::new(0);
