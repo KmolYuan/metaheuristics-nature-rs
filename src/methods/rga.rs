@@ -104,7 +104,7 @@ where
             if !maybe(self.mutate) {
                 continue;
             }
-            let s = rand_rng(0, self.base.dim);
+            let s = rand_int(0, self.base.dim);
             if maybe(0.5) {
                 self.base.pool[[i, s]] += self.get_delta(self.ub(s) - self.base.pool[[i, s]]);
             } else {
@@ -117,8 +117,8 @@ where
 
     fn select(&mut self) {
         for i in 0..self.base.pop_num {
-            let j = rand_rng(0, self.base.pop_num);
-            let k = rand_rng(0, self.base.pop_num);
+            let j = rand_int(0, self.base.pop_num);
+            let k = rand_int(0, self.base.pop_num);
             if self.base.fitness[j] > self.base.fitness[k] && maybe(self.win) {
                 self.new_fitness[i] = self.base.fitness[k];
                 self.new_pool
@@ -133,7 +133,7 @@ where
             self.base.fitness.assign(&self.new_fitness);
             self.base.pool.assign(&self.new_pool);
             self.assign_from(
-                rand_rng(0, self.base.pop_num),
+                rand_int(0, self.base.pop_num),
                 self.base.report.best_f,
                 &self.base.best.clone(),
             );
@@ -180,7 +180,7 @@ where
     #[inline(always)]
     fn check(&self, s: usize, v: f64) -> f64 {
         if self.ub(s) < v || self.lb(s) > v {
-            rand_rng(self.lb(s), self.ub(s))
+            rand_float(self.lb(s), self.ub(s))
         } else {
             v
         }

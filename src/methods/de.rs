@@ -173,12 +173,12 @@ where
             for j in 0..self.num {
                 v[j] = i;
                 while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
-                    v[j] = rand_rng(0, self.base.pop_num);
+                    v[j] = rand_int(0, self.base.pop_num);
                 }
             }
             // Recombination
             let mut tmp = self.base.pool.slice(s![i, ..]).to_owned();
-            (self.setter)(self, &mut tmp, v, rand_rng(0, self.base.dim));
+            (self.setter)(self, &mut tmp, v, rand_int(0, self.base.dim));
             for s in 0..self.base.dim {
                 if tmp[s] > self.ub(s) || tmp[s] < self.lb(s) {
                     continue 'a;

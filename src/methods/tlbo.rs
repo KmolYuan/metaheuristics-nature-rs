@@ -35,7 +35,7 @@ where
             }
             mean /= self.base.dim as f64;
             let v = self.base.pool[[i, s]]
-                + rand_rng(1., self.base.dim as f64) * (self.base.best[s] - tf * mean);
+                + rand_float(1., self.base.dim as f64) * (self.base.best[s] - tf * mean);
             self.tmp[s] = self.check(s, v);
         }
         self.register(i);
@@ -43,7 +43,7 @@ where
 
     fn learning(&mut self, i: usize) {
         let j = {
-            let j = rand_rng(0, self.base.pop_num - 1);
+            let j = rand_int(0, self.base.pop_num - 1);
             if j >= i {
                 j + 1
             } else {
@@ -56,7 +56,7 @@ where
             } else {
                 self.base.pool[[j, s]] - self.base.pool[[i, s]]
             };
-            let v = self.base.pool[[i, s]] + rand_rng(1., self.base.dim as f64) * diff;
+            let v = self.base.pool[[i, s]] + rand_float(1., self.base.dim as f64) * diff;
             self.tmp[s] = self.check(s, v);
         }
         self.register(i);

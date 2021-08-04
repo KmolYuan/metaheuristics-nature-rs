@@ -13,5 +13,6 @@ keywords = ["metaheuristic", "algorithm", "optimization"]
 parallel = []
 
 [dependencies]
-rand = "0.8"
+getrandom = "0.2"
+oorandom = "11"
 ndarray = { version = "0.15", default-features = false }

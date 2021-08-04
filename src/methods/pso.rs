@@ -75,8 +75,8 @@ where
         #[cfg(feature = "parallel")]
         let mut tasks = crate::thread_pool::ThreadPool::new();
         for i in 0..self.base.pop_num {
-            let alpha = rand_rng(0., self.cognition);
-            let beta = rand_rng(0., self.social);
+            let alpha = rand_float(0., self.cognition);
+            let beta = rand_float(0., self.social);
             for s in 0..self.base.dim {
                 let v = self.velocity * self.base.pool[[i, s]]
                     + alpha * (self.best_past[[i, s]] - self.base.pool[[i, s]])

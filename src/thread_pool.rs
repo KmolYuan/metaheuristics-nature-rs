@@ -2,12 +2,12 @@
 //! this module provides a thread pool to spawn the objective function and collect the results.
 
 use crate::{ObjFunc, Report};
-use ndarray::AsArray;
-use std::{
-    collections::{hash_map::IntoIter, HashMap},
+use alloc::{
+    collections::{btree_map::IntoIter, BTreeMap},
     sync::Arc,
-    thread::{spawn, JoinHandle},
 };
+use ndarray::AsArray;
+use std::thread::{spawn, JoinHandle};
 
 /// A join handler collector.
 ///
@@ -51,7 +51,7 @@ use std::{
 /// ```
 #[derive(Default)]
 pub struct ThreadPool {
-    tasks: HashMap<usize, JoinHandle<f64>>,
+    tasks: BTreeMap<usize, JoinHandle<f64>>,
 }
 
 impl ThreadPool {
@@ -80,7 +80,7 @@ impl IntoIterator for ThreadPool {
             .tasks
             .into_iter()
             .map(|(i, j)| (i, j.join().unwrap()))
-            .collect::<HashMap<_, _>>();
+            .collect::<BTreeMap<_, _>>();
         m.into_iter()
     }
 }
