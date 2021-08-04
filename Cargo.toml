@@ -13,8 +13,8 @@ categories = ["algorithms", "no-std"]
 [features]
 default = ["std"]
 std = []
-wasm = ["getrandom/js"]
 parallel = ["std"]
+wasm = ["getrandom/js"]
 
 [dependencies]
 getrandom = "0.2"
