@@ -33,7 +33,7 @@ where
         self.best_past
             .slice_mut(s![i, ..])
             .assign(&self.base.pool.slice(s![i, ..]));
-        self.best_f_past[i] = self.base.fitness[i].clone();
+        self.best_f_past[i] = self.base.fitness[i];
     }
 }
 
