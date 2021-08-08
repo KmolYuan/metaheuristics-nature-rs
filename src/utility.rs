@@ -33,7 +33,7 @@ impl Report {
 
     /// Update time by a starting point.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     pub fn update_time(&mut self, time: Instant) {
         self.time = (Instant::now() - time).as_secs_f64();
     }
@@ -47,7 +47,7 @@ pub enum Task {
     MinFit(f64),
     /// Max time in second.
     #[cfg(feature = "std")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     MaxTime(f32),
     /// Minimum delta value.
     SlowDown(f64),

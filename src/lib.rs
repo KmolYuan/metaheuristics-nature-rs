@@ -63,8 +63,9 @@
 //!   uses [`std::thread::spawn`].
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
+//!   This feature required `std`.
 //! + `wasm`: Support for webassembly, especial for random seed generating.
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 #[cfg(not(feature = "std"))]
