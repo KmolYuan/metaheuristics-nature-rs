@@ -1,4 +1,5 @@
 use crate::{random::*, *};
+use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
@@ -25,22 +26,30 @@ pub struct PSO<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F> PSO<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> PSO<F> {
     fn set_past(&mut self, i: usize) {
         self.best_past
             .slice_mut(s![i, ..])
             .assign(&self.base.pool.slice(s![i, ..]));
-        self.best_f_past[i] = self.base.fitness[i];
+        self.best_f_past[i] = self.fitness[i];
     }
 }
 
-impl<F> Algorithm<F> for PSO<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> DerefMut for PSO<F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
+impl<F: ObjFunc> Deref for PSO<F> {
+    type Target = AlgorithmBase<F>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl<F: ObjFunc> Algorithm<F> for PSO<F> {
     type Setting = PSOSetting;
 
     fn create(func: F, settings: Self::Setting) -> Self {
@@ -56,61 +65,51 @@ where
     }
 
     #[inline(always)]
-    fn base(&self) -> &AlgorithmBase<F> {
-        &self.base
-    }
-
-    #[inline(always)]
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
-        &mut self.base
-    }
-
-    #[inline(always)]
     fn init(&mut self) {
-        self.best_past = self.base.pool.clone();
-        self.best_f_past = self.base.fitness.clone();
+        self.best_past = self.pool.to_owned();
+        self.best_f_past = self.fitness.to_owned();
     }
 
     fn generation(&mut self) {
         #[cfg(feature = "parallel")]
         let mut tasks = crate::thread_pool::ThreadPool::new();
-        for i in 0..self.base.pop_num {
+        for i in 0..self.pop_num {
             let alpha = rand_float(0., self.cognition);
             let beta = rand_float(0., self.social);
-            for s in 0..self.base.dim {
-                let v = self.velocity * self.base.pool[[i, s]]
-                    + alpha * (self.best_past[[i, s]] - self.base.pool[[i, s]])
-                    + beta * (self.base.best[s] - self.base.pool[[i, s]]);
-                self.base.pool[[i, s]] = self.check(s, v);
+            for s in 0..self.dim {
+                let v = self.velocity * self.pool[[i, s]]
+                    + alpha * (self.best_past[[i, s]] - self.pool[[i, s]])
+                    + beta * (self.best[s] - self.pool[[i, s]]);
+                self.pool[[i, s]] = self.check(s, v);
             }
             #[cfg(feature = "parallel")]
             {
                 tasks.insert(
                     i,
-                    self.base.func.clone(),
-                    self.base.report.clone(),
-                    self.base.pool.slice(s![i, ..]),
+                    self.func.clone(),
+                    self.report.clone(),
+                    self.pool.slice(s![i, ..]),
                 );
             }
             #[cfg(not(feature = "parallel"))]
             {
-                self.base.fitness(i);
-                if self.base.fitness[i] < self.best_f_past[i] {
+                self.fitness(i);
+                if self.fitness[i] < self.best_f_past[i] {
                     self.set_past(i);
                 }
-                if self.base.fitness[i] < self.base.report.best_f {
-                    self.base.set_best(i);
+                if self.fitness[i] < self.report.best_f {
+                    self.set_best(i);
                 }
             }
         }
         #[cfg(feature = "parallel")]
         for (i, f) in tasks {
-            self.base.fitness[i] = f;
-            if self.base.fitness[i] < self.best_f_past[i] {
+            self.fitness[i] = f;
+            if self.fitness[i] < self.best_f_past[i] {
                 self.set_past(i);
             }
-            if self.base.fitness[i] < self.base.report.best_f {
-                self.base.set_best(i);
+            if self.fitness[i] < self.report.best_f {
+                self.set_best(i);
             }
         }
     }

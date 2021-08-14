@@ -1,4 +1,5 @@
 use crate::{random::*, *};
+use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
@@ -28,22 +29,19 @@ pub struct RGA<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F> RGA<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> RGA<F> {
     fn crossover(&mut self) {
-        for i in (0..(self.base.pop_num - 1)).step_by(2) {
+        for i in (0..(self.pop_num - 1)).step_by(2) {
             if !maybe(self.cross) {
                 continue;
             }
-            let mut tmp = Array2::zeros((3, self.base.dim));
+            let mut tmp = Array2::zeros((3, self.dim));
             let mut f_tmp = Array1::zeros(3);
-            for s in 0..self.base.dim {
-                tmp[[0, s]] = 0.5 * self.base.pool[[i, s]] + 0.5 * self.base.pool[[i + 1, s]];
-                let v = 1.5 * self.base.pool[[i, s]] - 0.5 * self.base.pool[[i + 1, s]];
+            for s in 0..self.dim {
+                tmp[[0, s]] = 0.5 * self.pool[[i, s]] + 0.5 * self.pool[[i + 1, s]];
+                let v = 1.5 * self.pool[[i, s]] - 0.5 * self.pool[[i + 1, s]];
                 tmp[[1, s]] = self.check(s, v);
-                let v = -0.5 * self.base.pool[[i, s]] + 1.5 * self.base.pool[[i + 1, s]];
+                let v = -0.5 * self.pool[[i, s]] + 1.5 * self.pool[[i + 1, s]];
                 tmp[[2, s]] = self.check(s, v);
             }
             #[cfg(feature = "parallel")]
@@ -53,17 +51,14 @@ where
                 {
                     tasks.insert(
                         j,
-                        self.base.func.clone(),
-                        self.base.report.clone(),
+                        self.func.clone(),
+                        self.report.clone(),
                         tmp.slice(s![j, ..]),
                     );
                 }
                 #[cfg(not(feature = "parallel"))]
                 {
-                    f_tmp[j] = self
-                        .base
-                        .func
-                        .fitness(tmp.slice(s![j, ..]), &self.base.report);
+                    f_tmp[j] = self.base.func.fitness(tmp.slice(s![j, ..]), &self.report);
                 }
             }
             #[cfg(feature = "parallel")]
@@ -94,59 +89,70 @@ where
     }
 
     fn get_delta(&self, y: f64) -> f64 {
-        let r = match self.base.task {
-            Task::MaxGen(v) if v > 0 => self.base.report.gen as f64 / v as f64,
+        let r = match self.task {
+            Task::MaxGen(v) if v > 0 => self.report.gen as f64 / v as f64,
             _ => 1.,
         };
         y * rand() * (1. - r).powf(self.delta)
     }
 
     fn mutate(&mut self) {
-        for i in 0..self.base.pop_num {
+        for i in 0..self.pop_num {
             if !maybe(self.mutate) {
                 continue;
             }
-            let s = rand_int(0, self.base.dim);
+            let s = rand_int(0, self.dim);
             if maybe(0.5) {
-                self.base.pool[[i, s]] += self.get_delta(self.ub(s) - self.base.pool[[i, s]]);
+                self.pool[[i, s]] += self.get_delta(self.ub(s) - self.pool[[i, s]]);
             } else {
-                self.base.pool[[i, s]] -= self.get_delta(self.base.pool[[i, s]] - self.lb(s));
+                self.pool[[i, s]] -= self.get_delta(self.pool[[i, s]] - self.lb(s));
             }
-            self.base.fitness(i);
+            self.fitness(i);
         }
         self.find_best();
     }
 
     fn select(&mut self) {
-        for i in 0..self.base.pop_num {
-            let j = rand_int(0, self.base.pop_num);
-            let k = rand_int(0, self.base.pop_num);
-            if self.base.fitness[j] > self.base.fitness[k] && maybe(self.win) {
-                self.new_fitness[i] = self.base.fitness[k];
+        for i in 0..self.pop_num {
+            let j = rand_int(0, self.pop_num);
+            let k = rand_int(0, self.pop_num);
+            if self.fitness[j] > self.fitness[k] && maybe(self.win) {
+                self.new_fitness[i] = self.fitness[k];
                 self.new_pool
                     .slice_mut(s![i, ..])
                     .assign(&self.base.pool.slice(s![k, ..]));
             } else {
-                self.new_fitness[i] = self.base.fitness[j];
+                self.new_fitness[i] = self.fitness[j];
                 self.new_pool
                     .slice_mut(s![i, ..])
                     .assign(&self.base.pool.slice(s![j, ..]));
             }
             self.base.fitness.assign(&self.new_fitness);
             self.base.pool.assign(&self.new_pool);
-            self.assign_from(
-                rand_int(0, self.base.pop_num),
-                self.base.report.best_f,
-                &self.base.best.clone(),
+            self.base.assign_from(
+                rand_int(0, self.pop_num),
+                self.report.best_f,
+                &self.best.clone(),
             );
         }
     }
 }
 
-impl<F> Algorithm<F> for RGA<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> DerefMut for RGA<F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
+impl<F: ObjFunc> Deref for RGA<F> {
+    type Target = AlgorithmBase<F>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl<F: ObjFunc> Algorithm<F> for RGA<F> {
     type Setting = RGASetting;
 
     fn create(func: F, settings: Self::Setting) -> Self {
@@ -160,16 +166,6 @@ where
             new_pool: Array2::zeros((base.pop_num, base.dim)),
             base,
         }
-    }
-
-    #[inline(always)]
-    fn base(&self) -> &AlgorithmBase<F> {
-        &self.base
-    }
-
-    #[inline(always)]
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
-        &mut self.base
     }
 
     #[inline(always)]

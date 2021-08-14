@@ -1,4 +1,5 @@
 use crate::{random::*, *};
+use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, AsArray};
 
 setting_builder! {
@@ -38,41 +39,49 @@ pub struct FA<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F> FA<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> FA<F> {
     fn move_fireflies(&mut self) {
-        for (i, j) in product(0..self.base.pop_num, 0..self.base.pop_num) {
-            if self.base.fitness[i] <= self.base.fitness[j] {
+        for (i, j) in product(0..self.pop_num, 0..self.pop_num) {
+            if self.fitness[i] <= self.fitness[j] {
                 continue;
             }
-            let mut tmp = Array1::zeros(self.base.dim);
+            let mut tmp = Array1::zeros(self.dim);
             let pool_j = if i == j {
-                self.base.best.view()
+                self.best.view()
             } else {
-                self.base.pool.slice(s![j, ..])
+                self.pool.slice(s![j, ..])
             };
-            let r = distance(self.base.pool.slice(s![i, ..]), pool_j);
+            let r = distance(self.pool.slice(s![i, ..]), pool_j.view());
             let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
-            for s in 0..self.base.dim {
-                let v = self.base.pool[[i, s]]
-                    + beta * (pool_j[s] - self.base.pool[[i, s]])
+            for s in 0..self.dim {
+                let v = self.pool[[i, s]]
+                    + beta * (pool_j[s] - self.pool[[i, s]])
                     + self.alpha * (self.ub(s) - self.lb(s)) * rand_float(-0.5, 0.5);
                 tmp[s] = self.check(s, v);
             }
-            let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
-            if tmp_f < self.base.fitness[i] {
+            let tmp_f = self.func.fitness(&tmp, &self.report);
+            if tmp_f < self.fitness[i] {
                 self.assign_from(i, tmp_f, &tmp);
             }
         }
     }
 }
 
-impl<F> Algorithm<F> for FA<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> DerefMut for FA<F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
+impl<F: ObjFunc> Deref for FA<F> {
+    type Target = AlgorithmBase<F>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl<F: ObjFunc> Algorithm<F> for FA<F> {
     type Setting = FASetting;
 
     fn create(func: F, settings: Self::Setting) -> Self {
@@ -84,16 +93,6 @@ where
             beta0: 1.,
             base,
         }
-    }
-
-    #[inline(always)]
-    fn base(&self) -> &AlgorithmBase<F> {
-        &self.base
-    }
-
-    #[inline(always)]
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
-        &mut self.base
     }
 
     #[inline(always)]

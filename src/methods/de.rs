@@ -1,5 +1,6 @@
 use self::Strategy::*;
 use crate::{random::*, *};
+use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
@@ -69,44 +70,36 @@ pub struct DE<F: ObjFunc> {
     base: AlgorithmBase<F>,
 }
 
-impl<F> DE<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> DE<F> {
     fn f1(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.base.best[n] + self.f * (self.base.pool[[v[0], n]] - self.base.pool[[v[1], n]])
+        self.best[n] + self.f * (self.pool[[v[0], n]] - self.pool[[v[1], n]])
     }
 
     fn f2(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.base.pool[[v[0], n]] + self.f * (self.base.pool[[v[1], n]] - self.base.pool[[v[2], n]])
+        self.pool[[v[0], n]] + self.f * (self.pool[[v[1], n]] - self.pool[[v[2], n]])
     }
 
     fn f3(&self, tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        tmp[n]
-            + self.f
-                * (self.base.best[n] - tmp[n] + self.base.pool[[v[0], n]]
-                    - self.base.pool[[v[1], n]])
+        tmp[n] + self.f * (self.best[n] - tmp[n] + self.pool[[v[0], n]] - self.pool[[v[1], n]])
     }
 
     fn f4(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.base.best[n] + self.f45(v, n)
+        self.best[n] + self.f45(v, n)
     }
 
     fn f5(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.base.pool[[v[4], n]] + self.f45(v, n)
+        self.pool[[v[4], n]] + self.f45(v, n)
     }
 
     fn f45(&self, v: &Array1<usize>, n: usize) -> f64 {
-        (self.base.pool[[v[0], n]] + self.base.pool[[v[1], n]]
-            - self.base.pool[[v[2], n]]
-            - self.base.pool[[v[3], n]])
+        (self.pool[[v[0], n]] + self.pool[[v[1], n]] - self.pool[[v[2], n]] - self.pool[[v[3], n]])
             * self.f
     }
 
     fn c1(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
-        for _ in 0..self.base.dim {
+        for _ in 0..self.dim {
             tmp[n] = (self.formula)(self, tmp, &v, n);
-            n = (n + 1) % self.base.dim;
+            n = (n + 1) % self.dim;
             if !maybe(self.cross) {
                 break;
             }
@@ -114,19 +107,30 @@ where
     }
 
     fn c2(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
-        for lv in 0..self.base.dim {
-            if !maybe(self.cross) || lv == self.base.dim - 1 {
+        for lv in 0..self.dim {
+            if !maybe(self.cross) || lv == self.dim - 1 {
                 tmp[n] = (self.formula)(self, tmp, &v, n);
             }
-            n = (n + 1) % self.base.dim;
+            n = (n + 1) % self.dim;
         }
     }
 }
 
-impl<F> Algorithm<F> for DE<F>
-where
-    F: ObjFunc,
-{
+impl<F: ObjFunc> Deref for DE<F> {
+    type Target = AlgorithmBase<F>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl<F: ObjFunc> DerefMut for DE<F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
+impl<F: ObjFunc> Algorithm<F> for DE<F> {
     type Setting = DESetting;
 
     fn create(func: F, settings: Self::Setting) -> Self {
@@ -156,36 +160,26 @@ where
         }
     }
 
-    #[inline(always)]
-    fn base(&self) -> &AlgorithmBase<F> {
-        &self.base
-    }
-
-    #[inline(always)]
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F> {
-        &mut self.base
-    }
-
     fn generation(&mut self) {
-        'a: for i in 0..self.base.pop_num {
+        'a: for i in 0..self.pop_num {
             // Generate Vector
             let mut v = Array1::zeros(self.num);
             for j in 0..self.num {
                 v[j] = i;
                 while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
-                    v[j] = rand_int(0, self.base.pop_num);
+                    v[j] = rand_int(0, self.pop_num);
                 }
             }
             // Recombination
-            let mut tmp = self.base.pool.slice(s![i, ..]).to_owned();
-            (self.setter)(self, &mut tmp, v, rand_int(0, self.base.dim));
-            for s in 0..self.base.dim {
+            let mut tmp = self.pool.slice(s![i, ..]).to_owned();
+            (self.setter)(self, &mut tmp, v, rand_int(0, self.dim));
+            for s in 0..self.dim {
                 if tmp[s] > self.ub(s) || tmp[s] < self.lb(s) {
                     continue 'a;
                 }
             }
-            let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
-            if tmp_f < self.base.fitness[i] {
+            let tmp_f = self.func.fitness(&tmp, &self.report);
+            if tmp_f < self.fitness[i] {
                 self.assign_from(i, tmp_f, &tmp);
             }
         }

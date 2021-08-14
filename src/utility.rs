@@ -1,5 +1,6 @@
 use crate::{random::*, *};
 use alloc::{sync::Arc, vec, vec::Vec};
+use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2, AsArray};
 #[cfg(feature = "std")]
 use std::time::Instant;
@@ -131,6 +132,16 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
+    /// Assign from source.
+    #[inline(always)]
+    pub fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
+    where
+        A: AsArray<'a, f64>,
+    {
+        self.fitness[i] = f;
+        self.pool.slice_mut(s![i, ..]).assign(&v.into());
+    }
+
     /// Record the performance.
     fn report(&mut self) {
         self.reports.push(self.report.clone());
@@ -142,11 +153,25 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 /// This trait is extendable.
 /// Create a structure and store a `AlgorithmBase` member to implement it.
 /// ```
-/// use metaheuristics_nature::{AlgorithmBase, Algorithm, ObjFunc, Setting};
+/// use metaheuristics_nature::{Algorithm, AlgorithmBase, ObjFunc, Setting};
+/// use std::ops::{Deref, DerefMut};
 ///
 /// struct MyAlgorithm<F: ObjFunc> {
 ///     tmp: Vec<f64>,
 ///     base: AlgorithmBase<F>,
+/// }
+///
+/// impl<F: ObjFunc> Deref for MyAlgorithm<F> {
+///     type Target = AlgorithmBase<F>;
+///     fn deref(&self) -> &Self::Target {
+///         &self.base
+///     }
+/// }
+///
+/// impl<F: ObjFunc> DerefMut for MyAlgorithm<F> {
+///     fn deref_mut(&mut self) -> &mut Self::Target {
+///         &mut self.base
+///     }
 /// }
 ///
 /// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
@@ -157,24 +182,18 @@ impl<F: ObjFunc> AlgorithmBase<F> {
 ///             base: AlgorithmBase::new(func, settings),
 ///         }
 ///     }
-///     fn base(&self) -> &AlgorithmBase<F> { &self.base }
-///     fn base_mut(&mut self) -> &mut AlgorithmBase<F> { &mut self.base }
-///     fn generation(&mut self) { unimplemented!() }
+///     fn generation(&mut self) {
+///         todo!()
+///     }
 /// }
 /// ```
 /// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
-pub trait Algorithm<F: ObjFunc>: Sized {
+pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + Sized {
     /// The setting type of the algorithm.
     type Setting;
 
     /// Create the task.
     fn create(func: F, settings: Self::Setting) -> Self;
-
-    /// Return a base handle.
-    fn base(&self) -> &AlgorithmBase<F>;
-
-    /// Return a mutable base handle.
-    fn base_mut(&mut self) -> &mut AlgorithmBase<F>;
 
     /// Initialization implementation.
     fn init(&mut self) {}
@@ -182,75 +201,57 @@ pub trait Algorithm<F: ObjFunc>: Sized {
     /// Processing implementation of each generation.
     fn generation(&mut self);
 
-    /// Get lower bound with index.
-    #[inline(always)]
-    fn lb(&self, i: usize) -> f64 {
-        self.base().lb(i)
-    }
-
-    /// Get upper bound with index.
-    #[inline(always)]
-    fn ub(&self, i: usize) -> f64 {
-        self.base().ub(i)
-    }
-
-    /// Assign from source.
-    fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
-    where
-        A: AsArray<'a, f64>,
-    {
-        let b = self.base_mut();
-        b.fitness[i] = f;
-        b.pool.slice_mut(s![i, ..]).assign(&v.into());
-    }
-
     /// Find the best, and set it globally.
     fn find_best(&mut self) {
-        let b = self.base_mut();
         let mut best = 0;
-        for i in 1..b.pop_num {
-            if b.fitness[i] < b.fitness[best] {
+        for i in 1..self.pop_num {
+            if self.fitness[i] < self.fitness[best] {
                 best = i;
             }
         }
-        if b.fitness[best] < b.report.best_f {
-            b.set_best(best);
+        if self.fitness[best] < self.report.best_f {
+            self.set_best(best);
         }
     }
 
     /// Initialize population.
     fn init_pop(&mut self) {
-        let b = self.base_mut();
         #[cfg(feature = "parallel")]
         let mut tasks = crate::thread_pool::ThreadPool::new();
         let mut best = 0;
-        for i in 0..b.pop_num {
-            for s in 0..b.dim {
-                b.pool[[i, s]] = rand_float(b.lb(s), b.ub(s));
+        for i in 0..self.pop_num {
+            for s in 0..self.dim {
+                self.pool[[i, s]] = rand_float(self.lb(s), self.ub(s));
             }
             #[cfg(feature = "parallel")]
             {
-                tasks.insert(i, b.func.clone(), b.report.clone(), b.pool.slice(s![i, ..]));
+                tasks.insert(
+                    i,
+                    self.func.clone(),
+                    self.report.clone(),
+                    self.pool.slice(s![i, ..]),
+                );
             }
             #[cfg(not(feature = "parallel"))]
             {
-                b.fitness(i);
-                if b.fitness[i] < b.fitness[best] {
+                self.fitness(i);
+                if self.fitness[i] < self.fitness[best] {
                     best = i;
                 }
             }
         }
         #[cfg(feature = "parallel")]
         for (i, f) in tasks {
-            b.fitness[i] = f;
-            if b.fitness[i] < b.fitness[best] {
+            self.fitness[i] = f;
+            if self.fitness[i] < self.fitness[best] {
                 best = i;
             }
         }
-        b.set_best(best);
+        self.set_best(best);
     }
 
     /// Check the bounds of the index `s` with the value `v`.
+    #[inline(always)]
     fn check(&self, s: usize, v: f64) -> f64 {
         if v > self.ub(s) {
             self.ub(s)
@@ -268,40 +269,38 @@ pub trait Algorithm<F: ObjFunc>: Sized {
         self.init_pop();
         #[cfg(feature = "std")]
         {
-            self.base_mut().report.update_time(time_start);
+            self.report.update_time(time_start);
         }
         self.init();
-        if !callback(self.base().report.clone()) {
+        if !callback(self.report.clone()) {
             return self;
         }
-        self.base_mut().report();
+        self.report();
         let mut last_diff = 0.;
         loop {
             let best_f = {
-                let r = &mut self.base_mut().report;
-                r.next_gen();
+                self.report.next_gen();
                 #[cfg(feature = "std")]
                 {
-                    r.update_time(time_start);
+                    self.report.update_time(time_start);
                 }
-                r.best_f
+                self.report.best_f
             };
             self.generation();
-            let b = self.base_mut();
-            if b.report.gen % b.rpt == 0 {
-                if !callback(b.report.clone()) {
+            if self.report.gen % self.rpt == 0 {
+                if !callback(self.report.clone()) {
                     break;
                 }
-                b.report();
+                self.report();
             }
-            match b.task {
+            match self.task {
                 Task::MaxGen(v) => {
-                    if b.report.gen >= v {
+                    if self.report.gen >= v {
                         break;
                     }
                 }
                 Task::MinFit(v) => {
-                    if b.report.best_f <= v {
+                    if self.report.best_f <= v {
                         break;
                     }
                 }
@@ -312,7 +311,7 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                     }
                 }
                 Task::SlowDown(v) => {
-                    let diff = best_f - b.report.best_f;
+                    let diff = best_f - self.report.best_f;
                     if last_diff > 0. && diff / last_diff >= v {
                         break;
                     }
@@ -337,21 +336,22 @@ pub trait Solver<F: ObjFunc>: Algorithm<F> {
     }
 
     /// Get the history for plotting.
+    #[inline(always)]
     fn history(&self) -> Vec<Report> {
-        self.base().reports.clone()
+        self.reports.clone()
     }
 
     /// Return the x and y of function.
     /// The algorithm must be executed once.
+    #[inline(always)]
     fn parameters(&self) -> (Array1<f64>, f64) {
-        let b = self.base();
-        (b.best.clone(), b.report.best_f)
+        (self.best.to_owned(), self.report.best_f)
     }
 
     /// Get the result of the objective function.
+    #[inline(always)]
     fn result(&self) -> F::Result {
-        let b = self.base();
-        b.func.result(&b.best)
+        self.func.result(&self.best)
     }
 }
 
