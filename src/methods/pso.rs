@@ -1,4 +1,4 @@
-use crate::{random::*, *};
+use crate::{random::*, thread_pool::ThreadPool, *};
 use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2};
 
@@ -71,8 +71,7 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
     }
 
     fn generation(&mut self) {
-        #[cfg(feature = "parallel")]
-        let mut tasks = crate::thread_pool::ThreadPool::new();
+        let mut tasks = ThreadPool::new();
         for i in 0..self.pop_num {
             let alpha = rand_float(0., self.cognition);
             let beta = rand_float(0., self.social);
@@ -82,27 +81,13 @@ impl<F: ObjFunc> Algorithm<F> for PSO<F> {
                     + beta * (self.best[s] - self.pool[[i, s]]);
                 self.pool[[i, s]] = self.check(s, v);
             }
-            #[cfg(feature = "parallel")]
-            {
-                tasks.insert(
-                    i,
-                    self.func.clone(),
-                    self.report.clone(),
-                    self.pool.slice(s![i, ..]),
-                );
-            }
-            #[cfg(not(feature = "parallel"))]
-            {
-                self.fitness(i);
-                if self.fitness[i] < self.best_f_past[i] {
-                    self.set_past(i);
-                }
-                if self.fitness[i] < self.report.best_f {
-                    self.set_best(i);
-                }
-            }
+            tasks.insert(
+                i,
+                self.func.clone(),
+                self.report.clone(),
+                self.pool.slice(s![i, ..]),
+            );
         }
-        #[cfg(feature = "parallel")]
         for (i, f) in tasks {
             self.fitness[i] = f;
             if self.fitness[i] < self.best_f_past[i] {

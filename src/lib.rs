@@ -158,6 +158,5 @@ mod obj_func;
 pub mod random;
 #[cfg(test)]
 mod tests;
-#[cfg(feature = "parallel")]
 pub mod thread_pool;
 mod utility;

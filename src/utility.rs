@@ -1,4 +1,4 @@
-use crate::{random::*, *};
+use crate::{random::*, thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec, vec::Vec};
 use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2, AsArray};
@@ -216,31 +216,19 @@ pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + S
 
     /// Initialize population.
     fn init_pop(&mut self) {
-        #[cfg(feature = "parallel")]
-        let mut tasks = crate::thread_pool::ThreadPool::new();
+        let mut tasks = ThreadPool::new();
         let mut best = 0;
         for i in 0..self.pop_num {
             for s in 0..self.dim {
                 self.pool[[i, s]] = rand_float(self.lb(s), self.ub(s));
             }
-            #[cfg(feature = "parallel")]
-            {
-                tasks.insert(
-                    i,
-                    self.func.clone(),
-                    self.report.clone(),
-                    self.pool.slice(s![i, ..]),
-                );
-            }
-            #[cfg(not(feature = "parallel"))]
-            {
-                self.fitness(i);
-                if self.fitness[i] < self.fitness[best] {
-                    best = i;
-                }
-            }
+            tasks.insert(
+                i,
+                self.func.clone(),
+                self.report.clone(),
+                self.pool.slice(s![i, ..]),
+            );
         }
-        #[cfg(feature = "parallel")]
         for (i, f) in tasks {
             self.fitness[i] = f;
             if self.fitness[i] < self.fitness[best] {

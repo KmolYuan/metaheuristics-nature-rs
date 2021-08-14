@@ -7,6 +7,8 @@ use alloc::{
     sync::Arc,
 };
 use ndarray::AsArray;
+use std::ops::Deref;
+#[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 
 /// A join handler collector.
@@ -51,7 +53,10 @@ use std::thread::{spawn, JoinHandle};
 /// ```
 #[derive(Default)]
 pub struct ThreadPool {
+    #[cfg(feature = "parallel")]
     tasks: BTreeMap<usize, JoinHandle<f64>>,
+    #[cfg(not(feature = "parallel"))]
+    tasks: BTreeMap<usize, f64>,
 }
 
 impl ThreadPool {
@@ -67,7 +72,11 @@ impl ThreadPool {
         V: AsArray<'a, f64>,
     {
         let v = Arc::new(v.into().to_owned());
-        self.tasks.insert(i, spawn(move || f.fitness(&*v, &report)));
+        #[cfg(feature = "parallel")]
+        let fit = spawn(move || f.fitness(v.deref(), &report));
+        #[cfg(not(feature = "parallel"))]
+        let fit = f.fitness(v.deref(), &report);
+        self.tasks.insert(i, fit);
     }
 }
 
@@ -79,7 +88,13 @@ impl IntoIterator for ThreadPool {
         let m = self
             .tasks
             .into_iter()
-            .map(|(i, j)| (i, j.join().unwrap()))
+            .map(|(i, j)| {
+                #[cfg(feature = "parallel")]
+                let fit = j.join().unwrap();
+                #[cfg(not(feature = "parallel"))]
+                let fit = j;
+                (i, fit)
+            })
             .collect::<BTreeMap<_, _>>();
         m.into_iter()
     }
