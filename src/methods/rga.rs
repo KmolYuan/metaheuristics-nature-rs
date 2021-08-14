@@ -50,12 +50,14 @@ where
             let mut tasks = crate::thread_pool::ThreadPool::new();
             for j in 0..3 {
                 #[cfg(feature = "parallel")]
-                tasks.insert(
-                    j,
-                    self.base.func.clone(),
-                    self.base.report.clone(),
-                    tmp.slice(s![j, ..]),
-                );
+                {
+                    tasks.insert(
+                        j,
+                        self.base.func.clone(),
+                        self.base.report.clone(),
+                        tmp.slice(s![j, ..]),
+                    );
+                }
                 #[cfg(not(feature = "parallel"))]
                 {
                     f_tmp[j] = self

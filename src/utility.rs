@@ -229,7 +229,9 @@ pub trait Algorithm<F: ObjFunc>: Sized {
                 b.pool[[i, s]] = rand_float(b.lb(s), b.ub(s));
             }
             #[cfg(feature = "parallel")]
-            tasks.insert(i, b.func.clone(), b.report.clone(), b.pool.slice(s![i, ..]));
+            {
+                tasks.insert(i, b.func.clone(), b.report.clone(), b.pool.slice(s![i, ..]));
+            }
             #[cfg(not(feature = "parallel"))]
             {
                 b.fitness(i);

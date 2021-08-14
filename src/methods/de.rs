@@ -186,7 +186,7 @@ where
             }
             let tmp_f = self.base.func.fitness(&tmp, &self.base.report);
             if tmp_f < self.base.fitness[i] {
-                self.assign_from(i, tmp_f, &tmp.clone());
+                self.assign_from(i, tmp_f, &tmp);
             }
         }
         self.find_best();

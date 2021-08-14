@@ -84,12 +84,14 @@ where
                 self.base.pool[[i, s]] = self.check(s, v);
             }
             #[cfg(feature = "parallel")]
-            tasks.insert(
-                i,
-                self.base.func.clone(),
-                self.base.report.clone(),
-                self.base.pool.slice(s![i, ..]),
-            );
+            {
+                tasks.insert(
+                    i,
+                    self.base.func.clone(),
+                    self.base.report.clone(),
+                    self.base.pool.slice(s![i, ..]),
+                );
+            }
             #[cfg(not(feature = "parallel"))]
             {
                 self.base.fitness(i);
