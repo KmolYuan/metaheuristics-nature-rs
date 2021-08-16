@@ -3,7 +3,7 @@ use ndarray::s;
 
 setting_builder! {
     /// Particle Swarm Optimization settings.
-    pub struct PSOSetting for PSO {
+    pub struct PsoSetting for Pso {
         @base,
         @pop_num = 200,
         /// Cognition factor.
@@ -16,7 +16,7 @@ setting_builder! {
 }
 
 /// Particle Swarm Optimization type.
-pub struct PSO {
+pub struct Pso {
     cognition: f64,
     social: f64,
     velocity: f64,
@@ -24,7 +24,7 @@ pub struct PSO {
     best_f_past: Array1<f64>,
 }
 
-impl PSO {
+impl Pso {
     fn set_past<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize) {
         self.best_past
             .slice_mut(s![i, ..])
@@ -33,8 +33,8 @@ impl PSO {
     }
 }
 
-impl Algorithm for PSO {
-    type Setting = PSOSetting;
+impl Algorithm for Pso {
+    type Setting = PsoSetting;
 
     fn create(settings: &Self::Setting) -> Self {
         Self {

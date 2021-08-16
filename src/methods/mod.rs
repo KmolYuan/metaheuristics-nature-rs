@@ -1,8 +1,8 @@
-pub use self::de::*;
-pub use self::fa::*;
-pub use self::pso::*;
-pub use self::rga::*;
-pub use self::tlbo::*;
+pub use self::de::DeSetting;
+pub use self::fa::FaSetting;
+pub use self::pso::PsoSetting;
+pub use self::rga::RgaSetting;
+pub use self::tlbo::TlboSetting;
 
 mod de;
 mod fa;

@@ -47,7 +47,7 @@ pub enum Strategy {
 
 setting_builder! {
     /// Differential Evolution settings.
-    pub struct DESetting for DE {
+    pub struct DeSetting for De {
         @base,
         @pop_num = 400,
         /// Strategy of the formula.
@@ -60,14 +60,14 @@ setting_builder! {
 }
 
 /// Differential Evolution type.
-pub struct DE {
+pub struct De {
     f: f64,
     cross: f64,
     num: usize,
     strategy: Strategy,
 }
 
-impl DE {
+impl De {
     fn formula<F: ObjFunc>(
         &self,
         ctx: &Context<F>,
@@ -130,8 +130,8 @@ impl DE {
     }
 }
 
-impl Algorithm for DE {
-    type Setting = DESetting;
+impl Algorithm for De {
+    type Setting = DeSetting;
 
     fn create(settings: &Self::Setting) -> Self {
         let num = match settings.strategy {

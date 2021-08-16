@@ -3,7 +3,7 @@ use ndarray::{s, Array1, AsArray};
 
 setting_builder! {
     /// Firefly Algorithm settings.
-    pub struct FASetting for FA {
+    pub struct FaSetting for Fa {
         @base,
         @pop_num = 80,
         /// Alpha factor.
@@ -30,14 +30,14 @@ where
 }
 
 /// Firefly Algorithm type.
-pub struct FA {
+pub struct Fa {
     alpha: f64,
     beta_min: f64,
     gamma: f64,
     beta0: f64,
 }
 
-impl FA {
+impl Fa {
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for (i, j) in product(0..ctx.pop_num, 0..ctx.pop_num) {
             if ctx.fitness[i] <= ctx.fitness[j] {
@@ -65,8 +65,8 @@ impl FA {
     }
 }
 
-impl Algorithm for FA {
-    type Setting = FASetting;
+impl Algorithm for Fa {
+    type Setting = FaSetting;
 
     fn create(settings: &Self::Setting) -> Self {
         Self {

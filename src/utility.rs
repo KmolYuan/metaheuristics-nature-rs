@@ -238,7 +238,7 @@ impl<F: ObjFunc> Context<F> {
 ///     }
 /// }
 /// ```
-/// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
+/// Your algorithm will be implemented by [Solver] automatically.
 pub trait Algorithm: Sized {
     /// The setting type of the algorithm.
     type Setting: Setting<Algorithm = Self>;
@@ -262,6 +262,8 @@ pub trait Algorithm: Sized {
 /// + The method is a type that implemented [`Algorithm`].
 /// + The objective function is a type that implement [`ObjFunc`].
 /// + A basic algorithm data is hold by [`Context`].
+///
+/// This type can infer the algorithm by [`Setting::Algorithm`].
 pub struct Solver<M: Algorithm, F: ObjFunc> {
     method: M,
     ctx: Context<F>,

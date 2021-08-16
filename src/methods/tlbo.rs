@@ -3,15 +3,15 @@ use ndarray::s;
 
 setting_builder! {
     /// Teaching Learning Based Optimization settings.
-    pub struct TLBOSetting for TLBO {
+    pub struct TlboSetting for Tlbo {
         @base,
     }
 }
 
 /// Teaching Learning Based Optimization type.
-pub struct TLBO;
+pub struct Tlbo;
 
-impl TLBO {
+impl Tlbo {
     fn register<F: ObjFunc>(ctx: &mut Context<F>, i: usize, student: &Array1<f64>) {
         let f_new = ctx.func.fitness(student, &ctx.report);
         if f_new < ctx.fitness[i] {
@@ -59,8 +59,8 @@ impl TLBO {
     }
 }
 
-impl Algorithm for TLBO {
-    type Setting = TLBOSetting;
+impl Algorithm for Tlbo {
+    type Setting = TlboSetting;
 
     fn create(_: &Self::Setting) -> Self {
         Self

@@ -1,6 +1,6 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
-//! use metaheuristics_nature::{Report, RGA, RGASetting, Solver, Task, ObjFunc};
+//! use metaheuristics_nature::{Report, RgaSetting, Solver, Task, ObjFunc};
 //! # use metaheuristics_nature::{Array1, AsArray};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
@@ -27,7 +27,7 @@
 //!
 //! let a = Solver::solve(
 //!     MyFunc::new(),
-//!     RGASetting::default().task(Task::MinFit(1e-20)),
+//!     RgaSetting::default().task(Task::MinFit(1e-20)),
 //!     |_| true // Run without callback
 //! );
 //! let ans: f64 = a.result(); // Get the result from objective function
