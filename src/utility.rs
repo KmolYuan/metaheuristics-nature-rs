@@ -58,7 +58,7 @@ pub struct Context<F> {
     pub pop_num: usize,
     /// Dimension, the variable number of the problem.
     pub dim: usize,
-    rpt: u32,
+    pub(crate) rpt: u32,
     /// Termination condition.
     pub task: Task,
     /// The best variables.
@@ -69,7 +69,7 @@ pub struct Context<F> {
     pub pool: Array2<f64>,
     /// The current information of the algorithm.
     pub report: Report,
-    reports: Vec<Report>,
+    pub(crate) reports: Vec<Report>,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -111,7 +111,7 @@ impl<F: ObjFunc> Context<F> {
         self.fitness[i] = self.func.fitness(self.pool.slice(s![i, ..]), &self.report);
     }
 
-    fn init_pop(&mut self) {
+    pub(crate) fn init_pop(&mut self) {
         let mut tasks = ThreadPool::new();
         let mut best = 0;
         for i in 0..self.pop_num {
@@ -184,7 +184,7 @@ impl<F: ObjFunc> Context<F> {
     }
 
     /// Record the performance.
-    fn report(&mut self) {
+    pub(crate) fn report(&mut self) {
         self.reports.push(self.report.clone());
     }
 }
@@ -229,119 +229,6 @@ pub trait Algorithm: Sized {
 
     /// Processing implementation of each generation.
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>);
-}
-
-/// A public API for [`Algorithm`].
-///
-/// Users can simply obtain their solution and see the result.
-///
-/// + The method is a type that implemented [`Algorithm`].
-/// + The objective function is a type that implement [`ObjFunc`].
-/// + A basic algorithm data is hold by [`Context`].
-///
-/// This type can infer the algorithm by [`Setting::Algorithm`].
-pub struct Solver<M: Algorithm, F: ObjFunc> {
-    method: M,
-    ctx: Context<F>,
-}
-
-impl<S, M, F> Solver<M, F>
-where
-    S: Setting<Algorithm = M>,
-    M: Algorithm<Setting = S>,
-    F: ObjFunc,
-{
-    /// Create the task and run the algorithm.
-    ///
-    /// Argument `callback` is a progress feedback function,
-    /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve(func: F, settings: S, callback: impl FnMut(Report) -> bool) -> Self {
-        Self {
-            method: M::create(&settings),
-            ctx: Context::new(func, settings.into_setting()),
-        }
-        .run(callback)
-    }
-}
-
-impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
-    fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
-        #[cfg(feature = "std")]
-        let time_start = Instant::now();
-        self.ctx.init_pop();
-        #[cfg(feature = "std")]
-        {
-            self.ctx.report.update_time(time_start);
-        }
-        self.method.init(&mut self.ctx);
-        if !callback(self.ctx.report.clone()) {
-            return self;
-        }
-        self.ctx.report();
-        let mut last_diff = 0.;
-        loop {
-            let best_f = {
-                self.ctx.report.next_gen();
-                #[cfg(feature = "std")]
-                {
-                    self.ctx.report.update_time(time_start);
-                }
-                self.ctx.report.best_f
-            };
-            self.method.generation(&mut self.ctx);
-            if self.ctx.report.gen % self.ctx.rpt == 0 {
-                if !callback(self.ctx.report.clone()) {
-                    break;
-                }
-                self.ctx.report();
-            }
-            match self.ctx.task {
-                Task::MaxGen(v) => {
-                    if self.ctx.report.gen >= v {
-                        break;
-                    }
-                }
-                Task::MinFit(v) => {
-                    if self.ctx.report.best_f <= v {
-                        break;
-                    }
-                }
-                #[cfg(feature = "std")]
-                Task::MaxTime(v) => {
-                    if (Instant::now() - time_start).as_secs_f32() >= v {
-                        break;
-                    }
-                }
-                Task::SlowDown(v) => {
-                    let diff = best_f - self.ctx.report.best_f;
-                    if last_diff > 0. && diff / last_diff >= v {
-                        break;
-                    }
-                    last_diff = diff;
-                }
-            }
-        }
-        self
-    }
-
-    /// Get the history for plotting.
-    #[inline(always)]
-    pub fn history(&self) -> Vec<Report> {
-        self.ctx.reports.clone()
-    }
-
-    /// Return the x and y of function.
-    /// The algorithm must be executed once.
-    #[inline(always)]
-    pub fn parameters(&self) -> (Array1<f64>, f64) {
-        (self.ctx.best.to_owned(), self.ctx.report.best_f)
-    }
-
-    /// Get the result of the objective function.
-    #[inline(always)]
-    pub fn result(&self) -> F::Result {
-        self.ctx.func.result(&self.ctx.best)
-    }
 }
 
 /// Product two iterators together.

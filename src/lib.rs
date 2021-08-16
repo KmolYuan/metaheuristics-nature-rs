@@ -75,7 +75,8 @@ extern crate core as std;
 pub use crate::methods::*;
 pub use crate::obj_func::ObjFunc;
 pub use crate::report::*;
-pub use crate::utility::{Solver, Task};
+pub use crate::solver::Solver;
+pub use crate::utility::Task;
 pub use ndarray::{Array1, Array2, AsArray};
 
 /// Define a data structure and its builder functions.
@@ -162,6 +163,7 @@ mod methods;
 mod obj_func;
 pub mod random;
 mod report;
+mod solver;
 #[cfg(test)]
 mod tests;
 pub mod thread_pool;
