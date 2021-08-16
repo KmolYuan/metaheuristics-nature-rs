@@ -35,11 +35,11 @@
 //! let history: Vec<Report> = a.history(); // Get the history reports
 //! ```
 //!
-//! There are two traits [`Algorithm`] and [`Solver`].
+//! There are two traits [`Algorithm`] and [`Setting`].
 //! The previous is used to design the optimization method,
-//! and the latter is a simple interface for obtaining the solution, or analyzing the result.
+//! and the latter is the setting interface.
 //!
-//! `Solver` will automatically implement for the type which implements `Algorithm`.
+//! [`Solver`] is a simple interface for obtaining the solution, or analyzing the result.
 //!
 //! # Objective Function
 //!
@@ -84,8 +84,8 @@ pub use crate::utility::*;
 /// # pub struct GA;
 /// # impl Algorithm for GA {
 /// #     type Setting = GASetting;
-/// #     fn create(settings: &Self::Setting) -> Self { todo!() }
-/// #     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) { todo!() }
+/// #     fn create(settings: &Self::Setting) -> Self { unimplemented!() }
+/// #     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) { unimplemented!() }
 /// # }
 ///
 /// setting_builder! {

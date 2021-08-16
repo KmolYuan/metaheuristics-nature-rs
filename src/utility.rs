@@ -229,10 +229,10 @@ impl<F: ObjFunc> Context<F> {
 /// impl Algorithm for MyAlgorithm {
 ///     type Setting = MySetting;
 ///     fn create(settings: &Self::Setting) -> Self {
-///         todo!()
+///         unimplemented!()
 ///     }
 ///     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-///         todo!()
+///         unimplemented!()
 ///     }
 /// }
 /// ```
