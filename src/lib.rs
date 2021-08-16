@@ -99,15 +99,15 @@ pub use crate::utility::*;
 macro_rules! setting_builder {
     (
         $(#[$attr:meta])*
-        $v:vis struct $name:ident {
-            $(@$base:ident, $(@$base_field:ident = $base_default:expr,)*)?
-            $($(#[$field_attr:meta])* $field:ident: $field_type:ty = $field_default:expr,)+
+        $vis:vis struct $name:ident $(for $alg:ident)? {
+            $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
+            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr,)*
         }
     ) => {
         $(#[$attr])*
-        $v struct $name {
-            $($base: $crate::Setting,)?
-            $($field: $field_type,)+
+        $vis struct $name {
+            $($base: $crate::BasicSetting,)?
+            $($field: $field_ty,)*
         }
         impl $name {
             $(setting_builder! {
@@ -119,19 +119,25 @@ macro_rules! setting_builder {
                 /// The report frequency. (per generation)
                 rpt: u32,
             })?
-            $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
+            $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
                 self.$field = $field;
                 self
-            })+
+            })*
         }
         impl Default for $name {
             fn default() -> Self {
                 Self {
-                    $($base: $crate::Setting::default()$(.$base_field($base_default))*,)?
-                    $($field: $field_default,)+
+                    $($base: $crate::BasicSetting::default()$(.$base_field($base_default))*,)?
+                    $($field: $field_default,)*
                 }
             }
         }
+        $(impl $crate::Setting for $name {
+            type Algorithm = $alg;
+            fn into_setting(self) -> $crate::BasicSetting {
+                self.$base
+            }
+        })?
     };
     (@$base:ident, $($(#[$field_attr:meta])* $field:ident: $field_type:ty,)+) => {
         $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {

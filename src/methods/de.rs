@@ -1,6 +1,5 @@
 use self::Strategy::*;
 use crate::{random::*, *};
-use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
@@ -48,7 +47,7 @@ pub enum Strategy {
 
 setting_builder! {
     /// Differential Evolution settings.
-    pub struct DESetting {
+    pub struct DESetting for DE {
         @base,
         @pop_num = 400,
         /// Strategy of the formula.
@@ -61,80 +60,80 @@ setting_builder! {
 }
 
 /// Differential Evolution type.
-pub struct DE<F: ObjFunc> {
+pub struct DE {
     f: f64,
     cross: f64,
     num: usize,
-    formula: fn(&Self, &Array1<f64>, &Array1<usize>, usize) -> f64,
-    setter: fn(&mut Self, &mut Array1<f64>, Array1<usize>, usize),
-    base: AlgorithmBase<F>,
+    strategy: Strategy,
 }
 
-impl<F: ObjFunc> DE<F> {
-    fn f1(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.best[n] + self.f * (self.pool[[v[0], n]] - self.pool[[v[1], n]])
+impl DE {
+    fn formula<F: ObjFunc>(
+        &self,
+        ctx: &Context<F>,
+        tmp: &Array1<f64>,
+        v: &Array1<usize>,
+        n: usize,
+    ) -> f64 {
+        match self.strategy {
+            S1 | S6 => ctx.best[n] + self.f * (ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]]),
+            S2 | S7 => ctx.pool[[v[0], n]] + self.f * (ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]]),
+            S3 | S8 => {
+                tmp[n] + self.f * (ctx.best[n] - tmp[n] + ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
+            }
+            S4 | S9 => {
+                ctx.best[n]
+                    + (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]]
+                        - ctx.pool[[v[2], n]]
+                        - ctx.pool[[v[3], n]])
+                        * self.f
+            }
+            S5 | S10 => {
+                ctx.pool[[v[4], n]]
+                    + (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]]
+                        - ctx.pool[[v[2], n]]
+                        - ctx.pool[[v[3], n]])
+                        * self.f
+            }
+        }
     }
 
-    fn f2(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.pool[[v[0], n]] + self.f * (self.pool[[v[1], n]] - self.pool[[v[2], n]])
-    }
-
-    fn f3(&self, tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        tmp[n] + self.f * (self.best[n] - tmp[n] + self.pool[[v[0], n]] - self.pool[[v[1], n]])
-    }
-
-    fn f4(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.best[n] + self.f45(v, n)
-    }
-
-    fn f5(&self, _tmp: &Array1<f64>, v: &Array1<usize>, n: usize) -> f64 {
-        self.pool[[v[4], n]] + self.f45(v, n)
-    }
-
-    fn f45(&self, v: &Array1<usize>, n: usize) -> f64 {
-        (self.pool[[v[0], n]] + self.pool[[v[1], n]] - self.pool[[v[2], n]] - self.pool[[v[3], n]])
-            * self.f
-    }
-
-    fn c1(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
-        for _ in 0..self.dim {
-            tmp[n] = (self.formula)(self, tmp, &v, n);
-            n = (n + 1) % self.dim;
+    fn c1<F: ObjFunc>(
+        &mut self,
+        ctx: &Context<F>,
+        tmp: &mut Array1<f64>,
+        v: Array1<usize>,
+        mut n: usize,
+    ) {
+        for _ in 0..ctx.dim {
+            tmp[n] = self.formula(ctx, tmp, &v, n);
+            n = (n + 1) % ctx.dim;
             if !maybe(self.cross) {
                 break;
             }
         }
     }
 
-    fn c2(&mut self, tmp: &mut Array1<f64>, v: Array1<usize>, mut n: usize) {
-        for lv in 0..self.dim {
-            if !maybe(self.cross) || lv == self.dim - 1 {
-                tmp[n] = (self.formula)(self, tmp, &v, n);
+    fn c2<F: ObjFunc>(
+        &mut self,
+        ctx: &Context<F>,
+        tmp: &mut Array1<f64>,
+        v: Array1<usize>,
+        mut n: usize,
+    ) {
+        for lv in 0..ctx.dim {
+            if !maybe(self.cross) || lv == ctx.dim - 1 {
+                tmp[n] = self.formula(ctx, tmp, &v, n);
             }
-            n = (n + 1) % self.dim;
+            n = (n + 1) % ctx.dim;
         }
     }
 }
 
-impl<F: ObjFunc> Deref for DE<F> {
-    type Target = AlgorithmBase<F>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl<F: ObjFunc> DerefMut for DE<F> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
-impl<F: ObjFunc> Algorithm<F> for DE<F> {
+impl Algorithm for DE {
     type Setting = DESetting;
 
-    fn create(func: F, settings: Self::Setting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
+    fn create(settings: &Self::Setting) -> Self {
         let num = match settings.strategy {
             S1 | S3 | S6 | S8 => 2,
             S2 | S7 => 3,
@@ -145,44 +144,37 @@ impl<F: ObjFunc> Algorithm<F> for DE<F> {
             f: settings.f,
             cross: settings.cross,
             num,
-            formula: match settings.strategy {
-                S1 | S6 => Self::f1,
-                S2 | S7 => Self::f2,
-                S3 | S8 => Self::f3,
-                S4 | S9 => Self::f4,
-                S5 | S10 => Self::f5,
-            },
-            setter: match settings.strategy {
-                S1 | S2 | S3 | S4 | S5 => Self::c1,
-                S6 | S7 | S8 | S9 | S10 => Self::c2,
-            },
-            base,
+            strategy: settings.strategy.clone(),
         }
     }
 
-    fn generation(&mut self) {
-        'a: for i in 0..self.pop_num {
+    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        'a: for i in 0..ctx.pop_num {
             // Generate Vector
             let mut v = Array1::zeros(self.num);
             for j in 0..self.num {
                 v[j] = i;
                 while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
-                    v[j] = rand_int(0, self.pop_num);
+                    v[j] = rand_int(0, ctx.pop_num);
                 }
             }
             // Recombination
-            let mut tmp = self.pool.slice(s![i, ..]).to_owned();
-            (self.setter)(self, &mut tmp, v, rand_int(0, self.dim));
-            for s in 0..self.dim {
-                if tmp[s] > self.ub(s) || tmp[s] < self.lb(s) {
+            let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
+            let n = rand_int(0, ctx.dim);
+            match self.strategy {
+                S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, v, n),
+                S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, v, n),
+            }
+            for s in 0..ctx.dim {
+                if tmp[s] > ctx.ub(s) || tmp[s] < ctx.lb(s) {
                     continue 'a;
                 }
             }
-            let tmp_f = self.func.fitness(&tmp, &self.report);
-            if tmp_f < self.fitness[i] {
-                self.assign_from(i, tmp_f, &tmp);
+            let tmp_f = ctx.func.fitness(&tmp, &ctx.report);
+            if tmp_f < ctx.fitness[i] {
+                ctx.assign_from(i, tmp_f, &tmp);
             }
         }
-        self.find_best();
+        ctx.find_best();
     }
 }

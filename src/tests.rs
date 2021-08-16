@@ -1,14 +1,13 @@
 use crate::*;
-use ndarray::{Array1, ArrayView1, AsArray};
+use ndarray::AsArray;
 
 const OFFSET: f64 = 7.;
 
-struct TestObj(Array1<f64>, Array1<f64>);
+struct TestObj([f64; 4], [f64; 4]);
 
 impl Default for TestObj {
     fn default() -> Self {
-        // Self(Array1::ones(4) * -50., Array1::ones(4) * 50.)
-        Self(Array1::zeros(4), Array1::ones(4) * 50.)
+        Self([0.; 4], [50.; 4])
     }
 }
 
@@ -30,19 +29,16 @@ impl ObjFunc for TestObj {
         self.fitness(v, &Default::default())
     }
 
-    fn ub(&self) -> ArrayView1<f64> {
-        self.1.view()
+    fn ub(&self) -> &[f64] {
+        &self.1
     }
-    fn lb(&self) -> ArrayView1<f64> {
-        self.0.view()
+    fn lb(&self) -> &[f64] {
+        &self.0
     }
 }
 
-fn test<S>(obj: TestObj, setting: S::Setting)
-where
-    S: Solver<TestObj>,
-{
-    let a = S::solve(obj, setting, |_| true);
+fn test<S: Setting>(obj: TestObj, setting: S) {
+    let a = Solver::solve(obj, setting, |_| true);
     let ans = a.result();
     let (x, y) = a.parameters();
     let history = a.history();
@@ -56,7 +52,7 @@ where
 
 #[test]
 fn de() {
-    test::<DE<_>>(
+    test(
         TestObj::default(),
         DESetting::default().task(Task::MinFit(OFFSET)),
     );
@@ -64,7 +60,7 @@ fn de() {
 
 #[test]
 fn pso() {
-    test::<PSO<_>>(
+    test(
         TestObj::default(),
         PSOSetting::default().task(Task::MinFit(OFFSET)),
     );
@@ -72,7 +68,7 @@ fn pso() {
 
 #[test]
 fn fa() {
-    test::<FA<_>>(
+    test(
         TestObj::default(),
         FASetting::default().task(Task::MinFit(OFFSET)),
     );
@@ -80,7 +76,7 @@ fn fa() {
 
 #[test]
 fn rga() {
-    test::<RGA<_>>(
+    test(
         TestObj::default(),
         RGASetting::default().task(Task::MinFit(OFFSET)),
     );
@@ -88,7 +84,7 @@ fn rga() {
 
 #[test]
 fn tlbo() {
-    test::<TLBO<_>>(
+    test(
         TestObj::default(),
         TLBOSetting::default().task(Task::MinFit(OFFSET)),
     );

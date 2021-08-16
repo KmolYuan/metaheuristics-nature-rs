@@ -1,10 +1,11 @@
+#[cfg(feature = "parallel")]
+use crate::thread_pool::ThreadPool;
 use crate::{random::*, *};
-use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2};
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.
-    pub struct RGASetting {
+    pub struct RGASetting for RGA {
         @base,
         @pop_num = 500,
         /// Crossing probability.
@@ -19,46 +20,45 @@ setting_builder! {
 }
 
 /// Real-coded Genetic Algorithm type.
-pub struct RGA<F: ObjFunc> {
+pub struct RGA {
     cross: f64,
     mutate: f64,
     win: f64,
     delta: f64,
     new_fitness: Array1<f64>,
     new_pool: Array2<f64>,
-    base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> RGA<F> {
-    fn crossover(&mut self) {
-        for i in (0..(self.pop_num - 1)).step_by(2) {
+impl RGA {
+    fn crossover<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for i in (0..(ctx.pop_num - 1)).step_by(2) {
             if !maybe(self.cross) {
                 continue;
             }
-            let mut tmp = Array2::zeros((3, self.dim));
+            let mut tmp = Array2::zeros((3, ctx.dim));
             let mut f_tmp = Array1::zeros(3);
-            for s in 0..self.dim {
-                tmp[[0, s]] = 0.5 * self.pool[[i, s]] + 0.5 * self.pool[[i + 1, s]];
-                let v = 1.5 * self.pool[[i, s]] - 0.5 * self.pool[[i + 1, s]];
-                tmp[[1, s]] = self.check(s, v);
-                let v = -0.5 * self.pool[[i, s]] + 1.5 * self.pool[[i + 1, s]];
-                tmp[[2, s]] = self.check(s, v);
+            for s in 0..ctx.dim {
+                tmp[[0, s]] = 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]];
+                let v = 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]];
+                tmp[[1, s]] = Self::check(ctx, s, v);
+                let v = -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]];
+                tmp[[2, s]] = Self::check(ctx, s, v);
             }
             #[cfg(feature = "parallel")]
-            let mut tasks = crate::thread_pool::ThreadPool::new();
+            let mut tasks = ThreadPool::new();
             for j in 0..3 {
                 #[cfg(feature = "parallel")]
                 {
                     tasks.insert(
                         j,
-                        self.func.clone(),
-                        self.report.clone(),
+                        ctx.func.clone(),
+                        ctx.report.clone(),
                         tmp.slice(s![j, ..]),
                     );
                 }
                 #[cfg(not(feature = "parallel"))]
                 {
-                    f_tmp[j] = self.base.func.fitness(tmp.slice(s![j, ..]), &self.report);
+                    f_tmp[j] = ctx.func.fitness(tmp.slice(s![j, ..]), &ctx.report);
                 }
             }
             #[cfg(feature = "parallel")]
@@ -83,104 +83,94 @@ impl<F: ObjFunc> RGA<F> {
                     tmp.swap([1, j], [2, j]);
                 }
             }
-            self.assign_from(i, f_tmp[0], tmp.slice(s![0, ..]));
-            self.assign_from(i + 1, f_tmp[1], tmp.slice(s![1, ..]));
+            ctx.assign_from(i, f_tmp[0], tmp.slice(s![0, ..]));
+            ctx.assign_from(i + 1, f_tmp[1], tmp.slice(s![1, ..]));
         }
     }
 
-    fn get_delta(&self, y: f64) -> f64 {
-        let r = match self.task {
-            Task::MaxGen(v) if v > 0 => self.report.gen as f64 / v as f64,
+    fn get_delta<F: ObjFunc>(&self, ctx: &Context<F>, y: f64) -> f64 {
+        let r = match ctx.task {
+            Task::MaxGen(v) if v > 0 => ctx.report.gen as f64 / v as f64,
             _ => 1.,
         };
         y * rand() * (1. - r).powf(self.delta)
     }
 
-    fn mutate(&mut self) {
-        for i in 0..self.pop_num {
+    fn mutate<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for i in 0..ctx.pop_num {
             if !maybe(self.mutate) {
                 continue;
             }
-            let s = rand_int(0, self.dim);
+            let s = rand_int(0, ctx.dim);
             if maybe(0.5) {
-                self.pool[[i, s]] += self.get_delta(self.ub(s) - self.pool[[i, s]]);
+                ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
             } else {
-                self.pool[[i, s]] -= self.get_delta(self.pool[[i, s]] - self.lb(s));
+                ctx.pool[[i, s]] -= self.get_delta(ctx, ctx.pool[[i, s]] - ctx.lb(s));
             }
-            self.fitness(i);
+            ctx.fitness(i);
         }
-        self.find_best();
+        ctx.find_best();
     }
 
-    fn select(&mut self) {
-        for i in 0..self.pop_num {
-            let j = rand_int(0, self.pop_num);
-            let k = rand_int(0, self.pop_num);
-            if self.fitness[j] > self.fitness[k] && maybe(self.win) {
-                self.new_fitness[i] = self.fitness[k];
+    fn select<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for i in 0..ctx.pop_num {
+            let j = rand_int(0, ctx.pop_num);
+            let k = rand_int(0, ctx.pop_num);
+            // FIXME
+            assert!(i < ctx.pop_num);
+            assert!(j < ctx.pop_num);
+            assert!(k < ctx.pop_num);
+            if ctx.fitness[j] > ctx.fitness[k] && maybe(self.win) {
+                self.new_fitness[i] = ctx.fitness[k];
                 self.new_pool
                     .slice_mut(s![i, ..])
-                    .assign(&self.base.pool.slice(s![k, ..]));
+                    .assign(&ctx.pool.slice(s![k, ..]));
             } else {
-                self.new_fitness[i] = self.fitness[j];
+                self.new_fitness[i] = ctx.fitness[j];
                 self.new_pool
                     .slice_mut(s![i, ..])
-                    .assign(&self.base.pool.slice(s![j, ..]));
+                    .assign(&ctx.pool.slice(s![j, ..]));
             }
-            self.base.fitness.assign(&self.new_fitness);
-            self.base.pool.assign(&self.new_pool);
-            self.base.assign_from(
-                rand_int(0, self.pop_num),
-                self.report.best_f,
-                &self.best.clone(),
-            );
+            ctx.fitness.assign(&self.new_fitness);
+            ctx.pool.assign(&self.new_pool);
+            ctx.assign_from_best(rand_int(0, ctx.pop_num));
+        }
+    }
+
+    #[inline(always)]
+    fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
+        if ctx.ub(s) < v || v < ctx.lb(s) {
+            rand_float(ctx.lb(s), ctx.ub(s))
+        } else {
+            v
         }
     }
 }
 
-impl<F: ObjFunc> DerefMut for RGA<F> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
-impl<F: ObjFunc> Deref for RGA<F> {
-    type Target = AlgorithmBase<F>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl<F: ObjFunc> Algorithm<F> for RGA<F> {
+impl Algorithm for RGA {
     type Setting = RGASetting;
 
-    fn create(func: F, settings: Self::Setting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
+    fn create(settings: &Self::Setting) -> Self {
         Self {
             cross: settings.cross,
             mutate: settings.mutate,
             win: settings.win,
             delta: settings.delta,
-            new_fitness: Array1::ones(base.pop_num) * f64::INFINITY,
-            new_pool: Array2::zeros((base.pop_num, base.dim)),
-            base,
+            new_pool: Array2::zeros((1, 1)),
+            new_fitness: Array1::ones(1) * f64::INFINITY,
         }
     }
 
     #[inline(always)]
-    fn generation(&mut self) {
-        self.select();
-        self.crossover();
-        self.mutate();
+    fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        self.new_pool = ctx.pool.clone();
+        self.new_fitness = ctx.fitness.clone();
     }
 
     #[inline(always)]
-    fn check(&self, s: usize, v: f64) -> f64 {
-        if self.ub(s) < v || self.lb(s) > v {
-            rand_float(self.lb(s), self.ub(s))
-        } else {
-            v
-        }
+    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        self.select(ctx);
+        self.crossover(ctx);
+        self.mutate(ctx);
     }
 }

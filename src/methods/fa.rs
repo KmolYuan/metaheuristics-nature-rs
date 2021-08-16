@@ -1,10 +1,9 @@
 use crate::{random::*, *};
-use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, AsArray};
 
 setting_builder! {
     /// Firefly Algorithm settings.
-    pub struct FASetting {
+    pub struct FASetting for FA {
         @base,
         @pop_num = 80,
         /// Alpha factor.
@@ -31,73 +30,56 @@ where
 }
 
 /// Firefly Algorithm type.
-pub struct FA<F: ObjFunc> {
+pub struct FA {
     alpha: f64,
     beta_min: f64,
     gamma: f64,
     beta0: f64,
-    base: AlgorithmBase<F>,
 }
 
-impl<F: ObjFunc> FA<F> {
-    fn move_fireflies(&mut self) {
-        for (i, j) in product(0..self.pop_num, 0..self.pop_num) {
-            if self.fitness[i] <= self.fitness[j] {
+impl FA {
+    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for (i, j) in product(0..ctx.pop_num, 0..ctx.pop_num) {
+            if ctx.fitness[i] <= ctx.fitness[j] {
                 continue;
             }
-            let mut tmp = Array1::zeros(self.dim);
+            let mut tmp = Array1::zeros(ctx.dim);
             let pool_j = if i == j {
-                self.best.view()
+                ctx.best.view()
             } else {
-                self.pool.slice(s![j, ..])
+                ctx.pool.slice(s![j, ..])
             };
-            let r = distance(self.pool.slice(s![i, ..]), pool_j.view());
+            let r = distance(ctx.pool.slice(s![i, ..]), pool_j.view());
             let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
-            for s in 0..self.dim {
-                let v = self.pool[[i, s]]
-                    + beta * (pool_j[s] - self.pool[[i, s]])
-                    + self.alpha * (self.ub(s) - self.lb(s)) * rand_float(-0.5, 0.5);
-                tmp[s] = self.check(s, v);
+            for s in 0..ctx.dim {
+                let v = ctx.pool[[i, s]]
+                    + beta * (pool_j[s] - ctx.pool[[i, s]])
+                    + self.alpha * (ctx.ub(s) - ctx.lb(s)) * rand_float(-0.5, 0.5);
+                tmp[s] = ctx.check(s, v);
             }
-            let tmp_f = self.func.fitness(&tmp, &self.report);
-            if tmp_f < self.fitness[i] {
-                self.assign_from(i, tmp_f, &tmp);
+            let tmp_f = ctx.func.fitness(&tmp, &ctx.report);
+            if tmp_f < ctx.fitness[i] {
+                ctx.assign_from(i, tmp_f, &tmp);
             }
         }
     }
 }
 
-impl<F: ObjFunc> DerefMut for FA<F> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
-impl<F: ObjFunc> Deref for FA<F> {
-    type Target = AlgorithmBase<F>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl<F: ObjFunc> Algorithm<F> for FA<F> {
+impl Algorithm for FA {
     type Setting = FASetting;
 
-    fn create(func: F, settings: Self::Setting) -> Self {
-        let base = AlgorithmBase::new(func, settings.base);
+    fn create(settings: &Self::Setting) -> Self {
         Self {
             alpha: settings.alpha,
             beta_min: settings.beta_min,
             gamma: settings.gamma,
             beta0: 1.,
-            base,
         }
     }
 
     #[inline(always)]
-    fn generation(&mut self) {
-        self.move_fireflies();
-        self.find_best();
+    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        self.move_fireflies(ctx);
+        ctx.find_best();
     }
 }

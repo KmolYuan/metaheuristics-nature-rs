@@ -1,5 +1,5 @@
 use crate::Report;
-use ndarray::{ArrayView1, AsArray};
+use ndarray::AsArray;
 
 /// The base of the objective function.
 ///
@@ -82,8 +82,8 @@ pub trait ObjFunc: Sync + Send + 'static {
         V: AsArray<'a, f64>;
 
     /// Get upper bound.
-    fn ub(&self) -> ArrayView1<f64>;
+    fn ub(&self) -> &[f64];
 
     /// Get lower bound.
-    fn lb(&self) -> ArrayView1<f64>;
+    fn lb(&self) -> &[f64];
 }

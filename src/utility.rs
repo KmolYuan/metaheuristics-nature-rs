@@ -1,6 +1,5 @@
 use crate::{random::*, thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec, vec::Vec};
-use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1, Array2, AsArray};
 #[cfg(feature = "std")]
 use std::time::Instant;
@@ -56,7 +55,7 @@ pub enum Task {
 
 setting_builder! {
     /// Base settings.
-    pub struct Setting {
+    pub struct BasicSetting {
         /// Termination condition.
         task: Task = Task::MaxGen(200),
         /// Population number.
@@ -66,9 +65,17 @@ setting_builder! {
     }
 }
 
+/// A trait that provides a conversion to original setting.
+pub trait Setting {
+    /// Associated algorithm.
+    type Algorithm: Algorithm<Setting = Self>;
+    /// Convert to original setting.
+    fn into_setting(self) -> BasicSetting;
+}
+
 /// The base class of algorithms.
 /// Please see [`Algorithm`] for more information.
-pub struct AlgorithmBase<F: ObjFunc> {
+pub struct Context<F> {
     /// Population number.
     pub pop_num: usize,
     /// Dimension, the variable number of the problem.
@@ -89,14 +96,14 @@ pub struct AlgorithmBase<F: ObjFunc> {
     pub func: Arc<F>,
 }
 
-impl<F: ObjFunc> AlgorithmBase<F> {
-    pub fn new(func: F, settings: Setting) -> Self {
-        let dim = {
-            let lb = func.lb();
-            let ub = func.ub();
-            assert_eq!(lb.len(), ub.len(), "different dimension of the variables!");
-            lb.len()
-        };
+impl<F: ObjFunc> Context<F> {
+    pub fn new(func: F, settings: BasicSetting) -> Self {
+        let dim = func.lb().len();
+        assert_eq!(
+            dim,
+            func.ub().len(),
+            "different dimension of the variables!"
+        );
         Self {
             pop_num: settings.pop_num,
             dim,
@@ -126,95 +133,6 @@ impl<F: ObjFunc> AlgorithmBase<F> {
         self.fitness[i] = self.func.fitness(self.pool.slice(s![i, ..]), &self.report);
     }
 
-    /// Set the index to best.
-    pub fn set_best(&mut self, i: usize) {
-        self.report.best_f = self.fitness[i];
-        self.best.assign(&self.pool.slice(s![i, ..]));
-    }
-
-    /// Assign from source.
-    #[inline(always)]
-    pub fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
-    where
-        A: AsArray<'a, f64>,
-    {
-        self.fitness[i] = f;
-        self.pool.slice_mut(s![i, ..]).assign(&v.into());
-    }
-
-    /// Record the performance.
-    fn report(&mut self) {
-        self.reports.push(self.report.clone());
-    }
-}
-
-/// The methods of the metaheuristic algorithms.
-///
-/// This trait is extendable.
-/// Create a structure and store a `AlgorithmBase` member to implement it.
-/// ```
-/// use metaheuristics_nature::{Algorithm, AlgorithmBase, ObjFunc, Setting};
-/// use std::ops::{Deref, DerefMut};
-///
-/// struct MyAlgorithm<F: ObjFunc> {
-///     tmp: Vec<f64>,
-///     base: AlgorithmBase<F>,
-/// }
-///
-/// impl<F: ObjFunc> Deref for MyAlgorithm<F> {
-///     type Target = AlgorithmBase<F>;
-///     fn deref(&self) -> &Self::Target {
-///         &self.base
-///     }
-/// }
-///
-/// impl<F: ObjFunc> DerefMut for MyAlgorithm<F> {
-///     fn deref_mut(&mut self) -> &mut Self::Target {
-///         &mut self.base
-///     }
-/// }
-///
-/// impl<F: ObjFunc> Algorithm<F> for MyAlgorithm<F> {
-///     type Setting = Setting;
-///     fn create(func: F, settings: Self::Setting) -> Self {
-///         Self {
-///             tmp: vec![],
-///             base: AlgorithmBase::new(func, settings),
-///         }
-///     }
-///     fn generation(&mut self) {
-///         todo!()
-///     }
-/// }
-/// ```
-/// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
-pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + Sized {
-    /// The setting type of the algorithm.
-    type Setting;
-
-    /// Create the task.
-    fn create(func: F, settings: Self::Setting) -> Self;
-
-    /// Initialization implementation.
-    fn init(&mut self) {}
-
-    /// Processing implementation of each generation.
-    fn generation(&mut self);
-
-    /// Find the best, and set it globally.
-    fn find_best(&mut self) {
-        let mut best = 0;
-        for i in 1..self.pop_num {
-            if self.fitness[i] < self.fitness[best] {
-                best = i;
-            }
-        }
-        if self.fitness[best] < self.report.best_f {
-            self.set_best(best);
-        }
-    }
-
-    /// Initialize population.
     fn init_pop(&mut self) {
         let mut tasks = ThreadPool::new();
         let mut best = 0;
@@ -238,9 +156,46 @@ pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + S
         self.set_best(best);
     }
 
+    /// Set the index to best.
+    #[inline(always)]
+    pub fn set_best(&mut self, i: usize) {
+        self.report.best_f = self.fitness[i];
+        self.best.assign(&self.pool.slice(s![i, ..]));
+    }
+
+    /// Assign the index from best.
+    #[inline(always)]
+    pub fn assign_from_best(&mut self, i: usize) {
+        self.fitness[i] = self.report.best_f;
+        self.pool.slice_mut(s![i, ..]).assign(&self.best);
+    }
+
+    /// Assign the index from source.
+    #[inline(always)]
+    pub fn assign_from<'a, A>(&mut self, i: usize, f: f64, v: A)
+    where
+        A: AsArray<'a, f64>,
+    {
+        self.fitness[i] = f;
+        self.pool.slice_mut(s![i, ..]).assign(&v.into());
+    }
+
+    /// Find the best, and set it globally.
+    pub fn find_best(&mut self) {
+        let mut best = 0;
+        for i in 1..self.pop_num {
+            if self.fitness[i] < self.fitness[best] {
+                best = i;
+            }
+        }
+        if self.fitness[best] < self.report.best_f {
+            self.set_best(best);
+        }
+    }
+
     /// Check the bounds of the index `s` with the value `v`.
     #[inline(always)]
-    fn check(&self, s: usize, v: f64) -> f64 {
+    pub fn check(&self, s: usize, v: f64) -> f64 {
         if v > self.ub(s) {
             self.ub(s)
         } else if v < self.lb(s) {
@@ -250,45 +205,116 @@ pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + S
         }
     }
 
-    #[doc(hidden)]
+    /// Record the performance.
+    fn report(&mut self) {
+        self.reports.push(self.report.clone());
+    }
+}
+
+/// The methods of the metaheuristic algorithms.
+///
+/// This trait is extendable.
+/// Create a structure and store a `AlgorithmBase` member to implement it.
+/// ```
+/// use metaheuristics_nature::{Algorithm, AlgorithmBase, ObjFunc, Setting, Context};
+///
+/// struct MyAlgorithm {
+///     tmp: Vec<f64>,
+/// }
+///
+/// impl<F: ObjFunc> Algorithm for MyAlgorithm {
+///     type Setting = Setting;
+///     fn create(_settings: Self::Setting) -> Self {
+///         Self { tmp: vec![] }
+///     }
+///     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+///         todo!()
+///     }
+/// }
+/// ```
+/// Your algorithm will be implemented [Solver](trait.Solver.html) automatically.
+pub trait Algorithm: Sized {
+    /// The setting type of the algorithm.
+    type Setting: Setting<Algorithm = Self>;
+
+    /// Create the task.
+    fn create(settings: &Self::Setting) -> Self;
+
+    /// Initialization implementation.
+    #[inline(always)]
+    #[allow(unused_variables)]
+    fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {}
+
+    /// Processing implementation of each generation.
+    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>);
+}
+
+/// A public API for [`Algorithm`].
+///
+/// Users can simply obtain their solution and see the result.
+pub struct Solver<M: Algorithm, F: ObjFunc> {
+    method: M,
+    ctx: Context<F>,
+}
+
+impl<S, M, F> Solver<M, F>
+where
+    S: Setting<Algorithm = M>,
+    M: Algorithm<Setting = S>,
+    F: ObjFunc,
+{
+    /// Create the task and run the algorithm.
+    ///
+    /// Argument `callback` is a progress feedback function,
+    /// returns true to keep algorithm running, same as the behavior of the while-loop.
+    pub fn solve(func: F, settings: S, callback: impl FnMut(Report) -> bool) -> Self {
+        Self {
+            method: M::create(&settings),
+            ctx: Context::new(func, settings.into_setting()),
+        }
+        .run(callback)
+    }
+}
+
+impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
         #[cfg(feature = "std")]
         let time_start = Instant::now();
-        self.init_pop();
+        self.ctx.init_pop();
         #[cfg(feature = "std")]
         {
-            self.report.update_time(time_start);
+            self.ctx.report.update_time(time_start);
         }
-        self.init();
-        if !callback(self.report.clone()) {
+        self.method.init(&mut self.ctx);
+        if !callback(self.ctx.report.clone()) {
             return self;
         }
-        self.report();
+        self.ctx.report();
         let mut last_diff = 0.;
         loop {
             let best_f = {
-                self.report.next_gen();
+                self.ctx.report.next_gen();
                 #[cfg(feature = "std")]
                 {
-                    self.report.update_time(time_start);
+                    self.ctx.report.update_time(time_start);
                 }
-                self.report.best_f
+                self.ctx.report.best_f
             };
-            self.generation();
-            if self.report.gen % self.rpt == 0 {
-                if !callback(self.report.clone()) {
+            self.method.generation(&mut self.ctx);
+            if self.ctx.report.gen % self.ctx.rpt == 0 {
+                if !callback(self.ctx.report.clone()) {
                     break;
                 }
-                self.report();
+                self.ctx.report();
             }
-            match self.task {
+            match self.ctx.task {
                 Task::MaxGen(v) => {
-                    if self.report.gen >= v {
+                    if self.ctx.report.gen >= v {
                         break;
                     }
                 }
                 Task::MinFit(v) => {
-                    if self.report.best_f <= v {
+                    if self.ctx.report.best_f <= v {
                         break;
                     }
                 }
@@ -299,7 +325,7 @@ pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + S
                     }
                 }
                 Task::SlowDown(v) => {
-                    let diff = best_f - self.report.best_f;
+                    let diff = best_f - self.ctx.report.best_f;
                     if last_diff > 0. && diff / last_diff >= v {
                         break;
                     }
@@ -309,43 +335,23 @@ pub trait Algorithm<F: ObjFunc>: Deref<Target = AlgorithmBase<F>> + DerefMut + S
         }
         self
     }
-}
-
-/// A public API for [`Algorithm`].
-///
-/// Users can simply obtain their solution and see the result.
-pub trait Solver<F: ObjFunc>: Algorithm<F> {
-    /// Create the task and run the algorithm.
-    ///
-    /// Argument `callback` is a progress feedback function,
-    /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    fn solve(func: F, settings: Self::Setting, callback: impl FnMut(Report) -> bool) -> Self {
-        Self::create(func, settings).run(callback)
-    }
 
     /// Get the history for plotting.
     #[inline(always)]
-    fn history(&self) -> Vec<Report> {
-        self.reports.clone()
+    pub fn history(&self) -> Vec<Report> {
+        self.ctx.reports.clone()
     }
 
     /// Return the x and y of function.
     /// The algorithm must be executed once.
     #[inline(always)]
-    fn parameters(&self) -> (Array1<f64>, f64) {
-        (self.best.to_owned(), self.report.best_f)
+    pub fn parameters(&self) -> (Array1<f64>, f64) {
+        (self.ctx.best.to_owned(), self.ctx.report.best_f)
     }
 
     /// Get the result of the objective function.
     #[inline(always)]
-    fn result(&self) -> F::Result {
-        self.func.result(&self.best)
+    pub fn result(&self) -> F::Result {
+        self.ctx.func.result(&self.ctx.best)
     }
-}
-
-impl<F, T> Solver<F> for T
-where
-    F: ObjFunc,
-    T: Algorithm<F>,
-{
 }

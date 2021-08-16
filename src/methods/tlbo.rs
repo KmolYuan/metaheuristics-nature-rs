@@ -1,90 +1,77 @@
 use crate::{random::*, *};
-use core::ops::{Deref, DerefMut};
 use ndarray::{s, Array1};
 
-/// Teaching Learning Based Optimization settings.
-/// This is a type alias to [`Setting`].
-pub type TLBOSetting = Setting;
+setting_builder! {
+    /// Teaching Learning Based Optimization settings.
+    pub struct TLBOSetting for TLBO {
+        @base,
+    }
+}
 
 /// Teaching Learning Based Optimization type.
-pub struct TLBO<F: ObjFunc>(AlgorithmBase<F>);
+pub struct TLBO;
 
-impl<F: ObjFunc> TLBO<F> {
-    fn register(&mut self, i: usize, student: &Array1<f64>) {
-        let f_new = self.func.fitness(student, &self.report);
-        if f_new < self.fitness[i] {
-            self.pool.slice_mut(s![i, ..]).assign(student);
-            self.fitness[i] = f_new;
+impl TLBO {
+    fn register<F: ObjFunc>(ctx: &mut Context<F>, i: usize, student: &Array1<f64>) {
+        let f_new = ctx.func.fitness(student, &ctx.report);
+        if f_new < ctx.fitness[i] {
+            ctx.pool.slice_mut(s![i, ..]).assign(student);
+            ctx.fitness[i] = f_new;
         }
-        if f_new < self.report.best_f {
-            self.set_best(i);
+        if f_new < ctx.report.best_f {
+            ctx.set_best(i);
         }
     }
 
-    fn teaching(&mut self, i: usize, student: &mut Array1<f64>) {
+    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
         let tf = f64::round(rand() + 1.);
-        for s in 0..self.dim {
+        for s in 0..ctx.dim {
             let mut mean = 0.;
-            for j in 0..self.pop_num {
-                mean += self.pool[[j, s]];
+            for j in 0..ctx.pop_num {
+                mean += ctx.pool[[j, s]];
             }
-            mean /= self.dim as f64;
-            let v =
-                self.pool[[i, s]] + rand_float(1., self.dim as f64) * (self.best[s] - tf * mean);
-            student[s] = self.check(s, v);
+            mean /= ctx.dim as f64;
+            let v = ctx.pool[[i, s]] + rand_float(1., ctx.dim as f64) * (ctx.best[s] - tf * mean);
+            student[s] = ctx.check(s, v);
         }
-        self.register(i, student);
+        Self::register(ctx, i, student);
     }
 
-    fn learning(&mut self, i: usize, student: &mut Array1<f64>) {
+    fn learning<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
         let j = {
-            let j = rand_int(0, self.pop_num - 1);
+            let j = rand_int(0, ctx.pop_num - 1);
             if j >= i {
                 j + 1
             } else {
                 j
             }
         };
-        for s in 0..self.dim {
-            let diff = if self.fitness[j] < self.fitness[i] {
-                self.pool[[i, s]] - self.pool[[j, s]]
+        for s in 0..ctx.dim {
+            let diff = if ctx.fitness[j] < ctx.fitness[i] {
+                ctx.pool[[i, s]] - ctx.pool[[j, s]]
             } else {
-                self.pool[[j, s]] - self.pool[[i, s]]
+                ctx.pool[[j, s]] - ctx.pool[[i, s]]
             };
-            let v = self.pool[[i, s]] + rand_float(1., self.dim as f64) * diff;
-            student[s] = self.check(s, v);
+            let v = ctx.pool[[i, s]] + rand_float(1., ctx.dim as f64) * diff;
+            student[s] = ctx.check(s, v);
         }
-        self.register(i, student);
+        Self::register(ctx, i, student);
     }
 }
 
-impl<F: ObjFunc> DerefMut for TLBO<F> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl<F: ObjFunc> Deref for TLBO<F> {
-    type Target = AlgorithmBase<F>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<F: ObjFunc> Algorithm<F> for TLBO<F> {
+impl Algorithm for TLBO {
     type Setting = TLBOSetting;
 
-    fn create(func: F, settings: Self::Setting) -> Self {
-        Self(AlgorithmBase::new(func, settings))
+    fn create(_: &Self::Setting) -> Self {
+        Self
     }
 
     #[inline(always)]
-    fn generation(&mut self) {
-        for i in 0..self.pop_num {
-            let mut student = Array1::zeros(self.dim);
-            self.teaching(i, &mut student);
-            self.learning(i, &mut student);
+    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for i in 0..ctx.pop_num {
+            let mut student = Array1::zeros(ctx.dim);
+            self.teaching(ctx, i, &mut student);
+            self.learning(ctx, i, &mut student);
         }
     }
 }
