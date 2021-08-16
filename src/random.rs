@@ -10,7 +10,7 @@ use oorandom::Rand32;
 static STATE1: AtomicU64 = AtomicU64::new(0);
 static STATE2: AtomicU64 = AtomicU64::new(0);
 
-/// Generate random values between [0., 1.).
+/// Generate a random values between [0., 1.).
 pub fn rand() -> f64 {
     let mut gen = if STATE1.load(Ordering::SeqCst) == 0 && STATE2.load(Ordering::SeqCst) == 0 {
         // First time
@@ -27,20 +27,30 @@ pub fn rand() -> f64 {
     v
 }
 
-/// Generate random boolean by positive (`true`) factor.
+/// Generate a random boolean by positive (`true`) factor.
 #[inline]
 pub fn maybe(v: f64) -> bool {
     rand() < v
 }
 
-/// Generate random values by range.
+/// Generate a random values by range.
 #[inline]
 pub fn rand_float(lb: f64, ub: f64) -> f64 {
     rand() * (ub - lb) + lb
 }
 
-/// Generate random values by range.
+/// Generate a random values by range.
 #[inline]
 pub fn rand_int(lb: usize, ub: usize) -> usize {
     (rand() * (ub - lb) as f64) as usize + lb
+}
+
+/// Generate a random vector.
+pub fn rand_vector(v: &mut [usize], start: usize, lb: usize, ub: usize) {
+    for i in start..v.len() {
+        v[i] = rand_int(lb, ub);
+        while v[..i].contains(&v[i]) {
+            v[i] = rand_int(lb, ub);
+        }
+    }
 }

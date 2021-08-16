@@ -25,8 +25,8 @@ pub struct RGA {
     mutate: f64,
     win: f64,
     delta: f64,
-    new_fitness: Array1<f64>,
-    new_pool: Array2<f64>,
+    fitness_new: Array1<f64>,
+    pool_new: Array2<f64>,
 }
 
 impl RGA {
@@ -114,25 +114,24 @@ impl RGA {
 
     fn select<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num {
-            let j = rand_int(0, ctx.pop_num);
-            let k = rand_int(0, ctx.pop_num);
-            // FIXME
-            assert!(i < ctx.pop_num);
-            assert!(j < ctx.pop_num);
-            assert!(k < ctx.pop_num);
+            let (j, k) = {
+                let mut v = [i, 0, 0];
+                rand_vector(&mut v, 1, 0, ctx.pop_num);
+                (v[1], v[2])
+            };
             if ctx.fitness[j] > ctx.fitness[k] && maybe(self.win) {
-                self.new_fitness[i] = ctx.fitness[k];
-                self.new_pool
+                self.fitness_new[i] = ctx.fitness[k];
+                self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![k, ..]));
             } else {
-                self.new_fitness[i] = ctx.fitness[j];
-                self.new_pool
+                self.fitness_new[i] = ctx.fitness[j];
+                self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![j, ..]));
             }
-            ctx.fitness.assign(&self.new_fitness);
-            ctx.pool.assign(&self.new_pool);
+            ctx.fitness.assign(&self.fitness_new);
+            ctx.pool.assign(&self.pool_new);
             ctx.assign_from_best(rand_int(0, ctx.pop_num));
         }
     }
@@ -156,15 +155,15 @@ impl Algorithm for RGA {
             mutate: settings.mutate,
             win: settings.win,
             delta: settings.delta,
-            new_pool: Array2::zeros((1, 1)),
-            new_fitness: Array1::ones(1) * f64::INFINITY,
+            pool_new: Array2::zeros((1, 1)),
+            fitness_new: Array1::ones(1) * f64::INFINITY,
         }
     }
 
     #[inline(always)]
     fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        self.new_pool = ctx.pool.clone();
-        self.new_fitness = ctx.fitness.clone();
+        self.pool_new = Array2::zeros(ctx.pool.raw_dim());
+        self.fitness_new = Array1::ones(ctx.fitness.raw_dim()) * f64::INFINITY;
     }
 
     #[inline(always)]

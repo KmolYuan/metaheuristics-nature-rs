@@ -7,7 +7,8 @@ use alloc::{
     sync::Arc,
 };
 use ndarray::AsArray;
-use std::ops::Deref;
+#[cfg(feature = "parallel")]
+extern crate std;
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 
@@ -73,10 +74,15 @@ impl ThreadPool {
     {
         let v = Arc::new(v.into().to_owned());
         #[cfg(feature = "parallel")]
-        let fit = spawn(move || f.fitness(v.deref(), &report));
+        {
+            let job = spawn(move || f.fitness(&*v, &report));
+            self.tasks.insert(i, job);
+        }
         #[cfg(not(feature = "parallel"))]
-        let fit = f.fitness(v.deref(), &report);
-        self.tasks.insert(i, fit);
+        {
+            let fit = f.fitness(&*v, &report);
+            self.tasks.insert(i, fit);
+        }
     }
 }
 
@@ -85,17 +91,14 @@ impl IntoIterator for ThreadPool {
     type IntoIter = IntoIter<usize, f64>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let m = self
-            .tasks
+        self.tasks
             .into_iter()
             .map(|(i, j)| {
                 #[cfg(feature = "parallel")]
-                let fit = j.join().unwrap();
-                #[cfg(not(feature = "parallel"))]
-                let fit = j;
-                (i, fit)
+                let j = j.join().unwrap();
+                (i, j)
             })
-            .collect::<BTreeMap<_, _>>();
-        m.into_iter()
+            .collect::<BTreeMap<_, _>>()
+            .into_iter()
     }
 }

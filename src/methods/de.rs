@@ -152,12 +152,7 @@ impl Algorithm for DE {
         'a: for i in 0..ctx.pop_num {
             // Generate Vector
             let mut v = Array1::zeros(self.num);
-            for j in 0..self.num {
-                v[j] = i;
-                while v[j] == i || v.slice(s![..j]).iter().any(|&n| n == v[j]) {
-                    v[j] = rand_int(0, ctx.pop_num);
-                }
-            }
+            rand_vector(v.as_slice_mut().unwrap(), 0, 0, ctx.pop_num);
             // Recombination
             let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
             let n = rand_int(0, ctx.dim);
