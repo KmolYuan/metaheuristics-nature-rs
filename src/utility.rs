@@ -1,6 +1,6 @@
 use crate::{random::*, thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec, vec::Vec};
-use ndarray::{s, Array1, Array2, AsArray};
+use ndarray::s;
 #[cfg(feature = "std")]
 use std::time::Instant;
 
@@ -54,7 +54,7 @@ pub enum Task {
 }
 
 setting_builder! {
-    /// Base settings.
+    /// Setting base.
     pub struct BasicSetting {
         /// Termination condition.
         task: Task = Task::MaxGen(200),
@@ -66,6 +66,8 @@ setting_builder! {
 }
 
 /// A trait that provides a conversion to original setting.
+///
+/// Can be auto implemented through [`setting_builder!`].
 pub trait Setting {
     /// Associated algorithm.
     type Algorithm: Algorithm<Setting = Self>;
@@ -74,7 +76,7 @@ pub trait Setting {
 }
 
 /// The base class of algorithms.
-/// Please see [`Algorithm`] for more information.
+/// Please see [`Solver`] for more information.
 pub struct Context<F> {
     /// Population number.
     pub pop_num: usize,
@@ -256,6 +258,10 @@ pub trait Algorithm: Sized {
 /// A public API for [`Algorithm`].
 ///
 /// Users can simply obtain their solution and see the result.
+///
+/// + The method is a type that implemented [`Algorithm`].
+/// + The objective function is a type that implement [`ObjFunc`].
+/// + A basic algorithm data is hold by [`Context`].
 pub struct Solver<M: Algorithm, F: ObjFunc> {
     method: M,
     ctx: Context<F>,

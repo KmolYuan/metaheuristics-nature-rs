@@ -1,5 +1,5 @@
 use crate::{random::*, *};
-use ndarray::{s, Array1};
+use ndarray::s;
 
 setting_builder! {
     /// Teaching Learning Based Optimization settings.

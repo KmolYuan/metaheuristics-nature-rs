@@ -1,7 +1,7 @@
 #[cfg(feature = "parallel")]
 use crate::thread_pool::ThreadPool;
 use crate::{random::*, *};
-use ndarray::{s, Array1, Array2};
+use ndarray::s;
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.

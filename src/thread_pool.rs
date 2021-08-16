@@ -1,12 +1,11 @@
 //! If the `parallel` feature is enabled,
 //! this module provides a thread pool to spawn the objective function and collect the results.
 
-use crate::{ObjFunc, Report};
+use crate::{AsArray, ObjFunc, Report};
 use alloc::{
     collections::{btree_map::IntoIter, BTreeMap},
     sync::Arc,
 };
-use ndarray::AsArray;
 #[cfg(feature = "parallel")]
 extern crate std;
 #[cfg(feature = "parallel")]
@@ -20,8 +19,7 @@ use std::thread::{spawn, JoinHandle};
 /// ```
 /// use std::sync::Arc;
 /// use metaheuristics_nature::{Report, thread_pool::ThreadPool};
-/// # use metaheuristics_nature::ObjFunc;
-/// # use ndarray::{Array1, AsArray, ArrayView1, array};
+/// # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
 /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
@@ -46,7 +44,7 @@ use std::thread::{spawn, JoinHandle};
 /// # }
 ///
 /// let mut tasks = ThreadPool::new();
-/// tasks.insert(0, Arc::new(MyFunc::new()), Report::default(), &array![0., 0., 0.]);
+/// tasks.insert(0, Arc::new(MyFunc::new()), Report::default(), &Array1::zeros(3));
 ///
 /// for (i, f) in tasks {
 ///     assert_eq!(i, 0);

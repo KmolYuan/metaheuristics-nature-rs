@@ -1,7 +1,7 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
 //! use metaheuristics_nature::{Report, RGA, RGASetting, Solver, Task, ObjFunc};
-//! # use ndarray::{Array1, AsArray, ArrayView1};
+//! # use metaheuristics_nature::{Array1, AsArray};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
 //! #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
@@ -74,6 +74,7 @@ extern crate core as std;
 pub use crate::methods::*;
 pub use crate::obj_func::*;
 pub use crate::utility::*;
+pub use ndarray::{Array1, Array2, AsArray};
 
 /// Define a data structure and its builder functions.
 ///
@@ -101,6 +102,8 @@ pub use crate::utility::*;
 /// }
 /// let s = GASetting::default().pop_num(300).cross(0.9);
 /// ```
+///
+/// This macro will also implement [`Setting`] trait.
 #[macro_export]
 macro_rules! setting_builder {
     (

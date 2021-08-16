@@ -1,5 +1,4 @@
 use crate::*;
-use ndarray::AsArray;
 
 const OFFSET: f64 = 7.;
 

@@ -1,12 +1,10 @@
-use crate::Report;
-use ndarray::AsArray;
+use crate::{AsArray, Report};
 
 /// The base of the objective function.
 ///
 /// For example:
 /// ```
-/// use metaheuristics_nature::{ObjFunc, Report};
-/// use ndarray::{AsArray, ArrayView1, Array1};
+/// use metaheuristics_nature::{ObjFunc, Report, AsArray, Array1};
 ///
 /// struct MyFunc([f64; 3], [f64; 3]);
 ///
