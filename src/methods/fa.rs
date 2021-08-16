@@ -1,5 +1,5 @@
-use crate::{random::*, *};
-use ndarray::{s, Array1, AsArray};
+use crate::{utility::*, *};
+use ndarray::s;
 
 setting_builder! {
     /// Firefly Algorithm settings.

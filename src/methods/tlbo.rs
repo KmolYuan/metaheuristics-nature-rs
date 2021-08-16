@@ -1,4 +1,4 @@
-use crate::{random::*, *};
+use crate::{utility::*, *};
 use ndarray::s;
 
 setting_builder! {

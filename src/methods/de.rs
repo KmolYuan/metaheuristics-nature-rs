@@ -1,5 +1,5 @@
 use self::Strategy::*;
-use crate::{random::*, *};
+use crate::{utility::*, *};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.

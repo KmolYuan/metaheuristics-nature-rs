@@ -1,4 +1,4 @@
-use crate::{random::*, thread_pool::ThreadPool, *};
+use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
 setting_builder! {

@@ -35,7 +35,8 @@
 //! let history: Vec<Report> = a.history(); // Get the history reports
 //! ```
 //!
-//! There are two traits [`Algorithm`] and [`Setting`].
+//! There are two traits [`Algorithm`](crate::utility::Algorithm) and
+//! [`Setting`](crate::utility::Setting).
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -72,8 +73,9 @@ extern crate alloc;
 extern crate core as std;
 
 pub use crate::methods::*;
-pub use crate::obj_func::*;
-pub use crate::utility::*;
+pub use crate::obj_func::ObjFunc;
+pub use crate::report::*;
+pub use crate::utility::{Solver, Task};
 pub use ndarray::{Array1, Array2, AsArray};
 
 /// Define a data structure and its builder functions.
@@ -81,7 +83,7 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// Use `@` to denote the base settings, such as population number, task category
 /// or reporting interval.
 /// ```
-/// use metaheuristics_nature::{setting_builder, Algorithm, ObjFunc, Context};
+/// use metaheuristics_nature::{setting_builder, utility::*};
 /// # pub struct GA;
 /// # impl Algorithm for GA {
 /// #     type Setting = GASetting;
@@ -103,7 +105,7 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// let s = GASetting::default().pop_num(300).cross(0.9);
 /// ```
 ///
-/// This macro will also implement [`Setting`] trait.
+/// This macro will also implement [`Setting`](crate::utility::Setting) trait.
 #[macro_export]
 macro_rules! setting_builder {
     (
@@ -115,14 +117,14 @@ macro_rules! setting_builder {
     ) => {
         $(#[$attr])*
         $vis struct $name {
-            $($base: $crate::BasicSetting,)?
+            $($base: $crate::utility::BasicSetting,)?
             $($field: $field_ty,)*
         }
         impl $name {
             $(setting_builder! {
                 @$base,
                 /// Termination condition.
-                task: $crate::Task,
+                task: $crate::utility::Task,
                 /// Population number.
                 pop_num: usize,
                 /// The report frequency. (per generation)
@@ -136,14 +138,14 @@ macro_rules! setting_builder {
         impl Default for $name {
             fn default() -> Self {
                 Self {
-                    $($base: $crate::BasicSetting::default()$(.$base_field($base_default))*,)?
+                    $($base: $crate::utility::BasicSetting::default()$(.$base_field($base_default))*,)?
                     $($field: $field_default,)*
                 }
             }
         }
-        $(impl $crate::Setting for $name {
+        $(impl $crate::utility::Setting for $name {
             type Algorithm = $alg;
-            fn into_setting(self) -> $crate::BasicSetting {
+            fn into_setting(self) -> $crate::utility::BasicSetting {
                 self.$base
             }
         })?
@@ -156,22 +158,11 @@ macro_rules! setting_builder {
     }
 }
 
-/// Product two iterators together.
-pub fn product<A, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, A)>
-where
-    A: Clone,
-    I1: IntoIterator<Item = A>,
-    I2: IntoIterator<Item = A> + Clone,
-{
-    iter1
-        .into_iter()
-        .flat_map(move |e: A| core::iter::repeat(e).zip(iter2.clone()))
-}
-
 mod methods;
 mod obj_func;
 pub mod random;
+mod report;
 #[cfg(test)]
 mod tests;
 pub mod thread_pool;
-mod utility;
+pub mod utility;

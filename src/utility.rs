@@ -1,43 +1,19 @@
-use crate::{random::*, thread_pool::ThreadPool, *};
-use alloc::{sync::Arc, vec, vec::Vec};
+//! The utility API used to create a new algorithm.
+//!
+//! When building a new method, just import this module as prelude.
+//!
+//! ```
+//! use metaheuristics_nature::{utility::*, *};
+//! ```
+//!
+//! In other hand, if you went to fork the task manually by using parallel structure,
+//! import [`thread_pool::ThreadPool`] is required.
+pub use crate::random::*;
+use crate::{thread_pool::ThreadPool, *};
+use alloc::{sync::Arc, vec::Vec};
 use ndarray::s;
 #[cfg(feature = "std")]
 use std::time::Instant;
-
-/// The data of generation sampling.
-#[derive(Clone, Debug)]
-pub struct Report {
-    /// Generation.
-    pub gen: u32,
-    /// The best fitness.
-    pub best_f: f64,
-    /// Time duration.
-    pub time: f64,
-}
-
-impl Default for Report {
-    fn default() -> Self {
-        Self {
-            gen: 0,
-            best_f: f64::INFINITY,
-            time: 0.,
-        }
-    }
-}
-
-impl Report {
-    /// Go into next generation.
-    pub fn next_gen(&mut self) {
-        self.gen += 1;
-    }
-
-    /// Update time by a starting point.
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    pub fn update_time(&mut self, time: Instant) {
-        self.time = (Instant::now() - time).as_secs_f64();
-    }
-}
 
 /// The terminal condition of the algorithm setting.
 pub enum Task {
@@ -115,7 +91,7 @@ impl<F: ObjFunc> Context<F> {
             fitness: Array1::ones(settings.pop_num) * f64::INFINITY,
             pool: Array2::zeros((settings.pop_num, dim)),
             report: Default::default(),
-            reports: vec![],
+            reports: Vec::new(),
             func: Arc::new(func),
         }
     }
@@ -218,7 +194,7 @@ impl<F: ObjFunc> Context<F> {
 /// This trait is extendable.
 /// Create a structure and implement `Algorithm` member to implement it.
 /// ```
-/// use metaheuristics_nature::{Algorithm, ObjFunc, setting_builder, Context};
+/// use metaheuristics_nature::{setting_builder, utility::*};
 ///
 /// setting_builder! {
 ///     pub struct MySetting for MyAlgorithm {
@@ -366,4 +342,16 @@ impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     pub fn result(&self) -> F::Result {
         self.ctx.func.result(&self.ctx.best)
     }
+}
+
+/// Product two iterators together.
+pub fn product<A, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, A)>
+where
+    A: Clone,
+    I1: IntoIterator<Item = A>,
+    I2: IntoIterator<Item = A> + Clone,
+{
+    iter1
+        .into_iter()
+        .flat_map(move |e: A| core::iter::repeat(e).zip(iter2.clone()))
 }

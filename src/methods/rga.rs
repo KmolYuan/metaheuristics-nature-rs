@@ -1,6 +1,6 @@
 #[cfg(feature = "parallel")]
 use crate::thread_pool::ThreadPool;
-use crate::{random::*, *};
+use crate::{utility::*, *};
 use ndarray::s;
 
 setting_builder! {
