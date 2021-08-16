@@ -8,10 +8,10 @@ use ndarray::AsArray;
 /// use metaheuristics_nature::{ObjFunc, Report};
 /// use ndarray::{AsArray, ArrayView1, Array1};
 ///
-/// struct MyFunc(Array1<f64>, Array1<f64>);
+/// struct MyFunc([f64; 3], [f64; 3]);
 ///
 /// impl MyFunc {
-///     fn new() -> Self { Self(Array1::zeros(3), Array1::ones(3) * 50.) }
+///     fn new() -> Self { Self([0.; 3], [50.; 3]) }
 /// }
 ///
 /// impl ObjFunc for MyFunc {
@@ -32,8 +32,8 @@ use ndarray::AsArray;
 ///         self.fitness(v, &Default::default())
 ///     }
 ///
-///     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
-///     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
+///     fn ub(&self) -> &[f64] { &self.1 }
+///     fn lb(&self) -> &[f64] { &self.0 }
 /// }
 /// ```
 /// The objective function returns fitness value that used to evaluate the objective.

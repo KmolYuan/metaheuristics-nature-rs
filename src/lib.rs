@@ -2,9 +2,9 @@
 //! ```
 //! use metaheuristics_nature::{Report, RGA, RGASetting, Solver, Task, ObjFunc};
 //! # use ndarray::{Array1, AsArray, ArrayView1};
-//! # struct MyFunc(Array1<f64>, Array1<f64>);
+//! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
-//! #     fn new() -> Self { Self(Array1::zeros(3), Array1::ones(3) * 50.) }
+//! #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
 //! # }
 //! # impl ObjFunc for MyFunc {
 //! #     type Result = f64;
@@ -21,11 +21,11 @@
 //! #     {
 //! #         self.fitness(v, &Default::default())
 //! #     }
-//! #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
-//! #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
+//! #     fn ub(&self) -> &[f64] { &self.1 }
+//! #     fn lb(&self) -> &[f64] { &self.0 }
 //! # }
 //!
-//! let a = RGA::solve(
+//! let a = Solver::solve(
 //!     MyFunc::new(),
 //!     RGASetting::default().task(Task::MinFit(1e-20)),
 //!     |_| true // Run without callback
@@ -80,11 +80,17 @@ pub use crate::utility::*;
 /// Use `@` to denote the base settings, such as population number, task category
 /// or reporting interval.
 /// ```
-/// use metaheuristics_nature::setting_builder;
+/// use metaheuristics_nature::{setting_builder, Algorithm, ObjFunc, Context};
+/// # pub struct GA;
+/// # impl Algorithm for GA {
+/// #     type Setting = GASetting;
+/// #     fn create(settings: &Self::Setting) -> Self { todo!() }
+/// #     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) { todo!() }
+/// # }
 ///
 /// setting_builder! {
 ///     /// Genetic Algorithm settings.
-///     pub struct GASetting {
+///     pub struct GASetting for GA {
 ///         @base,
 ///         @pop_num = 500,
 ///         cross: f64 = 0.95,

@@ -19,11 +19,12 @@ use std::thread::{spawn, JoinHandle};
 ///
 /// ```
 /// use std::sync::Arc;
-/// use metaheuristics_nature::{Report, ObjFunc, thread_pool::ThreadPool};
+/// use metaheuristics_nature::{Report, thread_pool::ThreadPool};
+/// # use metaheuristics_nature::ObjFunc;
 /// # use ndarray::{Array1, AsArray, ArrayView1, array};
-/// # struct MyFunc(Array1<f64>, Array1<f64>);
+/// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
-/// #     fn new() -> Self { Self(Array1::zeros(3), Array1::ones(3) * 50.) }
+/// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
 /// # }
 /// # impl ObjFunc for MyFunc {
 /// #     type Result = f64;
@@ -40,8 +41,8 @@ use std::thread::{spawn, JoinHandle};
 /// #     {
 /// #         self.fitness(v, &Default::default())
 /// #     }
-/// #     fn ub(&self) -> ArrayView1<f64> { self.1.view() }
-/// #     fn lb(&self) -> ArrayView1<f64> { self.0.view() }
+/// #     fn ub(&self) -> &[f64] { &self.1 }
+/// #     fn lb(&self) -> &[f64] { &self.0 }
 /// # }
 ///
 /// let mut tasks = ThreadPool::new();

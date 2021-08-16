@@ -214,18 +214,22 @@ impl<F: ObjFunc> Context<F> {
 /// The methods of the metaheuristic algorithms.
 ///
 /// This trait is extendable.
-/// Create a structure and store a `AlgorithmBase` member to implement it.
+/// Create a structure and implement `Algorithm` member to implement it.
 /// ```
-/// use metaheuristics_nature::{Algorithm, AlgorithmBase, ObjFunc, Setting, Context};
+/// use metaheuristics_nature::{Algorithm, ObjFunc, setting_builder, Context};
 ///
-/// struct MyAlgorithm {
-///     tmp: Vec<f64>,
+/// setting_builder! {
+///     pub struct MySetting for MyAlgorithm {
+///         @base,
+///     }
 /// }
 ///
-/// impl<F: ObjFunc> Algorithm for MyAlgorithm {
-///     type Setting = Setting;
-///     fn create(_settings: Self::Setting) -> Self {
-///         Self { tmp: vec![] }
+/// pub struct MyAlgorithm;
+///
+/// impl Algorithm for MyAlgorithm {
+///     type Setting = MySetting;
+///     fn create(settings: &Self::Setting) -> Self {
+///         todo!()
 ///     }
 ///     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
 ///         todo!()
