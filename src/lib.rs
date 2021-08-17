@@ -76,7 +76,7 @@ pub use crate::methods::*;
 pub use crate::obj_func::ObjFunc;
 pub use crate::report::*;
 pub use crate::solver::Solver;
-pub use crate::utility::Task;
+pub use crate::task::Task;
 pub use ndarray::{Array1, Array2, AsArray};
 
 /// Define a data structure and its builder functions.
@@ -125,7 +125,7 @@ macro_rules! setting_builder {
             $(setting_builder! {
                 @$base,
                 /// Termination condition.
-                task: $crate::utility::Task,
+                task: $crate::Task,
                 /// Population number.
                 pop_num: usize,
                 /// The report frequency. (per generation)
@@ -164,6 +164,7 @@ mod obj_func;
 pub mod random;
 mod report;
 mod solver;
+mod task;
 #[cfg(test)]
 mod tests;
 pub mod thread_pool;

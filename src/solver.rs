@@ -1,5 +1,9 @@
 use crate::{utility::*, *};
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::time::Instant;
 
 /// A public API for [`Algorithm`].
 ///
