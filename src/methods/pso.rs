@@ -1,9 +1,12 @@
+//! Particle Swarm Optimization.
+//!
+//! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
 setting_builder! {
     /// Particle Swarm Optimization settings.
-    pub struct Pso for Method {
+    pub struct Pso {
         @base,
         @pop_num = 200,
         /// Cognition factor.
@@ -12,6 +15,24 @@ setting_builder! {
         social: f64 = 2.05,
         /// Moving velocity.
         velocity: f64 = 1.3,
+    }
+}
+
+impl Setting for Pso {
+    type Algorithm = Method;
+
+    fn base(&self) -> &BasicSetting {
+        &self.base
+    }
+
+    fn create(self) -> Self::Algorithm {
+        Method {
+            cognition: self.cognition,
+            social: self.social,
+            velocity: self.velocity,
+            best_past: Array2::zeros((1, 1)),
+            best_f_past: Array1::ones(1) * f64::INFINITY,
+        }
     }
 }
 
@@ -34,18 +55,6 @@ impl Method {
 }
 
 impl Algorithm for Method {
-    type Setting = Pso;
-
-    fn create(settings: &Self::Setting) -> Self {
-        Self {
-            cognition: settings.cognition,
-            social: settings.social,
-            velocity: settings.velocity,
-            best_past: Array2::zeros((1, 1)),
-            best_f_past: Array1::ones(1) * f64::INFINITY,
-        }
-    }
-
     #[inline(always)]
     fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         self.best_past = ctx.pool.clone();

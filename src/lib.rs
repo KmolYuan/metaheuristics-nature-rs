@@ -1,6 +1,8 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
-//! use metaheuristics_nature::{Report, Rga, Solver, Task};
+//! use metaheuristics_nature::{Rga, Solver, Task};
+//! // Just for type annotation
+//! use metaheuristics_nature::{Report, utility::Setting};
 //! # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
@@ -25,7 +27,7 @@
 //! #     fn lb(&self) -> &[f64] { &self.0 }
 //! # }
 //!
-//! let a = Solver::solve(
+//! let a: Solver<<Rga as Setting>::Algorithm, MyFunc> = Solver::solve(
 //!     MyFunc::new(),
 //!     Rga::default().task(Task::MinFit(1e-20)),
 //!     |_| true // Run without callback
@@ -85,17 +87,10 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// or reporting interval.
 /// ```
 /// use metaheuristics_nature::{setting_builder, utility::*};
-/// # use metaheuristics_nature::ObjFunc;
-/// # pub struct GaAlgorithm;
-/// # impl Algorithm for GaAlgorithm {
-/// #     type Setting = Ga;
-/// #     fn create(settings: &Self::Setting) -> Self { unimplemented!() }
-/// #     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) { unimplemented!() }
-/// # }
 ///
 /// setting_builder! {
 ///     /// Genetic Algorithm settings.
-///     pub struct Ga for GaAlgorithm {
+///     pub struct Ga {
 ///         @base,
 ///         @pop_num = 500,
 ///         cross: f64 = 0.95,
@@ -112,7 +107,7 @@ pub use ndarray::{Array1, Array2, AsArray};
 macro_rules! setting_builder {
     (
         $(#[$attr:meta])*
-        $vis:vis struct $name:ident $(for $alg:ident)? {
+        $vis:vis struct $name:ident {
             $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
             $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr,)*
         }
@@ -145,12 +140,6 @@ macro_rules! setting_builder {
                 }
             }
         }
-        $(impl $crate::utility::Setting for $name {
-            type Algorithm = $alg;
-            fn into_setting(self) -> $crate::utility::BasicSetting {
-                self.$base
-            }
-        })?
     };
     (@$base:ident, $($(#[$field_attr:meta])* $field:ident: $field_type:ty,)+) => {
         $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
@@ -160,7 +149,7 @@ macro_rules! setting_builder {
     }
 }
 
-mod methods;
+pub mod methods;
 mod obj_func;
 pub mod random;
 mod report;

@@ -1,7 +1,8 @@
-use crate::{utility::*, Array1, ObjFunc, Report, Task};
-use alloc::vec::Vec;
 #[cfg(feature = "std")]
 extern crate std;
+
+use crate::{utility::*, Array1, ObjFunc, Report, Task};
+use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::time::Instant;
 
@@ -15,30 +16,26 @@ use std::time::Instant;
 ///
 /// This type can infer the algorithm by [`Setting::Algorithm`].
 pub struct Solver<M: Algorithm, F: ObjFunc> {
-    method: M,
     ctx: Context<F>,
+    method: M,
 }
 
-impl<S, M, F> Solver<M, F>
-where
-    S: Setting<Algorithm = M>,
-    M: Algorithm<Setting = S>,
-    F: ObjFunc,
-{
+impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     /// Create the task and run the algorithm.
     ///
     /// Argument `callback` is a progress feedback function,
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve(func: F, settings: S, callback: impl FnMut(Report) -> bool) -> Self {
+    pub fn solve<S>(func: F, settings: S, callback: impl FnMut(Report) -> bool) -> Self
+    where
+        S: Setting<Algorithm = M>,
+    {
         Self {
-            method: M::create(&settings),
-            ctx: Context::new(func, settings.into_setting()),
+            ctx: Context::new(func, settings.base()),
+            method: settings.create(),
         }
         .run(callback)
     }
-}
 
-impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
         #[cfg(feature = "std")]
         let time_start = Instant::now();

@@ -1,10 +1,25 @@
+//! Teaching Learning Based Optimization.
+//!
+//! <https://doi.org/10.1016/j.cad.2010.12.015>
 use crate::{utility::*, *};
 use ndarray::s;
 
 setting_builder! {
     /// Teaching Learning Based Optimization settings.
-    pub struct Tlbo for Method {
+    pub struct Tlbo {
         @base,
+    }
+}
+
+impl Setting for Tlbo {
+    type Algorithm = Method;
+
+    fn base(&self) -> &BasicSetting {
+        &self.base
+    }
+
+    fn create(self) -> Self::Algorithm {
+        Method
     }
 }
 
@@ -60,12 +75,6 @@ impl Method {
 }
 
 impl Algorithm for Method {
-    type Setting = Tlbo;
-
-    fn create(_: &Self::Setting) -> Self {
-        Self
-    }
-
     #[inline(always)]
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num {

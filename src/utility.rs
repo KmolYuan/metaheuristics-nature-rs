@@ -30,9 +30,11 @@ setting_builder! {
 /// Can be auto implemented through [`setting_builder!`].
 pub trait Setting {
     /// Associated algorithm.
-    type Algorithm: Algorithm<Setting = Self>;
+    type Algorithm: Algorithm;
     /// Convert to original setting.
-    fn into_setting(self) -> BasicSetting;
+    fn base(&self) -> &BasicSetting;
+    /// Create the algorithm.
+    fn create(self) -> Self::Algorithm;
 }
 
 /// The base class of algorithms.
@@ -59,7 +61,7 @@ pub struct Context<F> {
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub fn new(func: F, settings: BasicSetting) -> Self {
+    pub(crate) fn new(func: F, settings: &BasicSetting) -> Self {
         let dim = func.lb().len();
         assert_eq!(
             dim,
@@ -70,7 +72,7 @@ impl<F: ObjFunc> Context<F> {
             pop_num: settings.pop_num,
             dim,
             rpt: settings.rpt,
-            task: settings.task,
+            task: settings.task.clone(),
             best: Array1::zeros(dim),
             fitness: Array1::ones(settings.pop_num) * f64::INFINITY,
             pool: Array2::zeros((settings.pop_num, dim)),
@@ -80,11 +82,13 @@ impl<F: ObjFunc> Context<F> {
         }
     }
 
+    /// Get lower bound.
     #[inline(always)]
     pub fn lb(&self, i: usize) -> f64 {
         self.func.lb()[i]
     }
 
+    /// Get upper bound.
     #[inline(always)]
     pub fn ub(&self, i: usize) -> f64 {
         self.func.ub()[i]
@@ -181,18 +185,24 @@ impl<F: ObjFunc> Context<F> {
 /// use metaheuristics_nature::{setting_builder, utility::*, ObjFunc};
 ///
 /// setting_builder! {
-///     pub struct MySetting for MyAlgorithm {
+///     pub struct MySetting {
 ///         @base,
 ///     }
 /// }
 ///
-/// pub struct MyAlgorithm;
-///
-/// impl Algorithm for MyAlgorithm {
-///     type Setting = MySetting;
-///     fn create(settings: &Self::Setting) -> Self {
-///         unimplemented!()
+/// impl Setting for MySetting {
+///     type Algorithm = Method;
+///     fn base(&self) -> &BasicSetting {
+///         &self.base
 ///     }
+///     fn create(self) -> Self::Algorithm {
+///         Method
+///     }
+/// }
+///
+/// pub struct Method;
+///
+/// impl Algorithm for Method {
 ///     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
 ///         unimplemented!()
 ///     }
@@ -200,12 +210,6 @@ impl<F: ObjFunc> Context<F> {
 /// ```
 /// Your algorithm will be implemented by [Solver] automatically.
 pub trait Algorithm: Sized {
-    /// The setting type of the algorithm.
-    type Setting: Setting<Algorithm = Self>;
-
-    /// Create the task.
-    fn create(settings: &Self::Setting) -> Self;
-
     /// Initialization implementation.
     #[inline(always)]
     #[allow(unused_variables)]

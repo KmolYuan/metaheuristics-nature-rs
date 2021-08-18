@@ -1,9 +1,14 @@
+//! Real-coded Genetic Algorithm.
+//!
+//! (Real-valued Genetic Algorithm)
+//!
+//! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.
-    pub struct Rga for Method {
+    pub struct Rga {
         @base,
         @pop_num = 500,
         /// Crossing probability.
@@ -14,6 +19,25 @@ setting_builder! {
         win: f64 = 0.95,
         /// Delta factor.
         delta: f64 = 5.,
+    }
+}
+
+impl Setting for Rga {
+    type Algorithm = Method;
+
+    fn base(&self) -> &BasicSetting {
+        &self.base
+    }
+
+    fn create(self) -> Self::Algorithm {
+        Method {
+            cross: self.cross,
+            mutate: self.mutate,
+            win: self.win,
+            delta: self.delta,
+            pool_new: Array2::zeros((1, 1)),
+            fitness_new: Array1::ones(1) * f64::INFINITY,
+        }
     }
 }
 
@@ -136,19 +160,6 @@ impl Method {
 }
 
 impl Algorithm for Method {
-    type Setting = Rga;
-
-    fn create(settings: &Self::Setting) -> Self {
-        Self {
-            cross: settings.cross,
-            mutate: settings.mutate,
-            win: settings.win,
-            delta: settings.delta,
-            pool_new: Array2::zeros((1, 1)),
-            fitness_new: Array1::ones(1) * f64::INFINITY,
-        }
-    }
-
     #[inline(always)]
     fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());

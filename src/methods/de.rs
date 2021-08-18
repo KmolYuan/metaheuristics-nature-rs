@@ -1,8 +1,12 @@
+//! Differential Evolution.
+//!
+//! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
 use crate::{utility::*, *};
 use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
+///
 /// Each strategy has different formulas on the recombination.
 ///
 /// # Variable formula
@@ -47,7 +51,7 @@ pub enum Strategy {
 
 setting_builder! {
     /// Differential Evolution settings.
-    pub struct De for Method {
+    pub struct De {
         @base,
         @pop_num = 400,
         /// Strategy of the formula.
@@ -56,6 +60,29 @@ setting_builder! {
         f: f64 = 0.6,
         /// Crossing probability.
         cross: f64 = 0.9,
+    }
+}
+
+impl Setting for De {
+    type Algorithm = Method;
+
+    fn base(&self) -> &BasicSetting {
+        &self.base
+    }
+
+    fn create(self) -> Self::Algorithm {
+        let num = match self.strategy {
+            S1 | S3 | S6 | S8 => 2,
+            S2 | S7 => 3,
+            S4 | S9 => 4,
+            S5 | S10 => 5,
+        };
+        Method {
+            f: self.f,
+            cross: self.cross,
+            num,
+            strategy: self.strategy,
+        }
     }
 }
 
@@ -68,6 +95,11 @@ pub struct Method {
 }
 
 impl Method {
+    fn f45<F: ObjFunc>(&self, ctx: &Context<F>, v: &Array1<usize>, n: usize) -> f64 {
+        (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]] - ctx.pool[[v[3], n]])
+            * self.f
+    }
+
     fn formula<F: ObjFunc>(
         &self,
         ctx: &Context<F>,
@@ -81,20 +113,8 @@ impl Method {
             S3 | S8 => {
                 tmp[n] + self.f * (ctx.best[n] - tmp[n] + ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
             }
-            S4 | S9 => {
-                ctx.best[n]
-                    + (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]]
-                        - ctx.pool[[v[2], n]]
-                        - ctx.pool[[v[3], n]])
-                        * self.f
-            }
-            S5 | S10 => {
-                ctx.pool[[v[4], n]]
-                    + (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]]
-                        - ctx.pool[[v[2], n]]
-                        - ctx.pool[[v[3], n]])
-                        * self.f
-            }
+            S4 | S9 => ctx.best[n] + self.f45(ctx, v, n),
+            S5 | S10 => ctx.pool[[v[4], n]] + self.f45(ctx, v, n),
         }
     }
 
@@ -131,23 +151,6 @@ impl Method {
 }
 
 impl Algorithm for Method {
-    type Setting = De;
-
-    fn create(settings: &Self::Setting) -> Self {
-        let num = match settings.strategy {
-            S1 | S3 | S6 | S8 => 2,
-            S2 | S7 => 3,
-            S4 | S9 => 4,
-            S5 | S10 => 5,
-        };
-        Self {
-            f: settings.f,
-            cross: settings.cross,
-            num,
-            strategy: settings.strategy.clone(),
-        }
-    }
-
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         'a: for i in 0..ctx.pop_num {
             // Generate Vector

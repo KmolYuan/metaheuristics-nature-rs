@@ -1,10 +1,10 @@
 //! If the `parallel` feature is enabled,
 //! this module provides a thread pool to spawn the objective function and collect the results.
+#[cfg(feature = "parallel")]
+extern crate std;
 
 use crate::{AsArray, ObjFunc, Report};
 use alloc::{sync::Arc, vec::Vec};
-#[cfg(feature = "parallel")]
-extern crate std;
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 

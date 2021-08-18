@@ -1,4 +1,5 @@
 /// The terminal condition of the algorithm setting.
+#[derive(Clone)]
 pub enum Task {
     /// Max generation.
     MaxGen(u32),

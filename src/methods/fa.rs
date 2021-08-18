@@ -1,9 +1,12 @@
+//! Firefly Algorithm.
+//!
+//! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 use crate::{utility::*, *};
 use ndarray::s;
 
 setting_builder! {
     /// Firefly Algorithm settings.
-    pub struct Fa for Method {
+    pub struct Fa {
         @base,
         @pop_num = 80,
         /// Alpha factor.
@@ -12,6 +15,23 @@ setting_builder! {
         beta_min: f64 = 0.2,
         /// Gamma factor.
         gamma: f64 = 1.,
+    }
+}
+
+impl Setting for Fa {
+    type Algorithm = Method;
+
+    fn base(&self) -> &BasicSetting {
+        &self.base
+    }
+
+    fn create(self) -> Self::Algorithm {
+        Method {
+            alpha: self.alpha,
+            beta_min: self.beta_min,
+            gamma: self.gamma,
+            beta0: 1.,
+        }
     }
 }
 
@@ -66,17 +86,6 @@ impl Method {
 }
 
 impl Algorithm for Method {
-    type Setting = Fa;
-
-    fn create(settings: &Self::Setting) -> Self {
-        Self {
-            alpha: settings.alpha,
-            beta_min: settings.beta_min,
-            gamma: settings.gamma,
-            beta0: 1.,
-        }
-    }
-
     #[inline(always)]
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         self.move_fireflies(ctx);
