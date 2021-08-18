@@ -2,16 +2,16 @@
 //! this module provides a thread pool to spawn the objective function and collect the results.
 
 use crate::{AsArray, ObjFunc, Report};
-use alloc::{
-    collections::{btree_map::IntoIter, BTreeMap},
-    sync::Arc,
-};
+use alloc::{sync::Arc, vec::Vec};
 #[cfg(feature = "parallel")]
 extern crate std;
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 
 /// A join handler collector.
+///
+/// If the feature "parallel" is not enabled,
+/// this container will run the objective function immediately.
 ///
 /// This type implements [`IntoIterator`] that consume the pool,
 /// and the tasks can be wait by a for-loop.
@@ -54,9 +54,9 @@ use std::thread::{spawn, JoinHandle};
 #[derive(Default)]
 pub struct ThreadPool {
     #[cfg(feature = "parallel")]
-    tasks: BTreeMap<usize, JoinHandle<f64>>,
+    tasks: Vec<(usize, JoinHandle<f64>)>,
     #[cfg(not(feature = "parallel"))]
-    tasks: BTreeMap<usize, f64>,
+    tasks: Vec<(usize, f64)>,
 }
 
 impl ThreadPool {
@@ -71,33 +71,34 @@ impl ThreadPool {
         F: ObjFunc,
         V: AsArray<'a, f64>,
     {
-        let v = Arc::new(v.into().to_owned());
         #[cfg(feature = "parallel")]
         {
-            let job = spawn(move || f.fitness(&*v, &report));
-            self.tasks.insert(i, job);
+            let v = v.into().to_shared();
+            let job = spawn(move || f.fitness(&v, &report));
+            self.tasks.push((i, job));
         }
         #[cfg(not(feature = "parallel"))]
         {
-            let fit = f.fitness(&*v, &report);
-            self.tasks.insert(i, fit);
+            let fit = f.fitness(v, &report);
+            self.tasks.push((i, fit));
         }
     }
 }
 
 impl IntoIterator for ThreadPool {
     type Item = (usize, f64);
-    type IntoIter = IntoIter<usize, f64>;
+    type IntoIter = <Vec<Self::Item> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.tasks
-            .into_iter()
-            .map(|(i, j)| {
-                #[cfg(feature = "parallel")]
-                let j = j.join().unwrap();
-                (i, j)
-            })
-            .collect::<BTreeMap<_, _>>()
-            .into_iter()
+        #[cfg(feature = "parallel")]
+        {
+            self.tasks
+                .into_iter()
+                .map(|(i, j)| (i, j.join().unwrap()))
+                .collect::<Vec<_>>()
+                .into_iter()
+        }
+        #[cfg(not(feature = "parallel"))]
+        self.tasks.into_iter()
     }
 }

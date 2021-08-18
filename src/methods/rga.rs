@@ -1,6 +1,4 @@
-#[cfg(feature = "parallel")]
-use crate::thread_pool::ThreadPool;
-use crate::{utility::*, *};
+use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
 setting_builder! {
@@ -16,6 +14,15 @@ setting_builder! {
         win: f64 = 0.95,
         /// Delta factor.
         delta: f64 = 5.,
+    }
+}
+
+#[inline(always)]
+fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
+    if ctx.ub(s) < v || v < ctx.lb(s) {
+        rand_float(ctx.lb(s), ctx.ub(s))
+    } else {
+        v
     }
 }
 
@@ -40,28 +47,19 @@ impl Rga {
             for s in 0..ctx.dim {
                 tmp[[0, s]] = 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]];
                 let v = 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]];
-                tmp[[1, s]] = Self::check(ctx, s, v);
+                tmp[[1, s]] = check(ctx, s, v);
                 let v = -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]];
-                tmp[[2, s]] = Self::check(ctx, s, v);
+                tmp[[2, s]] = check(ctx, s, v);
             }
-            #[cfg(feature = "parallel")]
             let mut tasks = ThreadPool::new();
             for j in 0..3 {
-                #[cfg(feature = "parallel")]
-                {
-                    tasks.insert(
-                        j,
-                        ctx.func.clone(),
-                        ctx.report.clone(),
-                        tmp.slice(s![j, ..]),
-                    );
-                }
-                #[cfg(not(feature = "parallel"))]
-                {
-                    f_tmp[j] = ctx.func.fitness(tmp.slice(s![j, ..]), &ctx.report);
-                }
+                tasks.insert(
+                    j,
+                    ctx.func.clone(),
+                    ctx.report.clone(),
+                    tmp.slice(s![j, ..]),
+                );
             }
-            #[cfg(feature = "parallel")]
             for (j, f) in tasks {
                 f_tmp[j] = f;
             }
@@ -133,15 +131,6 @@ impl Rga {
             ctx.fitness.assign(&self.fitness_new);
             ctx.pool.assign(&self.pool_new);
             ctx.assign_from_best(rand_int(0, ctx.pop_num));
-        }
-    }
-
-    #[inline(always)]
-    fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
-        if ctx.ub(s) < v || v < ctx.lb(s) {
-            rand_float(ctx.lb(s), ctx.ub(s))
-        } else {
-            v
         }
     }
 }
