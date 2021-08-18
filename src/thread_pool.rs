@@ -1,5 +1,7 @@
-//! If the `parallel` feature is enabled,
-//! this module provides a thread pool to spawn the objective function and collect the results.
+//! This module provides a thread pool to spawn the objective function and collect the results.
+//!
+//! Although the "parallel" feature maybe disabled,
+//! the thread pool is still can work with single thread.
 #[cfg(feature = "parallel")]
 extern crate std;
 
@@ -10,8 +12,9 @@ use std::thread::{spawn, JoinHandle};
 
 /// A join handler collector.
 ///
-/// If the feature "parallel" is not enabled,
-/// this container will run the objective function immediately.
+/// If the feature "parallel" is enabled,
+/// the jobs will be spawned when inserted.
+/// Otherwise, this container will run the objective function immediately.
 ///
 /// This type implements [`IntoIterator`] that consume the pool,
 /// and the tasks can be wait by a for-loop.
