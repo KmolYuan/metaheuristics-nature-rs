@@ -14,7 +14,7 @@ This crate implemented following algorithms:
 + Teaching-Learning Based Optimization (TLBO)
 
 Each algorithm gives same API and default parameters to help you test different implementation. For example, you can
-test another algorithm by simply replacing `RGASettings` to `DESetting`.
+test another algorithm by simply replacing `RgaSetting` to `DeSetting`.
 
 ```rust
 use metaheuristics_nature::{Report, RgaSetting, Solver, Task};
