@@ -9,6 +9,8 @@ pub struct Report {
     /// The best fitness.
     pub best_f: f64,
     /// Time duration.
+    #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     pub time: f64,
 }
 
@@ -17,6 +19,7 @@ impl Default for Report {
         Self {
             gen: 0,
             best_f: f64::INFINITY,
+            #[cfg(feature = "std")]
             time: 0.,
         }
     }
@@ -28,10 +31,8 @@ impl Report {
         self.gen += 1;
     }
 
-    /// Update time by a starting point.
     #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    pub fn update_time(&mut self, time: Instant) {
+    pub(crate) fn update_time(&mut self, time: Instant) {
         self.time = (Instant::now() - time).as_secs_f64();
     }
 }

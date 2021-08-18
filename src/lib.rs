@@ -1,9 +1,9 @@
 //! A collection of nature-inspired metaheuristic algorithms.
+//!
+//! An example is shown below.
 //! ```
 //! use metaheuristics_nature::{Rga, Solver, Task};
-//! // Just for type annotation
-//! use metaheuristics_nature::{Report, utility::Setting};
-//! # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
+//! # use metaheuristics_nature::{ObjFunc, Array1, AsArray, Report};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
 //! #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
@@ -27,15 +27,20 @@
 //! #     fn lb(&self) -> &[f64] { &self.0 }
 //! # }
 //!
-//! let a: Solver<<Rga as Setting>::Algorithm, MyFunc> = Solver::solve(
+//! let a = Solver::solve(
 //!     MyFunc::new(),
 //!     Rga::default().task(Task::MinFit(1e-20)),
 //!     |_| true // Run without callback
 //! );
-//! let ans: f64 = a.result(); // Get the result from objective function
-//! let (x, y): (Array1<f64>, f64) = a.parameters(); // Get the optimized XY value of your function
-//! let history: Vec<Report> = a.history(); // Get the history reports
+//! // Get the result from objective function
+//! let ans = a.result();
+//! // Get the optimized XY value of your function
+//! let (x, y) = a.parameters();
+//! // Get the history reports
+//! let history = a.history();
 //! ```
+//!
+//! # Algorithm
 //!
 //! There are two traits [`Algorithm`](crate::utility::Algorithm) and
 //! [`Setting`](crate::utility::Setting).
