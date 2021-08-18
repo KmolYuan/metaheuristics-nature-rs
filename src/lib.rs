@@ -1,6 +1,6 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
-//! use metaheuristics_nature::{Report, RgaSetting, Solver, Task};
+//! use metaheuristics_nature::{Report, Rga, Solver, Task};
 //! # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
@@ -27,7 +27,7 @@
 //!
 //! let a = Solver::solve(
 //!     MyFunc::new(),
-//!     RgaSetting::default().task(Task::MinFit(1e-20)),
+//!     Rga::default().task(Task::MinFit(1e-20)),
 //!     |_| true // Run without callback
 //! );
 //! let ans: f64 = a.result(); // Get the result from objective function
@@ -86,16 +86,16 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// ```
 /// use metaheuristics_nature::{setting_builder, utility::*};
 /// # use metaheuristics_nature::ObjFunc;
-/// # pub struct GA;
-/// # impl Algorithm for GA {
-/// #     type Setting = GASetting;
+/// # pub struct GaAlgorithm;
+/// # impl Algorithm for GaAlgorithm {
+/// #     type Setting = Ga;
 /// #     fn create(settings: &Self::Setting) -> Self { unimplemented!() }
 /// #     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) { unimplemented!() }
 /// # }
 ///
 /// setting_builder! {
 ///     /// Genetic Algorithm settings.
-///     pub struct GASetting for GA {
+///     pub struct Ga for GaAlgorithm {
 ///         @base,
 ///         @pop_num = 500,
 ///         cross: f64 = 0.95,
@@ -104,7 +104,7 @@ pub use ndarray::{Array1, Array2, AsArray};
 ///         delta: f64 = 5.,
 ///     }
 /// }
-/// let s = GASetting::default().pop_num(300).cross(0.9);
+/// let s = Ga::default().pop_num(300).cross(0.9);
 /// ```
 ///
 /// This macro will also implement [`Setting`](crate::utility::Setting) trait.

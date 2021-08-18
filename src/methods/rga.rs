@@ -3,7 +3,7 @@ use ndarray::s;
 
 setting_builder! {
     /// Real-coded Genetic Algorithm settings.
-    pub struct RgaSetting for Rga {
+    pub struct Rga for Method {
         @base,
         @pop_num = 500,
         /// Crossing probability.
@@ -27,7 +27,7 @@ fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
 }
 
 /// Real-coded Genetic Algorithm type.
-pub struct Rga {
+pub struct Method {
     cross: f64,
     mutate: f64,
     win: f64,
@@ -36,7 +36,7 @@ pub struct Rga {
     pool_new: Array2<f64>,
 }
 
-impl Rga {
+impl Method {
     fn crossover<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in (0..(ctx.pop_num - 1)).step_by(2) {
             if !maybe(self.cross) {
@@ -135,8 +135,8 @@ impl Rga {
     }
 }
 
-impl Algorithm for Rga {
-    type Setting = RgaSetting;
+impl Algorithm for Method {
+    type Setting = Rga;
 
     fn create(settings: &Self::Setting) -> Self {
         Self {

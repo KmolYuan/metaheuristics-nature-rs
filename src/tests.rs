@@ -51,33 +51,27 @@ fn test<S: Setting>(obj: TestObj, setting: S) {
 
 #[test]
 fn de() {
-    test(
-        TestObj::default(),
-        DeSetting::default().task(Task::MinFit(OFFSET)),
-    );
+    test(TestObj::default(), De::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn pso() {
     test(
         TestObj::default(),
-        PsoSetting::default().task(Task::MinFit(OFFSET)),
+        Pso::default().task(Task::MinFit(OFFSET)),
     );
 }
 
 #[test]
 fn fa() {
-    test(
-        TestObj::default(),
-        FaSetting::default().task(Task::MinFit(OFFSET)),
-    );
+    test(TestObj::default(), Fa::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn rga() {
     test(
         TestObj::default(),
-        RgaSetting::default().task(Task::MinFit(OFFSET)),
+        Rga::default().task(Task::MinFit(OFFSET)),
     );
 }
 
@@ -85,6 +79,6 @@ fn rga() {
 fn tlbo() {
     test(
         TestObj::default(),
-        TlboSetting::default().task(Task::MinFit(OFFSET)),
+        Tlbo::default().task(Task::MinFit(OFFSET)),
     );
 }

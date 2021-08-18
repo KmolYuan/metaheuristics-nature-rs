@@ -14,15 +14,15 @@ This crate implemented following algorithms:
 + Teaching-Learning Based Optimization (TLBO)
 
 Each algorithm gives same API and default parameters to help you test different implementation. For example, you can
-test another algorithm by simply replacing `RgaSetting` to `DeSetting`.
+test another algorithm by simply replacing `Rga` to `De`.
 
 ```rust
-use metaheuristics_nature::{Report, RgaSetting, Solver, Task};
+use metaheuristics_nature::{Report, Rga, Solver, Task};
 
 let a = Solver::solve(
     MyFunc::new(),
-    RgaSetting::default().task(Task::MinFit(1e-20)),
-    | _ | true // Run without callback
+    Rga::default().task(Task::MinFit(1e-20)),
+    |_| true // Run without callback
 );
 let ans: f64 = a.result(); // Get the result from objective function
 let (x, y): (Array1<f64>, f64) = a.parameters(); // Get the optimized XY value of your function
