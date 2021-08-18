@@ -38,7 +38,10 @@ pub trait Setting {
 }
 
 /// The base class of algorithms.
-/// Please see [`Solver`] for more information.
+///
+/// This type provides a shared dataset if you want to implement a new method.
+///
+/// Please see [`Algorithm`] for the implementation.
 pub struct Context<F> {
     /// Population number.
     pub pop_num: usize,
@@ -179,8 +182,14 @@ impl<F: ObjFunc> Context<F> {
 
 /// The methods of the metaheuristic algorithms.
 ///
-/// This trait is extendable.
-/// Create a structure and implement `Algorithm` member to implement it.
+/// + First, use [`setting_builder!`] macro to build a "setting" type.
+/// + Second, implement [`Setting`] trait then indicate to a "method" type.
+/// + Last, implement `Algorithm` trait on the "method" type.
+///
+/// Usually, the "method" type that implements this trait will not leak from the API.
+/// All most common dataset is store in the [`Context`] type.
+/// So the "method" type is used to store the additional data if any.
+///
 /// ```
 /// use metaheuristics_nature::{setting_builder, utility::*, ObjFunc};
 ///
@@ -208,9 +217,17 @@ impl<F: ObjFunc> Context<F> {
 ///     }
 /// }
 /// ```
+///
 /// Your algorithm will be implemented by [Solver] automatically.
+/// All you have to do is implement the "initialization" method and
+/// "generation" method, which are corresponded to the [`Algorithm::init`] and
+/// [`Algorithm::generation`] respectively.
 pub trait Algorithm: Sized {
     /// Initialization implementation.
+    ///
+    /// The information of the [`Context`] can be obtained or modified at this phase preliminarily.
+    ///
+    /// The default behavior is do nothing.
     #[inline(always)]
     #[allow(unused_variables)]
     fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {}

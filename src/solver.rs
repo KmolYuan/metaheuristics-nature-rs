@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::time::Instant;
 
-/// A public API for [`Algorithm`].
+/// A public API for using optimization methods.
 ///
 /// Users can simply obtain their solution and see the result.
 ///
@@ -15,6 +15,45 @@ use std::time::Instant;
 /// + A basic algorithm data is hold by [`Context`].
 ///
 /// This type can infer the algorithm by [`Setting::Algorithm`].
+///
+/// ```
+/// use metaheuristics_nature::{Rga, Solver, Task};
+/// # use metaheuristics_nature::{ObjFunc, Array1, AsArray, Report};
+/// # struct MyFunc([f64; 3], [f64; 3]);
+/// # impl MyFunc {
+/// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
+/// # }
+/// # impl ObjFunc for MyFunc {
+/// #     type Result = f64;
+/// #     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
+/// #     where
+/// #         A: AsArray<'a, f64>,
+/// #     {
+/// #         let v = v.into();
+/// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+/// #     }
+/// #     fn result<'a, V>(&self, v: V) -> Self::Result
+/// #     where
+/// #         V: AsArray<'a, f64>
+/// #     {
+/// #         self.fitness(v, &Default::default())
+/// #     }
+/// #     fn ub(&self) -> &[f64] { &self.1 }
+/// #     fn lb(&self) -> &[f64] { &self.0 }
+/// # }
+///
+/// let a = Solver::solve(
+///     MyFunc::new(),
+///     Rga::default().task(Task::MinFit(1e-20)),
+///     |_| true // Run without callback
+/// );
+/// // Get the result from objective function
+/// let ans = a.result();
+/// // Get the optimized XY value of your function
+/// let (x, y) = a.parameters();
+/// // Get the history reports
+/// let history = a.history();
+/// ```
 pub struct Solver<M: Algorithm, F: ObjFunc> {
     ctx: Context<F>,
     method: M,

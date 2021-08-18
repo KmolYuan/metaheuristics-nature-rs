@@ -2,7 +2,6 @@ use crate::{AsArray, Report};
 
 /// The base of the objective function.
 ///
-/// For example:
 /// ```
 /// use metaheuristics_nature::{Array1, AsArray, ObjFunc, Report};
 ///
