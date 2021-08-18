@@ -4,7 +4,7 @@ use crate::{AsArray, Report};
 ///
 /// For example:
 /// ```
-/// use metaheuristics_nature::{ObjFunc, Report, AsArray, Array1};
+/// use metaheuristics_nature::{Array1, AsArray, ObjFunc, Report};
 ///
 /// struct MyFunc([f64; 3], [f64; 3]);
 ///

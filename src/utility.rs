@@ -178,7 +178,7 @@ impl<F: ObjFunc> Context<F> {
 /// This trait is extendable.
 /// Create a structure and implement `Algorithm` member to implement it.
 /// ```
-/// use metaheuristics_nature::{setting_builder, utility::*};
+/// use metaheuristics_nature::{setting_builder, utility::*, ObjFunc};
 ///
 /// setting_builder! {
 ///     pub struct MySetting for MyAlgorithm {

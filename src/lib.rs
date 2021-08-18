@@ -1,7 +1,7 @@
 //! A collection of nature-inspired metaheuristic algorithms.
 //! ```
-//! use metaheuristics_nature::{Report, RgaSetting, Solver, Task, ObjFunc};
-//! # use metaheuristics_nature::{Array1, AsArray};
+//! use metaheuristics_nature::{Report, RgaSetting, Solver, Task};
+//! # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
 //! # struct MyFunc([f64; 3], [f64; 3]);
 //! # impl MyFunc {
 //! #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
@@ -85,6 +85,7 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// or reporting interval.
 /// ```
 /// use metaheuristics_nature::{setting_builder, utility::*};
+/// # use metaheuristics_nature::ObjFunc;
 /// # pub struct GA;
 /// # impl Algorithm for GA {
 /// #     type Setting = GASetting;

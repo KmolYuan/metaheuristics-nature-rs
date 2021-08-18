@@ -18,7 +18,7 @@ use std::thread::{spawn, JoinHandle};
 ///
 /// ```
 /// use std::sync::Arc;
-/// use metaheuristics_nature::{Report, thread_pool::ThreadPool};
+/// use metaheuristics_nature::{thread_pool::ThreadPool, Report};
 /// # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
