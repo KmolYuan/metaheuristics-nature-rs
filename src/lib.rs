@@ -53,9 +53,9 @@ pub use ndarray::{Array1, Array2, AsArray};
 /// or reporting interval.
 ///
 /// ```
-/// use metaheuristics_nature::{setting_builder, utility::*};
+/// use metaheuristics_nature::{setting, utility::*};
 ///
-/// setting_builder! {
+/// setting! {
 ///     /// Genetic Algorithm settings.
 ///     pub struct Ga {
 ///         @base,
@@ -71,12 +71,12 @@ pub use ndarray::{Array1, Array2, AsArray};
 ///
 /// This macro will also implement [`Setting`](crate::utility::Setting) trait.
 #[macro_export]
-macro_rules! setting_builder {
+macro_rules! setting {
     (
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
             $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
-            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr),+ $(,)?
+            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr),* $(,)?
         }
     ) => {
         $(#[$attr])*
@@ -85,7 +85,7 @@ macro_rules! setting_builder {
             $($field: $field_ty,)*
         }
         impl $name {
-            $(setting_builder! { @$base })?
+            $(setting! { @$base })?
             $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
                 self.$field = $field;
                 self
@@ -100,19 +100,16 @@ macro_rules! setting_builder {
             }
         }
     };
-    (
-        $(#[$attr:meta])*
-        $vis:vis struct $name:ident(@base);
-    ) => {
+    ($(#[$attr:meta])* $vis:vis struct $name:ident(@base);) => {
         $(#[$attr])*
         #[derive(Default)]
         $vis struct $name($crate::utility::BasicSetting);
         impl $name {
-            setting_builder! { @0 }
+            setting! { @0 }
         }
     };
     (@$base:tt) => {
-        setting_builder! {
+        setting! {
             @$base,
             /// Termination condition.
             task: $crate::Task,

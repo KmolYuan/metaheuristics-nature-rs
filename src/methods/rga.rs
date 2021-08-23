@@ -6,7 +6,7 @@
 use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
-setting_builder! {
+setting! {
     /// Real-coded Genetic Algorithm settings.
     pub struct Rga {
         @base,

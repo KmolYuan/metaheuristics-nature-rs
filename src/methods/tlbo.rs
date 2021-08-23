@@ -4,7 +4,7 @@
 use crate::{utility::*, *};
 use ndarray::s;
 
-setting_builder! {
+setting! {
     /// Teaching Learning Based Optimization settings.
     pub struct Tlbo(@base);
 }

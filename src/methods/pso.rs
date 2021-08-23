@@ -4,7 +4,7 @@
 use crate::{thread_pool::ThreadPool, utility::*, *};
 use ndarray::s;
 
-setting_builder! {
+setting! {
     /// Particle Swarm Optimization settings.
     pub struct Pso {
         @base,

@@ -4,7 +4,7 @@
 use crate::{utility::*, *};
 use ndarray::s;
 
-setting_builder! {
+setting! {
     /// Firefly Algorithm settings.
     pub struct Fa {
         @base,

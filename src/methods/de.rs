@@ -49,7 +49,7 @@ pub enum Strategy {
     S10,
 }
 
-setting_builder! {
+setting! {
     /// Differential Evolution settings.
     pub struct De {
         @base,

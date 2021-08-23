@@ -13,7 +13,7 @@ use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
 use ndarray::s;
 
-setting_builder! {
+setting! {
     /// Setting base.
     pub struct BasicSetting {
         /// Termination condition.
@@ -27,7 +27,7 @@ setting_builder! {
 
 /// A trait that provides a conversion to original setting.
 ///
-/// Can be auto implemented through [`setting_builder!`].
+/// Can be auto implemented through [`setting!`].
 pub trait Setting {
     /// Associated algorithm.
     type Algorithm: Algorithm;
@@ -182,7 +182,7 @@ impl<F: ObjFunc> Context<F> {
 
 /// The methods of the metaheuristic algorithms.
 ///
-/// + First, use [`setting_builder!`] macro to build a "setting" type.
+/// + First, use [`setting!`] macro to build a "setting" type.
 /// + Second, implement [`Setting`] trait then indicate to a "method" type.
 /// + Last, implement `Algorithm` trait on the "method" type.
 ///
@@ -191,9 +191,9 @@ impl<F: ObjFunc> Context<F> {
 /// So the "method" type is used to store the additional data if any.
 ///
 /// ```
-/// use metaheuristics_nature::{setting_builder, utility::*, ObjFunc};
+/// use metaheuristics_nature::{setting, utility::*, ObjFunc};
 ///
-/// setting_builder! {
+/// setting! {
 ///     /// A setting with additional fields.
 ///     pub struct MySetting1 {
 ///         @base,
@@ -201,7 +201,7 @@ impl<F: ObjFunc> Context<F> {
 ///     }
 /// }
 ///
-/// setting_builder! {
+/// setting! {
 ///     /// Tuple-like setting.
 ///     pub struct MySetting2(@base);
 /// }
