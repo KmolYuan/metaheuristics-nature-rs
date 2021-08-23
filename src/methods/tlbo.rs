@@ -6,16 +6,14 @@ use ndarray::s;
 
 setting_builder! {
     /// Teaching Learning Based Optimization settings.
-    pub struct Tlbo {
-        @base,
-    }
+    pub struct Tlbo(@base);
 }
 
 impl Setting for Tlbo {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
-        &self.base
+        &self.0
     }
 
     fn create(self) -> Self::Algorithm {

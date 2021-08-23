@@ -76,7 +76,7 @@ macro_rules! setting_builder {
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
             $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
-            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr,)*
+            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr),+ $(,)?
         }
     ) => {
         $(#[$attr])*
@@ -85,15 +85,7 @@ macro_rules! setting_builder {
             $($field: $field_ty,)*
         }
         impl $name {
-            $(setting_builder! {
-                @$base,
-                /// Termination condition.
-                task: $crate::Task,
-                /// Population number.
-                pop_num: usize,
-                /// The report frequency. (per generation)
-                rpt: u32,
-            })?
+            $(setting_builder! { @$base })?
             $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
                 self.$field = $field;
                 self
@@ -108,12 +100,34 @@ macro_rules! setting_builder {
             }
         }
     };
-    (@$base:ident, $($(#[$field_attr:meta])* $field:ident: $field_type:ty,)+) => {
+    (
+        $(#[$attr:meta])*
+        $vis:vis struct $name:ident(@base);
+    ) => {
+        $(#[$attr])*
+        #[derive(Default)]
+        $vis struct $name($crate::utility::BasicSetting);
+        impl $name {
+            setting_builder! { @0 }
+        }
+    };
+    (@$base:tt) => {
+        setting_builder! {
+            @$base,
+            /// Termination condition.
+            task: $crate::Task,
+            /// Population number.
+            pop_num: usize,
+            /// The report frequency. (per generation)
+            rpt: u32,
+        }
+    };
+    (@$base:tt, $($(#[$field_attr:meta])* $field:ident: $field_type:ty),+ $(,)?) => {
         $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
             self.$base = self.$base.$field($field);
             self
         })+
-    }
+    };
 }
 
 pub mod methods;

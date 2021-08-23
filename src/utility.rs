@@ -194,15 +194,22 @@ impl<F: ObjFunc> Context<F> {
 /// use metaheuristics_nature::{setting_builder, utility::*, ObjFunc};
 ///
 /// setting_builder! {
-///     pub struct MySetting {
+///     /// A setting with additional fields.
+///     pub struct MySetting1 {
 ///         @base,
+///         my_option: u32 = 20,
 ///     }
 /// }
 ///
-/// impl Setting for MySetting {
+/// setting_builder! {
+///     /// Tuple-like setting.
+///     pub struct MySetting2(@base);
+/// }
+///
+/// impl Setting for MySetting2 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
-///         &self.base
+///         &self.0
 ///     }
 ///     fn create(self) -> Self::Algorithm {
 ///         Method
