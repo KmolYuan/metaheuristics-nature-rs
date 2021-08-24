@@ -14,9 +14,9 @@ use crate::{AsArray, Report};
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
 ///
-///     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
+///     fn fitness<'a, V>(&self, v: V, _: &Report) -> f64
 ///     where
-///         A: AsArray<'a, f64>,
+///         V: AsArray<'a, f64>,
 ///     {
 ///         let v = v.into();
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
@@ -69,9 +69,9 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness<'a, A>(&self, v: A, report: &Report) -> f64
+    fn fitness<'a, V>(&self, v: V, r: &Report) -> f64
     where
-        A: AsArray<'a, f64>;
+        V: AsArray<'a, f64>;
 
     /// Return the final result of the problem.
     fn result<'a, V>(&self, v: V) -> Self::Result
