@@ -85,7 +85,7 @@ macro_rules! setting {
             $($field: $field_ty,)*
         }
         impl $name {
-            $(setting! { @$base })?
+            $($crate::setting! { @$base })?
             $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
                 self.$field = $field;
                 self
@@ -105,11 +105,11 @@ macro_rules! setting {
         #[derive(Default)]
         $vis struct $name($crate::utility::BasicSetting);
         impl $name {
-            setting! { @0 }
+            $crate::setting! { @0 }
         }
     };
     (@$base:tt) => {
-        setting! {
+        $crate::setting! {
             @$base,
             /// Termination condition.
             task: $crate::Task,
