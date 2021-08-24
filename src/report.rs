@@ -10,7 +10,7 @@ pub struct Report {
     pub gen: u32,
     /// The best fitness.
     pub best_f: f64,
-    /// The gradient of the best fitness.
+    /// The gradient of the best fitness, between the current and the previous.
     pub diff: f64,
     /// Time duration.
     #[cfg(feature = "std")]

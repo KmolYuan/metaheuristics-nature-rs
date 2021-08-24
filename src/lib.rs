@@ -10,6 +10,8 @@
 //! [`Solver`] is a simple interface for obtaining the solution, or analyzing the result.
 //! This type allows you to use the API without importing any traits.
 //!
+//! All provided methods are listed in the module [`methods`].
+//!
 //! # Objective Function
 //!
 //! You can define your question as a objective function through implementing [`ObjFunc`].
