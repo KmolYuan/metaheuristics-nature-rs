@@ -64,55 +64,46 @@ impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     ///
     /// Argument `callback` is a progress feedback function,
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve<S>(func: F, settings: S, callback: impl FnMut(Report) -> bool) -> Self
+    pub fn solve<S>(func: F, settings: S, mut callback: impl FnMut(Report) -> bool) -> Self
     where
         S: Setting<Algorithm = M>,
     {
-        Self {
+        let mut s = Self {
             ctx: Context::new(func, settings.base()),
             method: settings.create(),
-        }
-        .run(callback)
-    }
-
-    fn run(mut self, mut callback: impl FnMut(Report) -> bool) -> Self {
+        };
         #[cfg(feature = "std")]
         let time_start = Instant::now();
-        self.ctx.init_pop();
+        s.ctx.init_pop();
         #[cfg(feature = "std")]
-        {
-            self.ctx.report.update_time(time_start);
+        let _ = s.ctx.report.update_time(time_start);
+        s.method.init(&mut s.ctx);
+        if !callback(s.ctx.report.clone()) {
+            return s;
         }
-        self.method.init(&mut self.ctx);
-        if !callback(self.ctx.report.clone()) {
-            return self;
-        }
-        self.ctx.report();
-        let mut last_diff = 0.;
+        s.ctx.report();
         loop {
-            let best_f = {
-                self.ctx.report.next_gen();
-                #[cfg(feature = "std")]
-                {
-                    self.ctx.report.update_time(time_start);
-                }
-                self.ctx.report.best_f
-            };
-            self.method.generation(&mut self.ctx);
-            if self.ctx.report.gen % self.ctx.rpt == 0 {
-                if !callback(self.ctx.report.clone()) {
+            s.ctx.report.next_gen();
+            #[cfg(feature = "std")]
+            let _ = s.ctx.report.update_time(time_start);
+            let best_f = s.ctx.report.best_f;
+            let diff = s.ctx.report.diff;
+            s.method.generation(&mut s.ctx);
+            s.ctx.report.set_diff(best_f - s.ctx.report.best_f);
+            if s.ctx.report.gen % s.ctx.rpt == 0 {
+                if !callback(s.ctx.report.clone()) {
                     break;
                 }
-                self.ctx.report();
+                s.ctx.report();
             }
-            match self.ctx.task {
+            match s.ctx.task {
                 Task::MaxGen(v) => {
-                    if self.ctx.report.gen >= v {
+                    if s.ctx.report.gen >= v {
                         break;
                     }
                 }
                 Task::MinFit(v) => {
-                    if self.ctx.report.best_f <= v {
+                    if s.ctx.report.best_f <= v {
                         break;
                     }
                 }
@@ -123,15 +114,13 @@ impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
                     }
                 }
                 Task::SlowDown(v) => {
-                    let diff = best_f - self.ctx.report.best_f;
-                    if last_diff > 0. && diff / last_diff >= v {
+                    if s.ctx.report.diff / diff >= v {
                         break;
                     }
-                    last_diff = diff;
                 }
             }
         }
-        self
+        s
     }
 
     /// Get the history for plotting.

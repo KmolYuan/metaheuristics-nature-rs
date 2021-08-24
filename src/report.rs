@@ -10,6 +10,8 @@ pub struct Report {
     pub gen: u32,
     /// The best fitness.
     pub best_f: f64,
+    /// The gradient of the best fitness.
+    pub diff: f64,
     /// Time duration.
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
@@ -21,6 +23,7 @@ impl Default for Report {
         Self {
             gen: 0,
             best_f: f64::INFINITY,
+            diff: 0.,
             #[cfg(feature = "std")]
             time: 0.,
         }
@@ -28,9 +31,12 @@ impl Default for Report {
 }
 
 impl Report {
-    /// Go into next generation.
-    pub fn next_gen(&mut self) {
+    pub(crate) fn next_gen(&mut self) {
         self.gen += 1;
+    }
+
+    pub(crate) fn set_diff(&mut self, diff: f64) {
+        self.diff = diff;
     }
 
     #[cfg(feature = "std")]

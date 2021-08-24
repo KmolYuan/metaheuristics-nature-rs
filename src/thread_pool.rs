@@ -81,10 +81,7 @@ impl ThreadPool {
             self.tasks.push((i, job));
         }
         #[cfg(not(feature = "parallel"))]
-        {
-            let fit = f.fitness(v, &report);
-            self.tasks.push((i, fit));
-        }
+        let _ = self.tasks.push((i, f.fitness(v, &report)));
     }
 }
 
