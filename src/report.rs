@@ -1,4 +1,6 @@
 #[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
 use std::time::Instant;
 
 /// The data of generation sampling.

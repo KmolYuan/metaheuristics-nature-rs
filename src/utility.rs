@@ -241,7 +241,7 @@ impl<F: ObjFunc> Context<F> {
 /// All you have to do is implement the "initialization" method and
 /// "generation" method, which are corresponded to the [`Algorithm::init`] and
 /// [`Algorithm::generation`] respectively.
-pub trait Algorithm: Sized {
+pub trait Algorithm {
     /// Initialization implementation.
     ///
     /// The information of the [`Context`] can be obtained or modified at this phase preliminarily.
