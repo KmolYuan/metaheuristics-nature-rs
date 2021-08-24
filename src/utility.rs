@@ -201,11 +201,23 @@ impl<F: ObjFunc> Context<F> {
 ///     }
 /// }
 ///
+/// /// The implementation of the structure with fields.
+/// impl Setting for MySetting1 {
+///     type Algorithm = Method;
+///     fn base(&self) -> &BasicSetting {
+///         &self.base
+///     }
+///     fn create(self) -> Self::Algorithm {
+///         Method
+///     }
+/// }
+///
 /// setting! {
 ///     /// Tuple-like setting.
 ///     pub struct MySetting2(@base);
 /// }
 ///
+/// /// The implementation of a tuple-like structure.
 /// impl Setting for MySetting2 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
