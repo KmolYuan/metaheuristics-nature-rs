@@ -12,7 +12,7 @@ categories = ["algorithms", "no-std"]
 
 [features]
 default = ["std"]
-std = []
+std = ["ndarray/std"]
 parallel = ["std"]
 wasm = ["getrandom/js"]
 
