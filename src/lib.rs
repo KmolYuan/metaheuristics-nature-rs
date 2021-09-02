@@ -70,20 +70,40 @@ pub use crate::task::Task;
 /// let s = Ga::default().pop_num(300).cross(0.9);
 /// ```
 ///
-/// The [`Setting`](crate::utility::Setting) trait still needs to import.
+/// This macro is not necessary, you still can use literal syntax directly.
+///
+/// ```
+/// use metaheuristics_nature::utility::BasicSetting;
+///
+/// #[derive(Default)]
+/// pub struct MyAlgorithm {
+///     base: BasicSetting,
+///     field: f64,
+/// }
+///
+/// let setting = MyAlgorithm {
+///     field: 20.,
+///     base: BasicSetting {
+///         pop_num: 300,
+///         ..Default::default()
+///     }
+/// };
+/// ```
+///
+/// Please aware that [`Setting`](crate::utility::Setting) trait still needs to implement.
 #[macro_export]
 macro_rules! setting {
     (
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
             $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
-            $($(#[$field_attr:meta])* $field:ident: $field_ty:ty = $field_default:expr),* $(,)?
+            $($(#[$field_attr:meta])* $v:vis $field:ident: $field_ty:ty = $field_default:expr),* $(,)?
         }
     ) => {
         $(#[$attr])*
         $vis struct $name {
             $($base: $crate::utility::BasicSetting,)?
-            $($field: $field_ty,)*
+            $($(#[$field_attr])* $v $field: $field_ty,)*
         }
         impl $name {
             $($crate::setting! { @$base })?

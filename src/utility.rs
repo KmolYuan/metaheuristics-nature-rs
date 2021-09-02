@@ -17,11 +17,11 @@ setting! {
     /// Setting base.
     pub struct BasicSetting {
         /// Termination condition.
-        task: Task = Task::MaxGen(200),
+        pub task: Task = Task::MaxGen(200),
         /// Population number.
-        pop_num: usize = 200,
+        pub pop_num: usize = 200,
         /// The report frequency. (per generation)
-        rpt: u32 = 1,
+        pub rpt: u32 = 1,
     }
 }
 
