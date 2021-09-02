@@ -18,24 +18,17 @@ use std::time::Instant;
 ///
 /// ```
 /// use metaheuristics_nature::{Rga, Solver, Task};
-/// # use metaheuristics_nature::{ObjFunc, Array1, AsArray, Report};
+/// # use metaheuristics_nature::{ObjFunc, Report};
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
 /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
 /// # }
 /// # impl ObjFunc for MyFunc {
 /// #     type Result = f64;
-/// #     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
-/// #     where
-/// #         A: AsArray<'a, f64>,
-/// #     {
-/// #         let v = v.into();
+/// #     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
 /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 /// #     }
-/// #     fn result<'a, V>(&self, v: V) -> Self::Result
-/// #     where
-/// #         V: AsArray<'a, f64>
-/// #     {
+/// #     fn result(&self, v: &[f64]) -> Self::Result {
 /// #         self.fitness(v, &Default::default())
 /// #     }
 /// #     fn ub(&self) -> &[f64] { &self.1 }
@@ -139,6 +132,6 @@ impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
     /// Get the result of the objective function.
     #[inline(always)]
     pub fn result(&self) -> F::Result {
-        self.ctx.func.result(&self.ctx.best)
+        self.ctx.func.result(self.ctx.best.as_slice().unwrap())
     }
 }

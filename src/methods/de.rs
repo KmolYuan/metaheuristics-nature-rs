@@ -168,7 +168,7 @@ impl Algorithm for Method {
                     continue 'a;
                 }
             }
-            let tmp_f = ctx.func.fitness(&tmp, &ctx.report);
+            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);
             if tmp_f < ctx.fitness[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
             }

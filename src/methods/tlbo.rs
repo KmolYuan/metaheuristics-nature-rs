@@ -26,7 +26,7 @@ pub struct Method;
 
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Context<F>, i: usize, student: &Array1<f64>) {
-        let f_new = ctx.func.fitness(student, &ctx.report);
+        let f_new = ctx.func.fitness(student.as_slice().unwrap(), &ctx.report);
         if f_new < ctx.fitness[i] {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
             ctx.fitness[i] = f_new;

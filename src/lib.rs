@@ -47,7 +47,7 @@ pub use crate::obj_func::ObjFunc;
 pub use crate::report::*;
 pub use crate::solver::Solver;
 pub use crate::task::Task;
-pub use ndarray::{Array1, Array2, AsArray};
+pub use ndarray::{Array1, Array2};
 
 /// Define a data structure and its builder functions.
 ///

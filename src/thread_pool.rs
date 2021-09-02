@@ -5,8 +5,9 @@
 #[cfg(feature = "parallel")]
 extern crate std;
 
-use crate::{AsArray, ObjFunc, Report};
+use crate::{ObjFunc, Report};
 use alloc::{sync::Arc, vec::Vec};
+use ndarray::AsArray;
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 
@@ -21,25 +22,18 @@ use std::thread::{spawn, JoinHandle};
 ///
 /// ```
 /// use std::sync::Arc;
-/// use metaheuristics_nature::{thread_pool::ThreadPool, Report};
-/// # use metaheuristics_nature::{ObjFunc, Array1, AsArray};
+/// use metaheuristics_nature::{thread_pool::ThreadPool, Report, Array1};
+/// # use metaheuristics_nature::ObjFunc;
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
 /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
 /// # }
 /// # impl ObjFunc for MyFunc {
 /// #     type Result = f64;
-/// #     fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
-/// #     where
-/// #         A: AsArray<'a, f64>,
-/// #     {
-/// #         let v = v.into();
+/// #     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
 /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 /// #     }
-/// #     fn result<'a, V>(&self, v: V) -> Self::Result
-/// #     where
-/// #         V: AsArray<'a, f64>
-/// #     {
+/// #     fn result(&self, v: &[f64]) -> Self::Result {
 /// #         self.fitness(v, &Default::default())
 /// #     }
 /// #     fn ub(&self) -> &[f64] { &self.1 }
@@ -77,11 +71,15 @@ impl ThreadPool {
         #[cfg(feature = "parallel")]
         {
             let v = v.into().to_shared();
-            let job = spawn(move || f.fitness(&v, &report));
+            let job = spawn(move || f.fitness(v.as_slice().unwrap(), &report));
             self.tasks.push((i, job));
         }
         #[cfg(not(feature = "parallel"))]
-        let _ = self.tasks.push((i, f.fitness(v, &report)));
+        {
+            let v = v.into();
+            self.tasks
+                .push((i, f.fitness(v.as_slice().unwrap(), &report)));
+        }
     }
 }
 

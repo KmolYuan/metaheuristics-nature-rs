@@ -35,20 +35,6 @@ impl Setting for Fa {
     }
 }
 
-fn distance<'a, A>(me: A, she: A) -> f64
-where
-    A: AsArray<'a, f64>,
-{
-    let me = me.into();
-    let she = she.into();
-    let mut dist = 0.;
-    for s in 0..me.len() {
-        let diff = me[s] - she[s];
-        dist += diff * diff;
-    }
-    dist
-}
-
 /// Firefly Algorithm type.
 pub struct Method {
     alpha: f64,
@@ -69,7 +55,14 @@ impl Method {
             } else {
                 ctx.pool.slice(s![j, ..])
             };
-            let r = distance(ctx.pool.slice(s![i, ..]), pool_j.view());
+            let r = {
+                let mut dist = 0.;
+                for s in 0..ctx.dim {
+                    let diff = ctx.pool[[i, s]] - pool_j[s];
+                    dist += diff * diff;
+                }
+                dist
+            };
             let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
             for s in 0..ctx.dim {
                 let v = ctx.pool[[i, s]]
@@ -77,7 +70,7 @@ impl Method {
                     + self.alpha * (ctx.ub(s) - ctx.lb(s)) * rand_float(-0.5, 0.5);
                 tmp[s] = ctx.check(s, v);
             }
-            let tmp_f = ctx.func.fitness(&tmp, &ctx.report);
+            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);
             if tmp_f < ctx.fitness[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
             }

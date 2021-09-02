@@ -13,18 +13,11 @@ impl Default for TestObj {
 impl ObjFunc for TestObj {
     type Result = f64;
 
-    fn fitness<'a, A>(&self, v: A, _: &Report) -> f64
-    where
-        A: AsArray<'a, f64>,
-    {
-        let v = v.into();
+    fn fitness(&self, v: &[f64], _: &Report) -> f64 {
         OFFSET + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
 
-    fn result<'a, V>(&self, v: V) -> f64
-    where
-        V: AsArray<'a, f64>,
-    {
+    fn result(&self, v: &[f64]) -> f64 {
         self.fitness(v, &Default::default())
     }
 

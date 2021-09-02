@@ -1,9 +1,9 @@
-use crate::{AsArray, Report};
+use crate::Report;
 
 /// The base of the objective function.
 ///
 /// ```
-/// use metaheuristics_nature::{Array1, AsArray, ObjFunc, Report};
+/// use metaheuristics_nature::{ObjFunc, Report};
 ///
 /// struct MyFunc([f64; 3], [f64; 3]);
 ///
@@ -14,18 +14,11 @@ use crate::{AsArray, Report};
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
 ///
-///     fn fitness<'a, V>(&self, v: V, _: &Report) -> f64
-///     where
-///         V: AsArray<'a, f64>,
-///     {
-///         let v = v.into();
+///     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
 ///
-///     fn result<'a, V>(&self, v: V) -> Self::Result
-///     where
-///         V: AsArray<'a, f64>
-///     {
+///     fn result(&self, v: &[f64]) -> Self::Result {
 ///         self.fitness(v, &Default::default())
 ///     }
 ///
@@ -69,14 +62,12 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness<'a, V>(&self, v: V, r: &Report) -> f64
-    where
-        V: AsArray<'a, f64>;
+    fn fitness(&self, v: &[f64], r: &Report) -> f64;
 
     /// Return the final result of the problem.
-    fn result<'a, V>(&self, v: V) -> Self::Result
-    where
-        V: AsArray<'a, f64>;
+    ///
+    /// The parameters `v` is the best parameter we found.
+    fn result(&self, v: &[f64]) -> Self::Result;
 
     /// Get upper bound.
     fn ub(&self) -> &[f64];

@@ -11,7 +11,7 @@
 pub use crate::random::*;
 use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
-use ndarray::s;
+use ndarray::{s, AsArray};
 
 setting! {
     /// Setting base.
@@ -99,7 +99,9 @@ impl<F: ObjFunc> Context<F> {
 
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.fitness[i] = self.func.fitness(self.pool.slice(s![i, ..]), &self.report);
+        self.fitness[i] = self
+            .func
+            .fitness(self.pool.slice(s![i, ..]).as_slice().unwrap(), &self.report);
     }
 
     pub(crate) fn init_pop(&mut self) {
