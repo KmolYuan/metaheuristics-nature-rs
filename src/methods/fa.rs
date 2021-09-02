@@ -2,7 +2,6 @@
 //!
 //! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 use crate::{utility::*, *};
-use ndarray::s;
 
 setting! {
     /// Firefly Algorithm settings.

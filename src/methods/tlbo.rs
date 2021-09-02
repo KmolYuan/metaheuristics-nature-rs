@@ -2,7 +2,6 @@
 //!
 //! <https://doi.org/10.1016/j.cad.2010.12.015>
 use crate::{utility::*, *};
-use ndarray::s;
 
 setting! {
     /// Teaching Learning Based Optimization settings.

@@ -4,7 +4,6 @@
 //!
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 use crate::{thread_pool::ThreadPool, utility::*, *};
-use ndarray::s;
 
 setting! {
     /// Real-coded Genetic Algorithm settings.

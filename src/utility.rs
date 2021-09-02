@@ -11,7 +11,7 @@
 pub use crate::random::*;
 use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
-use ndarray::{s, AsArray};
+pub use ndarray::{s, Array1, Array2, AsArray};
 
 setting! {
     /// Setting base.

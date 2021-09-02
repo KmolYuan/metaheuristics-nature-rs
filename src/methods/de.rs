@@ -3,7 +3,6 @@
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
 use crate::{utility::*, *};
-use ndarray::{s, Array1};
 
 /// The Differential Evolution strategy.
 ///

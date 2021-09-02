@@ -5,9 +5,8 @@
 #[cfg(feature = "parallel")]
 extern crate std;
 
-use crate::{ObjFunc, Report};
+use crate::{utility::AsArray, ObjFunc, Report};
 use alloc::{sync::Arc, vec::Vec};
-use ndarray::AsArray;
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
 

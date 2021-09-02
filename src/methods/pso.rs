@@ -2,7 +2,6 @@
 //!
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::{thread_pool::ThreadPool, utility::*, *};
-use ndarray::s;
 
 setting! {
     /// Particle Swarm Optimization settings.
