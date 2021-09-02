@@ -27,7 +27,10 @@ setting! {
 
 /// A trait that provides a conversion to original setting.
 ///
-/// Can be auto implemented through [`setting!`].
+/// The setting type is actually a builder of the [`Setting::Algorithm`] type.
+///
+/// Before the implementation,
+/// the builder function of the setting type can be implemented by [`setting!`].
 pub trait Setting {
     /// Associated algorithm.
     type Algorithm: Algorithm;

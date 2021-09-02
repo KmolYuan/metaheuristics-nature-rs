@@ -3,7 +3,7 @@
 //! # Algorithm
 //!
 //! There are two traits [`Algorithm`](crate::utility::Algorithm) and
-//! [`Setting`](crate::utility::Setting).
+//! [`Setting`](crate::utility::Setting) ([`setting!`]).
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -70,7 +70,7 @@ pub use crate::task::Task;
 /// let s = Ga::default().pop_num(300).cross(0.9);
 /// ```
 ///
-/// This macro will also implement [`Setting`](crate::utility::Setting) trait.
+/// The [`Setting`](crate::utility::Setting) trait still needs to import.
 #[macro_export]
 macro_rules! setting {
     (
