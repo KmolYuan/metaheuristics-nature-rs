@@ -1,6 +1,6 @@
 [package]
 name = "metaheuristics-nature"
-description = "A collection of nature-inspired metaheuristic algorithms."
+description = "A collection of nature-inspired meta-heuristic algorithms."
 version = "0.12.0"
 authors = ["KmolYuan <pyslvs@gmail.com>"]
 edition = "2018"

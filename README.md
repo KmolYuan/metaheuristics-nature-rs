@@ -2,7 +2,7 @@
 
 [![dependency status](https://deps.rs/repo/github/KmolYuan/metaheuristics-nature-rs/status.svg)](https://deps.rs/crate/metaheuristics-nature/)
 
-A collection of nature-inspired metaheuristic algorithms. Provides objective function trait, well-known methods, and
+A collection of nature-inspired meta-heuristic algorithms. Provides objective function trait, well-known methods, and
 tool functions let you implement your own searching method.
 
 This crate implemented following algorithms:
@@ -31,3 +31,15 @@ let (x, y) = a.parameters();
 // Get the history reports
 let history = a.history();
 ```
+
+### What kinds of problems can be solved?
+
+If your problem can be simulated and evaluate, the optimization method is the efficient way to find the best design! 🚀
+
+Assuming that your simulation can be done with a function `f`, by inputting the parameters `X` and the evaluation value `y`, then the optimization method will try to adjust `X` to obtain the smallest `y`. Their relationship can be written as `f(X) = y`.
+
+The number of the parameters `X` is called "dimension", imagine `X` is the coordinate in the multi-dimension, and `y` is the weight of the "point". If the dimension become higher, the problem will be more difficult to search.
+
+The "meta-heuristic" algorithms use multiple points to search the minimum value, which detect the local gradient, across the most of feasible solutions, and keep away from the local optimum.
+
+Please see the API documentation for more detail explanation.

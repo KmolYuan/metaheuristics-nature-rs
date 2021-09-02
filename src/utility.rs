@@ -182,7 +182,7 @@ impl<F: ObjFunc> Context<F> {
     }
 }
 
-/// The methods of the metaheuristic algorithms.
+/// The methods of the meta-heuristic algorithms.
 ///
 /// + First, use [`setting!`] macro to build a "setting" type.
 /// + Second, implement [`Setting`] trait then indicate to a "method" type.

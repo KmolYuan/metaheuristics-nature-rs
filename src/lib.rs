@@ -1,4 +1,4 @@
-//! A collection of nature-inspired metaheuristic algorithms.
+//! A collection of nature-inspired meta-heuristic algorithms.
 //!
 //! # Algorithm
 //!
