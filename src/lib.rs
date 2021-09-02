@@ -54,7 +54,7 @@ pub use crate::task::Task;
 /// or reporting interval.
 ///
 /// ```
-/// use metaheuristics_nature::{setting, utility::*};
+/// use metaheuristics_nature::setting;
 ///
 /// setting! {
 ///     /// Genetic Algorithm settings.
