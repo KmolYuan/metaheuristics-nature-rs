@@ -38,6 +38,7 @@
 //! + `wasm`: Support for webassembly, especial for random seed generating.
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
 extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
