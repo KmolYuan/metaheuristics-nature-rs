@@ -13,15 +13,22 @@ use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
 pub use ndarray::{s, Array1, Array2, AsArray};
 
-setting! {
-    /// Setting base.
-    pub struct BasicSetting {
-        /// Termination condition.
-        pub task: Task = Task::MaxGen(200),
-        /// Population number.
-        pub pop_num: usize = 200,
-        /// The report frequency. (per generation)
-        pub rpt: u32 = 1,
+pub struct BasicSetting {
+    /// Termination condition.
+    pub task: Task,
+    /// Population number.
+    pub pop_num: usize,
+    /// The report frequency. (per generation)
+    pub rpt: u32,
+}
+
+impl Default for BasicSetting {
+    fn default() -> Self {
+        Self {
+            task: Task::MaxGen(200),
+            pop_num: 200,
+            rpt: 1,
+        }
     }
 }
 
@@ -201,7 +208,7 @@ impl<F: ObjFunc> Context<F> {
 /// setting! {
 ///     /// A setting with additional fields.
 ///     pub struct MySetting1 {
-///         @base,
+///         .base,
 ///         my_option: u32 = 20,
 ///     }
 /// }

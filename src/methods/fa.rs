@@ -6,8 +6,8 @@ use crate::{utility::*, *};
 setting! {
     /// Firefly Algorithm settings.
     pub struct Fa {
-        @base,
-        @pop_num = 80,
+        .base,
+        .pop_num = 80,
         /// Alpha factor.
         alpha: f64 = 0.05,
         /// Minimum beta factor.

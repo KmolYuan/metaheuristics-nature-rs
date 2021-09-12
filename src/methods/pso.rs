@@ -6,8 +6,8 @@ use crate::{thread_pool::ThreadPool, utility::*, *};
 setting! {
     /// Particle Swarm Optimization settings.
     pub struct Pso {
-        @base,
-        @pop_num = 200,
+        .base,
+        .pop_num = 200,
         /// Cognition factor.
         cognition: f64 = 2.05,
         /// Social factor.

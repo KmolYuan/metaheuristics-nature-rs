@@ -59,8 +59,8 @@ pub use crate::task::Task;
 /// setting! {
 ///     /// Genetic Algorithm settings.
 ///     pub struct Ga {
-///         @base,
-///         @pop_num = 500,
+///         .base,
+///         .pop_num = 500,
 ///         cross: f64 = 0.95,
 ///         mutate: f64 = 0.05,
 ///         win: f64 = 0.95,
@@ -96,17 +96,19 @@ macro_rules! setting {
     (
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
-            $(@$base:ident, $(@$base_field:ident = $base_default:literal,)*)?
-            $($(#[$field_attr:meta])* $v:vis $field:ident: $field_ty:ty = $field_default:expr),* $(,)?
+            .$base:ident,
+            $(.$base_field:ident = $base_default:literal,)*
+            $($(#[$field_attr:meta])* $v:vis $field:ident: $field_ty:ty = $field_default:expr),*
+            $(,)?
         }
     ) => {
         $(#[$attr])*
         $vis struct $name {
-            $($base: $crate::utility::BasicSetting,)?
+            $base: $crate::utility::BasicSetting,
             $($(#[$field_attr])* $v $field: $field_ty,)*
         }
         impl $name {
-            $($crate::setting! { @$base })?
+            $crate::setting! { @$base }
             $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
                 self.$field = $field;
                 self
@@ -115,7 +117,10 @@ macro_rules! setting {
         impl Default for $name {
             fn default() -> Self {
                 Self {
-                    $($base: $crate::utility::BasicSetting::default()$(.$base_field($base_default))*,)?
+                    $base: $crate::utility::BasicSetting {
+                        $($base_field: $base_default,)*
+                        ..Default::default()
+                    },
                     $($field: $field_default,)*
                 }
             }
@@ -142,7 +147,7 @@ macro_rules! setting {
     };
     (@$base:tt, $($(#[$field_attr:meta])* $field:ident: $field_type:ty),+ $(,)?) => {
         $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
-            self.$base = self.$base.$field($field);
+            self.$base.$field = $field;
             self
         })+
     };

@@ -51,8 +51,8 @@ pub enum Strategy {
 setting! {
     /// Differential Evolution settings.
     pub struct De {
-        @base,
-        @pop_num = 400,
+        .base,
+        .pop_num = 400,
         /// Strategy of the formula.
         strategy: Strategy = S1,
         /// F factor.
