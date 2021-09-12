@@ -13,6 +13,9 @@ use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
 pub use ndarray::{s, Array1, Array2, AsArray};
 
+/// Setting base.
+///
+/// Please see [setting!] for more usage.
 pub struct BasicSetting {
     /// Termination condition.
     pub task: Task,
