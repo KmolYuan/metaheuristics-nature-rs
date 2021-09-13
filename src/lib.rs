@@ -51,8 +51,8 @@ pub use crate::task::Task;
 
 /// Define a data structure and its builder functions.
 ///
-/// Use `@` to denote the base settings, such as population number, task category
-/// or reporting interval.
+/// Use a dot `.` prefix to denote the base settings, such as population number,
+/// task category or reporting interval.
 ///
 /// ```
 /// use metaheuristics_nature::setting;
