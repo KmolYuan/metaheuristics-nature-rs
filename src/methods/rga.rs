@@ -8,7 +8,7 @@ use crate::{thread_pool::ThreadPool, utility::*, *};
 setting! {
     /// Real-coded Genetic Algorithm settings.
     pub struct Rga {
-        .base,
+        base,
         .pop_num = 500,
         /// Crossing probability.
         cross: f64 = 0.95,

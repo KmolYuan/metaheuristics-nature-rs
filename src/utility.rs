@@ -229,7 +229,7 @@ impl<F: ObjFunc> Context<F> {
 ///
 /// setting! {
 ///     /// Tuple-like setting.
-///     pub struct MySetting2(@base);
+///     pub struct MySetting2(_);
 /// }
 ///
 /// /// The implementation of a tuple-like structure.

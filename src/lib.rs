@@ -54,21 +54,38 @@ pub use crate::task::Task;
 /// Use a dot `.` prefix to denote the base settings, such as population number,
 /// task category or reporting interval.
 ///
+/// The visibility syntax are totally optional.
+///
 /// ```
 /// use metaheuristics_nature::setting;
 ///
 /// setting! {
 ///     /// Genetic Algorithm settings.
 ///     pub struct Ga {
-///         .base,
+///         /// Base field has its name "base".
+///         pub base,
 ///         .pop_num = 500,
-///         cross: f64 = 0.95,
-///         mutate: f64 = 0.05,
-///         win: f64 = 0.95,
-///         delta: f64 = 5.,
+///         pub cross: f64 = 0.95,
+///         pub mutate: f64 = 0.05,
+///         pub win: f64 = 0.95,
+///         pub delta: f64 = 5.,
 ///     }
 /// }
 /// let s = Ga::default().pop_num(300).cross(0.9);
+/// ```
+///
+/// If there is no additional fields required, a tuple-like structure syntax can be used.
+///
+/// ```
+/// use metaheuristics_nature::setting;
+///
+/// setting! {
+///     /// Tuple-like structure syntax. (single field only)
+///     ///
+///     /// The name of the base field is omitted,
+///     /// and its visibility is optional.
+///     struct Setting(pub _);
+/// }
 /// ```
 ///
 /// This macro is not necessary, you still can use literal syntax directly.
@@ -97,16 +114,16 @@ macro_rules! setting {
     (
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
-            .$base:ident,
+            $base_vis:vis $base:ident,
             $(.$base_field:ident = $base_default:literal,)*
-            $($(#[$field_attr:meta])* $v:vis $field:ident: $field_ty:ty = $field_default:expr),*
+            $($(#[$field_attr:meta])* $field_vis:vis $field:ident: $field_ty:ty = $field_default:expr),*
             $(,)?
         }
     ) => {
         $(#[$attr])*
         $vis struct $name {
-            $base: $crate::utility::BasicSetting,
-            $($(#[$field_attr])* $v $field: $field_ty,)*
+            $base_vis $base: $crate::utility::BasicSetting,
+            $($(#[$field_attr])* $field_vis $field: $field_ty,)*
         }
         impl $name {
             $crate::setting! { @$base }
@@ -127,10 +144,10 @@ macro_rules! setting {
             }
         }
     };
-    ($(#[$attr:meta])* $vis:vis struct $name:ident(@base);) => {
+    ($(#[$attr:meta])* $vis:vis struct $name:ident($base_vis:vis _);) => {
         $(#[$attr])*
         #[derive(Default)]
-        $vis struct $name($crate::utility::BasicSetting);
+        $vis struct $name($base_vis $crate::utility::BasicSetting);
         impl $name {
             $crate::setting! { @0 }
         }

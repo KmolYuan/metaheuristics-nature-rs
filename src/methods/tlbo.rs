@@ -5,7 +5,7 @@ use crate::{utility::*, *};
 
 setting! {
     /// Teaching Learning Based Optimization settings.
-    pub struct Tlbo(@base);
+    pub struct Tlbo(_);
 }
 
 impl Setting for Tlbo {
