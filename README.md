@@ -19,18 +19,18 @@ test another algorithm by simply replacing `Rga` to `De`.
 ```rust
 use metaheuristics_nature::{Rga, Solver, Task};
 
-let a = Solver::solve(
+let s = Solver::solve(
     MyFunc::new(),
     Rga::default().task(Task::MinFit(1e-20)),
     |_| true, // Run without callback
 );
 // Get the result from objective function
-let ans = a.result();
+let ans = s.result();
 // Get the optimized XY value of your function
-let x = a.best_parameters();
-let y = a.best_fitness();
+let x = s.best_parameters();
+let y = s.best_fitness();
 // Get the history reports
-let reports = a.reports();
+let reports = s.reports();
 ```
 
 ### What kinds of problems can be solved?
