@@ -29,8 +29,8 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test<S: Setting>(obj: TestObj, setting: S) {
-    let a = Solver::solve(obj, setting, |_| true);
+fn test(settings: impl Setting) {
+    let a = Solver::solve(TestObj::default(), settings, |_| true);
     let ans = a.result();
     let (x, y) = a.parameters();
     let history = a.history();
@@ -44,34 +44,25 @@ fn test<S: Setting>(obj: TestObj, setting: S) {
 
 #[test]
 fn de() {
-    test(TestObj::default(), De::default().task(Task::MinFit(OFFSET)));
+    test(De::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn pso() {
-    test(
-        TestObj::default(),
-        Pso::default().task(Task::MinFit(OFFSET)),
-    );
+    test(Pso::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn fa() {
-    test(TestObj::default(), Fa::default().task(Task::MinFit(OFFSET)));
+    test(Fa::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn rga() {
-    test(
-        TestObj::default(),
-        Rga::default().task(Task::MinFit(OFFSET)),
-    );
+    test(Rga::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn tlbo() {
-    test(
-        TestObj::default(),
-        Tlbo::default().task(Task::MinFit(OFFSET)),
-    );
+    test(Tlbo::default().task(Task::MinFit(OFFSET)));
 }
