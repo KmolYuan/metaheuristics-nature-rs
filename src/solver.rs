@@ -38,7 +38,7 @@ use std::time::Instant;
 /// let a = Solver::solve(
 ///     MyFunc::new(),
 ///     Rga::default().task(Task::MinFit(1e-20)),
-///     |_| true // Run without callback
+///     |_| true, // Run without callback
 /// );
 /// // Get the result from objective function
 /// let ans = a.result();
@@ -47,56 +47,52 @@ use std::time::Instant;
 /// // Get the history reports
 /// let history = a.history();
 /// ```
-pub struct Solver<M: Algorithm, F: ObjFunc> {
-    ctx: Context<F>,
-    method: M,
-}
+pub struct Solver<F: ObjFunc>(Context<F>);
 
-impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
-    /// Create the task and run the algorithm.
+impl<F: ObjFunc> Solver<F> {
+    /// Create the task and run the algorithm, which may takes a lot of time.
     ///
     /// Argument `callback` is a progress feedback function,
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve<S>(func: F, settings: S, mut callback: impl FnMut(Report) -> bool) -> Self
+    pub fn solve<S, C>(func: F, setting: S, mut callback: C) -> Self
     where
-        S: Setting<Algorithm = M>,
+        S: Setting,
+        C: FnMut(&Report) -> bool,
     {
-        let mut s = Self {
-            ctx: Context::new(func, settings.base()),
-            method: settings.create(),
-        };
+        let mut ctx = Context::new(func, setting.base());
+        let mut method = setting.create();
         #[cfg(feature = "std")]
         let time_start = Instant::now();
-        s.ctx.init_pop();
+        ctx.init_pop();
         #[cfg(feature = "std")]
-        let _ = s.ctx.report.update_time(time_start);
-        s.method.init(&mut s.ctx);
-        if !callback(s.ctx.report.clone()) {
-            return s;
+        let _ = ctx.report.update_time(time_start);
+        method.init(&mut ctx);
+        if !callback(&ctx.report) {
+            return Self(ctx);
         }
-        s.ctx.report();
+        ctx.report();
         loop {
-            s.ctx.report.next_gen();
+            ctx.report.next_gen();
             #[cfg(feature = "std")]
-            let _ = s.ctx.report.update_time(time_start);
-            let best_f = s.ctx.report.best_f;
-            let diff = s.ctx.report.diff;
-            s.method.generation(&mut s.ctx);
-            s.ctx.report.set_diff(best_f - s.ctx.report.best_f);
-            if s.ctx.report.gen % s.ctx.rpt == 0 {
-                if !callback(s.ctx.report.clone()) {
+            let _ = ctx.report.update_time(time_start);
+            let best_f = ctx.report.best_f;
+            let diff = ctx.report.diff;
+            method.generation(&mut ctx);
+            ctx.report.set_diff(best_f - ctx.report.best_f);
+            if ctx.report.gen % ctx.rpt == 0 {
+                if !callback(&ctx.report) {
                     break;
                 }
-                s.ctx.report();
+                ctx.report();
             }
-            match s.ctx.task {
+            match ctx.task {
                 Task::MaxGen(v) => {
-                    if s.ctx.report.gen >= v {
+                    if ctx.report.gen >= v {
                         break;
                     }
                 }
                 Task::MinFit(v) => {
-                    if s.ctx.report.best_f <= v {
+                    if ctx.report.best_f <= v {
                         break;
                     }
                 }
@@ -107,31 +103,31 @@ impl<M: Algorithm, F: ObjFunc> Solver<M, F> {
                     }
                 }
                 Task::SlowDown(v) => {
-                    if s.ctx.report.diff / diff >= v {
+                    if ctx.report.diff / diff >= v {
                         break;
                     }
                 }
             }
         }
-        s
+        Self(ctx)
     }
 
     /// Get the history for plotting.
     #[inline(always)]
     pub fn history(&self) -> Vec<Report> {
-        self.ctx.reports.clone()
+        self.0.reports.clone()
     }
 
     /// Return the x and y of function.
     /// The algorithm must be executed once.
     #[inline(always)]
-    pub fn parameters(&self) -> (Array1<f64>, f64) {
-        (self.ctx.best.to_owned(), self.ctx.report.best_f)
+    pub fn parameters(&self) -> (&[f64], f64) {
+        (self.0.best.as_slice().unwrap(), self.0.report.best_f)
     }
 
     /// Get the result of the objective function.
     #[inline(always)]
     pub fn result(&self) -> F::Result {
-        self.ctx.func.result(self.ctx.best.as_slice().unwrap())
+        self.0.func.result(self.0.best.as_slice().unwrap())
     }
 }

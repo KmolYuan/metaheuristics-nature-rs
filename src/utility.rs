@@ -77,7 +77,7 @@ pub struct Context<F> {
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub(crate) fn new(func: F, settings: &BasicSetting) -> Self {
+    pub(crate) fn new(func: F, setting: &BasicSetting) -> Self {
         let dim = func.lb().len();
         assert_eq!(
             dim,
@@ -85,13 +85,13 @@ impl<F: ObjFunc> Context<F> {
             "different dimension of the variables!"
         );
         Self {
-            pop_num: settings.pop_num,
+            pop_num: setting.pop_num,
             dim,
-            rpt: settings.rpt,
-            task: settings.task.clone(),
+            rpt: setting.rpt,
+            task: setting.task.clone(),
             best: Array1::zeros(dim),
-            fitness: Array1::ones(settings.pop_num) * f64::INFINITY,
-            pool: Array2::zeros((settings.pop_num, dim)),
+            fitness: Array1::ones(setting.pop_num) * f64::INFINITY,
+            pool: Array2::zeros((setting.pop_num, dim)),
             report: Default::default(),
             reports: Vec::new(),
             func: Arc::new(func),
@@ -211,7 +211,7 @@ impl<F: ObjFunc> Context<F> {
 /// setting! {
 ///     /// A setting with additional fields.
 ///     pub struct MySetting1 {
-///         .base,
+///         base,
 ///         my_option: u32 = 20,
 ///     }
 /// }

@@ -22,7 +22,7 @@ use metaheuristics_nature::{Rga, Solver, Task};
 let a = Solver::solve(
     MyFunc::new(),
     Rga::default().task(Task::MinFit(1e-20)),
-    |_| true // Run without callback
+    |_| true, // Run without callback
 );
 // Get the result from objective function
 let ans = a.result();

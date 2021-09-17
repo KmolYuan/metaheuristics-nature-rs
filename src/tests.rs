@@ -29,8 +29,8 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test(settings: impl Setting) {
-    let a = Solver::solve(TestObj::default(), settings, |_| true);
+fn test(setting: impl Setting) {
+    let a = Solver::solve(TestObj::default(), setting, |_| true);
     let ans = a.result();
     let (x, y) = a.parameters();
     let history = a.history();

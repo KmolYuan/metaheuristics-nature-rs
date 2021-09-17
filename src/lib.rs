@@ -114,6 +114,7 @@ macro_rules! setting {
     (
         $(#[$attr:meta])*
         $vis:vis struct $name:ident {
+            $(#[$base_attr:meta])*
             $base_vis:vis $base:ident,
             $(.$base_field:ident = $base_default:literal,)*
             $($(#[$field_attr:meta])* $field_vis:vis $field:ident: $field_ty:ty = $field_default:expr),*
@@ -122,6 +123,7 @@ macro_rules! setting {
     ) => {
         $(#[$attr])*
         $vis struct $name {
+            $(#[$base_attr])*
             $base_vis $base: $crate::utility::BasicSetting,
             $($(#[$field_attr])* $field_vis $field: $field_ty,)*
         }
