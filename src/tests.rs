@@ -32,9 +32,10 @@ impl ObjFunc for TestObj {
 fn test(setting: impl Setting) {
     let a = Solver::solve(TestObj::default(), setting, |_| true);
     let ans = a.result();
-    let (x, y) = a.parameters();
-    let history = a.history();
-    assert!(history.len() > 0, "{}", history.len());
+    let x = a.best_parameters();
+    let y = a.best_fitness();
+    let reports = a.reports();
+    assert!(reports.len() > 0, "{}", reports.len());
     assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
     for i in 0..4 {
         assert!(x[i].abs() < 1e-6, "x{} = {}", i, x[i]);

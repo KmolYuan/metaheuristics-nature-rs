@@ -27,9 +27,10 @@ let a = Solver::solve(
 // Get the result from objective function
 let ans = a.result();
 // Get the optimized XY value of your function
-let (x, y) = a.parameters();
+let x = a.best_parameters();
+let y = a.best_fitness();
 // Get the history reports
-let history = a.history();
+let reports = a.reports();
 ```
 
 ### What kinds of problems can be solved?

@@ -271,6 +271,8 @@ pub trait Algorithm {
 }
 
 /// Product two iterators together.
+///
+/// For example, `[a, b, c]` and `[1, 2, 3]` will become `[a1, a2, a3, b1, b2, b3, c1, c2, c3]`.
 pub fn product<A, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, A)>
 where
     A: Clone,

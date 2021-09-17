@@ -43,9 +43,10 @@ use std::time::Instant;
 /// // Get the result from objective function
 /// let ans = a.result();
 /// // Get the optimized XY value of your function
-/// let (x, y) = a.parameters();
+/// let x = a.best_parameters();
+/// let y = a.best_fitness();
 /// // Get the history reports
-/// let history = a.history();
+/// let reports = a.reports();
 /// ```
 pub struct Solver<F: ObjFunc>(Context<F>);
 
@@ -114,14 +115,20 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Get the history for plotting.
     #[inline(always)]
-    pub fn history(&self) -> Vec<Report> {
+    pub fn reports(&self) -> Vec<Report> {
         self.0.reports.clone()
     }
 
-    /// Return the x and y of function.
+    /// Get the best parameters.
     #[inline(always)]
-    pub fn parameters(&self) -> (&[f64], f64) {
-        (self.0.best.as_slice().unwrap(), self.0.report.best_f)
+    pub fn best_parameters(&self) -> &[f64] {
+        self.0.best.as_slice().unwrap()
+    }
+
+    /// Get the best fitness.
+    #[inline(always)]
+    pub fn best_fitness(&self) -> f64 {
+        self.0.report.best_f
     }
 
     /// Get the result of the objective function.
