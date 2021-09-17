@@ -119,7 +119,6 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Return the x and y of function.
-    /// The algorithm must be executed once.
     #[inline(always)]
     pub fn parameters(&self) -> (&[f64], f64) {
         (self.0.best.as_slice().unwrap(), self.0.report.best_f)
