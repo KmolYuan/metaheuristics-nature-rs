@@ -84,15 +84,16 @@ impl<F: ObjFunc> Context<F> {
             func.ub().len(),
             "different dimension of the variables!"
         );
+        let pop_num = setting.pop_num;
         Self {
-            pop_num: setting.pop_num,
+            pop_num,
             dim,
             rpt: setting.rpt,
             task: setting.task.clone(),
             best: Array1::zeros(dim),
-            fitness: Array1::ones(setting.pop_num) * f64::INFINITY,
-            pool: Array2::zeros((setting.pop_num, dim)),
-            report: Default::default(),
+            fitness: Array1::ones(pop_num) * f64::INFINITY,
+            pool: Array2::zeros((pop_num, dim)),
+            report: Report::default(),
             reports: Vec::new(),
             func: Arc::new(func),
         }
