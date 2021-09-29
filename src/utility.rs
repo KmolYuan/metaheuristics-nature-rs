@@ -94,24 +94,28 @@ impl<F: ObjFunc> Context<F> {
 
     /// Get lower bound.
     #[inline(always)]
+    #[must_use = "the bound value should be used"]
     pub fn lb(&self, i: usize) -> f64 {
         self.func.lb()[i]
     }
 
     /// Get upper bound.
     #[inline(always)]
+    #[must_use = "the bound value should be used"]
     pub fn ub(&self, i: usize) -> f64 {
         self.func.ub()[i]
     }
 
     /// Get dimension (number of variables).
     #[inline(always)]
+    #[must_use = "the dimension value should be used"]
     pub fn dim(&self) -> usize {
         self.best.len()
     }
 
     /// Get population number.
     #[inline(always)]
+    #[must_use = "the population number should be used"]
     pub fn pop_num(&self) -> usize {
         self.fitness.len()
     }
