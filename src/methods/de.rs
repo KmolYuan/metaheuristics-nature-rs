@@ -124,9 +124,9 @@ impl Method {
         v: Array1<usize>,
         mut n: usize,
     ) {
-        for _ in 0..ctx.dim {
+        for _ in 0..ctx.dim() {
             tmp[n] = self.formula(ctx, tmp, &v, n);
-            n = (n + 1) % ctx.dim;
+            n = (n + 1) % ctx.dim();
             if !maybe(self.cross) {
                 break;
             }
@@ -140,29 +140,29 @@ impl Method {
         v: Array1<usize>,
         mut n: usize,
     ) {
-        for lv in 0..ctx.dim {
-            if !maybe(self.cross) || lv == ctx.dim - 1 {
+        for lv in 0..ctx.dim() {
+            if !maybe(self.cross) || lv == ctx.dim() - 1 {
                 tmp[n] = self.formula(ctx, tmp, &v, n);
             }
-            n = (n + 1) % ctx.dim;
+            n = (n + 1) % ctx.dim();
         }
     }
 }
 
 impl Algorithm for Method {
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        'a: for i in 0..ctx.pop_num {
+        'a: for i in 0..ctx.pop_num() {
             // Generate Vector
             let mut v = Array1::zeros(self.num);
-            rand_vector(v.as_slice_mut().unwrap(), 0, 0, ctx.pop_num);
+            rand_vector(v.as_slice_mut().unwrap(), 0, 0, ctx.pop_num());
             // Recombination
             let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
-            let n = rand_int(0, ctx.dim);
+            let n = rand_int(0, ctx.dim());
             match self.strategy {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, v, n),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, v, n),
             }
-            for s in 0..ctx.dim {
+            for s in 0..ctx.dim() {
                 if tmp[s] > ctx.ub(s) || tmp[s] < ctx.lb(s) {
                     continue 'a;
                 }

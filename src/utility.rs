@@ -56,11 +56,6 @@ pub trait Setting {
 ///
 /// Please see [`Algorithm`] for the implementation.
 pub struct Context<F> {
-    /// Population number.
-    pub pop_num: usize,
-    /// Dimension, the variable number of the problem.
-    pub dim: usize,
-    pub(crate) rpt: u32,
     /// Termination condition.
     pub task: Task,
     /// The best variables.
@@ -72,29 +67,27 @@ pub struct Context<F> {
     /// The current information of the algorithm.
     pub report: Report,
     pub(crate) reports: Vec<Report>,
+    pub(crate) rpt: u32,
     /// The objective function.
     pub func: Arc<F>,
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub(crate) fn new(func: F, setting: &BasicSetting) -> Self {
+    pub(crate) fn new(func: F, s: &BasicSetting) -> Self {
         let dim = func.lb().len();
         assert_eq!(
             dim,
             func.ub().len(),
             "different dimension of the variables!"
         );
-        let pop_num = setting.pop_num;
         Self {
-            pop_num,
-            dim,
-            rpt: setting.rpt,
-            task: setting.task.clone(),
+            task: s.task.clone(),
             best: Array1::zeros(dim),
-            fitness: Array1::ones(pop_num) * f64::INFINITY,
-            pool: Array2::zeros((pop_num, dim)),
+            fitness: Array1::ones(s.pop_num) * f64::INFINITY,
+            pool: Array2::zeros((s.pop_num, dim)),
             report: Report::default(),
             reports: Vec::new(),
+            rpt: s.rpt,
             func: Arc::new(func),
         }
     }
@@ -111,6 +104,18 @@ impl<F: ObjFunc> Context<F> {
         self.func.ub()[i]
     }
 
+    /// Get dimension (number of variables).
+    #[inline(always)]
+    pub fn dim(&self) -> usize {
+        self.best.len()
+    }
+
+    /// Get population number.
+    #[inline(always)]
+    pub fn pop_num(&self) -> usize {
+        self.fitness.len()
+    }
+
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
         self.fitness[i] = self
@@ -121,8 +126,8 @@ impl<F: ObjFunc> Context<F> {
     pub(crate) fn init_pop(&mut self) {
         let mut tasks = ThreadPool::new();
         let mut best = 0;
-        for i in 0..self.pop_num {
-            for s in 0..self.dim {
+        for i in 0..self.pop_num() {
+            for s in 0..self.dim() {
                 self.pool[[i, s]] = rand_float(self.lb(s), self.ub(s));
             }
             tasks.insert(
@@ -168,7 +173,7 @@ impl<F: ObjFunc> Context<F> {
     /// Find the best, and set it globally.
     pub fn find_best(&mut self) {
         let mut best = 0;
-        for i in 1..self.pop_num {
+        for i in 1..self.pop_num() {
             if self.fitness[i] < self.fitness[best] {
                 best = i;
             }

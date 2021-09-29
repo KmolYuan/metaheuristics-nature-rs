@@ -62,10 +62,10 @@ impl Algorithm for Method {
 
     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         let mut tasks = ThreadPool::new();
-        for i in 0..ctx.pop_num {
+        for i in 0..ctx.pop_num() {
             let alpha = rand_float(0., self.cognition);
             let beta = rand_float(0., self.social);
-            for s in 0..ctx.dim {
+            for s in 0..ctx.dim() {
                 let v = self.velocity * ctx.pool[[i, s]]
                     + alpha * (self.best_past[[i, s]] - ctx.pool[[i, s]])
                     + beta * (ctx.best[s] - ctx.pool[[i, s]]);

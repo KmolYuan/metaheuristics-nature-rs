@@ -61,13 +61,13 @@ pub struct Method {
 
 impl Method {
     fn crossover<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for i in (0..(ctx.pop_num - 1)).step_by(2) {
+        for i in (0..(ctx.pop_num() - 1)).step_by(2) {
             if !maybe(self.cross) {
                 continue;
             }
-            let mut tmp = Array2::zeros((3, ctx.dim));
+            let mut tmp = Array2::zeros((3, ctx.dim()));
             let mut f_tmp = Array1::zeros(3);
-            for s in 0..ctx.dim {
+            for s in 0..ctx.dim() {
                 tmp[[0, s]] = 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]];
                 let v = 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]];
                 tmp[[1, s]] = check(ctx, s, v);
@@ -118,11 +118,11 @@ impl Method {
     }
 
     fn mutate<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for i in 0..ctx.pop_num {
+        for i in 0..ctx.pop_num() {
             if !maybe(self.mutate) {
                 continue;
             }
-            let s = rand_int(0, ctx.dim);
+            let s = rand_int(0, ctx.dim());
             if maybe(0.5) {
                 ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
             } else {
@@ -134,10 +134,10 @@ impl Method {
     }
 
     fn select<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for i in 0..ctx.pop_num {
+        for i in 0..ctx.pop_num() {
             let (j, k) = {
                 let mut v = [i, 0, 0];
-                rand_vector(&mut v, 1, 0, ctx.pop_num);
+                rand_vector(&mut v, 1, 0, ctx.pop_num());
                 (v[1], v[2])
             };
             if ctx.fitness[j] > ctx.fitness[k] && maybe(self.win) {
@@ -153,7 +153,7 @@ impl Method {
             }
             ctx.fitness.assign(&self.fitness_new);
             ctx.pool.assign(&self.pool_new);
-            ctx.assign_from_best(rand_int(0, ctx.pop_num));
+            ctx.assign_from_best(rand_int(0, ctx.pop_num()));
         }
     }
 }

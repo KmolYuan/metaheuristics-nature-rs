@@ -44,11 +44,11 @@ pub struct Method {
 
 impl Method {
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for (i, j) in product(0..ctx.pop_num, 0..ctx.pop_num) {
+        for (i, j) in product(0..ctx.pop_num(), 0..ctx.pop_num()) {
             if ctx.fitness[i] <= ctx.fitness[j] {
                 continue;
             }
-            let mut tmp = Array1::zeros(ctx.dim);
+            let mut tmp = Array1::zeros(ctx.dim());
             let pool_j = if i == j {
                 ctx.best.view()
             } else {
@@ -56,14 +56,14 @@ impl Method {
             };
             let r = {
                 let mut dist = 0.;
-                for s in 0..ctx.dim {
+                for s in 0..ctx.dim() {
                     let diff = ctx.pool[[i, s]] - pool_j[s];
                     dist += diff * diff;
                 }
                 dist
             };
             let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
-            for s in 0..ctx.dim {
+            for s in 0..ctx.dim() {
                 let v = ctx.pool[[i, s]]
                     + beta * (pool_j[s] - ctx.pool[[i, s]])
                     + self.alpha * (ctx.ub(s) - ctx.lb(s)) * rand_float(-0.5, 0.5);
