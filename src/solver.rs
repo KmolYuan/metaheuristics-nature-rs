@@ -73,13 +73,22 @@ impl<F: ObjFunc> Solver<F> {
         }
         ctx.report();
         loop {
-            ctx.report.next_gen();
+            ctx.report.gen += 1;
             #[cfg(feature = "std")]
             let _ = ctx.report.update_time(time_start);
             let best_f = ctx.report.best_f;
             let diff = ctx.report.diff;
             method.generation(&mut ctx);
-            ctx.report.set_diff(best_f - ctx.report.best_f);
+            ctx.report.diff = best_f - ctx.report.best_f;
+            {
+                let mut count = 0.;
+                ctx.report.average = 0.;
+                for v in ctx.fitness.iter().filter(|v| v.is_finite()) {
+                    ctx.report.average += v;
+                    count += 1.;
+                }
+                ctx.report.average /= count;
+            }
             if ctx.report.gen % ctx.rpt == 0 {
                 if !callback(&ctx.report) {
                     break;
