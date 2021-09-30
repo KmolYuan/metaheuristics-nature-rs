@@ -3,6 +3,8 @@
 //! (Real-valued Genetic Algorithm)
 //!
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
+//!
+//! This method require floating point power function.
 use crate::{thread_pool::ThreadPool, utility::*, *};
 
 /// Real-coded Genetic Algorithm settings.

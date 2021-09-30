@@ -66,7 +66,7 @@ impl<F: ObjFunc> Solver<F> {
         let time_start = Instant::now();
         ctx.init_pop();
         #[cfg(feature = "std")]
-        let _ = ctx.report.update_time(time_start);
+        let _ = { ctx.report.time = (Instant::now() - time_start).as_secs_f64() };
         method.init(&mut ctx);
         if !callback(&ctx.report) {
             return Self(ctx);
@@ -75,7 +75,7 @@ impl<F: ObjFunc> Solver<F> {
         loop {
             ctx.report.gen += 1;
             #[cfg(feature = "std")]
-            let _ = ctx.report.update_time(time_start);
+            let _ = { ctx.report.time = (Instant::now() - time_start).as_secs_f64() };
             let best_f = ctx.report.best_f;
             let diff = ctx.report.diff;
             method.generation(&mut ctx);

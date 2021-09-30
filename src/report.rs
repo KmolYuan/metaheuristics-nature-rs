@@ -1,8 +1,3 @@
-#[cfg(feature = "std")]
-extern crate std;
-#[cfg(feature = "std")]
-use std::time::Instant;
-
 /// The data of generation sampling.
 #[derive(Clone, Debug)]
 pub struct Report {
@@ -35,12 +30,5 @@ impl Default for Report {
             #[cfg(feature = "std")]
             time: 0.,
         }
-    }
-}
-
-impl Report {
-    #[cfg(feature = "std")]
-    pub(crate) fn update_time(&mut self, time: Instant) {
-        self.time = (Instant::now() - time).as_secs_f64();
     }
 }
