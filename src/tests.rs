@@ -45,25 +45,33 @@ fn test(setting: impl Setting) {
 
 #[test]
 fn de() {
-    test(De::default().task(Task::MinFit(OFFSET)));
+    test(setting!(De {
+        +base: { task: Task::MinFit(OFFSET) }
+    }));
 }
 
 #[test]
 fn pso() {
-    test(Pso::default().task(Task::MinFit(OFFSET)));
+    test(setting!(Pso {
+        +base: { task: Task::MinFit(OFFSET) }
+    }));
 }
 
 #[test]
 fn fa() {
-    test(Fa::default().task(Task::MinFit(OFFSET)));
+    test(setting!(Fa {
+        +base: { task: Task::MinFit(OFFSET) }
+    }));
 }
 
 #[test]
 fn rga() {
-    test(Rga::default().task(Task::MinFit(OFFSET)));
+    test(setting!(Rga {
+        +base: { task: Task::MinFit(OFFSET) }
+    }));
 }
 
 #[test]
 fn tlbo() {
-    test(Tlbo::default().task(Task::MinFit(OFFSET)));
+    test(setting!(Tlbo(task: Task::MinFit(OFFSET))));
 }

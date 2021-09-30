@@ -3,17 +3,29 @@
 //! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 use crate::{utility::*, *};
 
-setting! {
-    /// Firefly Algorithm settings.
-    pub struct Fa {
-        base,
-        .pop_num = 80,
-        /// Alpha factor.
-        alpha: f64 = 0.05,
-        /// Minimum beta factor.
-        beta_min: f64 = 0.2,
-        /// Gamma factor.
-        gamma: f64 = 1.,
+/// Firefly Algorithm settings.
+pub struct Fa {
+    /// Base setting.
+    pub base: BasicSetting,
+    /// Alpha factor.
+    pub alpha: f64,
+    /// Minimum beta factor.
+    pub beta_min: f64,
+    /// Gamma factor.
+    pub gamma: f64,
+}
+
+impl Default for Fa {
+    fn default() -> Self {
+        Self {
+            base: BasicSetting {
+                pop_num: 80,
+                ..Default::default()
+            },
+            alpha: 0.05,
+            beta_min: 0.2,
+            gamma: 1.,
+        }
     }
 }
 

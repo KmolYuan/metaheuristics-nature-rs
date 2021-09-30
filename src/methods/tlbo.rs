@@ -3,10 +3,9 @@
 //! <https://doi.org/10.1016/j.cad.2010.12.015>
 use crate::{utility::*, *};
 
-setting! {
-    /// Teaching Learning Based Optimization settings.
-    pub struct Tlbo(_);
-}
+/// Teaching Learning Based Optimization settings.
+#[derive(Default)]
+pub struct Tlbo(pub BasicSetting);
 
 impl Setting for Tlbo {
     type Algorithm = Method;

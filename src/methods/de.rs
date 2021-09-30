@@ -48,17 +48,29 @@ pub enum Strategy {
     S10,
 }
 
-setting! {
-    /// Differential Evolution settings.
-    pub struct De {
-        base,
-        .pop_num = 400,
-        /// Strategy of the formula.
-        strategy: Strategy = S1,
-        /// F factor.
-        f: f64 = 0.6,
-        /// Crossing probability.
-        cross: f64 = 0.9,
+/// Differential Evolution settings.
+pub struct De {
+    /// Base setting.
+    pub base: BasicSetting,
+    /// Strategy of the formula.
+    pub strategy: Strategy,
+    /// F factor.
+    pub f: f64,
+    /// Crossing probability.
+    pub cross: f64,
+}
+
+impl Default for De {
+    fn default() -> Self {
+        Self {
+            base: BasicSetting {
+                pop_num: 400,
+                ..Default::default()
+            },
+            strategy: S1,
+            f: 0.6,
+            cross: 0.9,
+        }
     }
 }
 

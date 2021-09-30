@@ -13,6 +13,8 @@ pub struct Report {
     /// Gradient of the best fitness, between the current and the previous.
     pub diff: f64,
     /// Average of the finite-fitness individuals.
+    ///
+    /// The first value might be [`f64::NaN`].
     pub average: f64,
     /// Time duration.
     #[cfg(feature = "std")]

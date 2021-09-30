@@ -3,17 +3,29 @@
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::{thread_pool::ThreadPool, utility::*, *};
 
-setting! {
-    /// Particle Swarm Optimization settings.
-    pub struct Pso {
-        base,
-        .pop_num = 200,
-        /// Cognition factor.
-        cognition: f64 = 2.05,
-        /// Social factor.
-        social: f64 = 2.05,
-        /// Moving velocity.
-        velocity: f64 = 1.3,
+/// Particle Swarm Optimization settings.
+pub struct Pso {
+    /// Base setting.
+    pub base: BasicSetting,
+    /// Cognition factor.
+    pub cognition: f64,
+    /// Social factor.
+    pub social: f64,
+    /// Moving velocity.
+    pub velocity: f64,
+}
+
+impl Default for Pso {
+    fn default() -> Self {
+        Self {
+            base: BasicSetting {
+                pop_num: 200,
+                ..Default::default()
+            },
+            cognition: 2.05,
+            social: 2.05,
+            velocity: 1.3,
+        }
     }
 }
 

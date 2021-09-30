@@ -46,130 +46,72 @@ extern crate core as std;
 pub use crate::methods::*;
 pub use crate::obj_func::ObjFunc;
 pub use crate::report::*;
+pub use crate::setting::{Adaptive, Task};
 pub use crate::solver::Solver;
-pub use crate::task::Task;
 
-/// Define a data structure and its builder functions.
+/// The setting expression, used to fill the algorithm options.
 ///
-/// Use a dot `.` prefix to denote the base settings, such as population number,
-/// task category or reporting interval.
+/// Please make sure all fields are visible.
 ///
-/// The visibility syntax are totally optional.
-///
-/// ```
-/// use metaheuristics_nature::setting;
-///
-/// setting! {
-///     /// Genetic Algorithm settings.
-///     pub struct Ga {
-///         /// Base field has its name "base".
-///         pub base,
-///         .pop_num = 500,
-///         pub cross: f64 = 0.95,
-///         pub mutate: f64 = 0.05,
-///         pub win: f64 = 0.95,
-///         pub delta: f64 = 5.,
-///     }
-/// }
-/// let s = Ga::default().pop_num(300).cross(0.9);
-/// ```
-///
-/// If there is no additional fields required, a tuple-like structure syntax can be used.
+/// This macro will use the construct pattern, something like:
 ///
 /// ```
-/// use metaheuristics_nature::setting;
+/// use metaheuristics_nature::{setting, utility::BasicSetting};
 ///
-/// setting! {
-///     /// Tuple-like structure syntax. (single field only)
-///     ///
-///     /// The name of the base field is omitted,
-///     /// and its visibility is optional.
-///     struct Setting(pub _);
-/// }
-/// ```
-///
-/// This macro is not necessary, you still can use literal syntax directly.
-///
-/// ```
-/// use metaheuristics_nature::utility::BasicSetting;
-///
-/// #[derive(Default)]
-/// pub struct MyAlgorithm {
+/// #[derive(Default, Debug, PartialEq)]
+/// struct Ga {
 ///     base: BasicSetting,
-///     field: f64,
+///     mutate: f64,
 /// }
 ///
-/// let setting = MyAlgorithm {
-///     field: 20.,
+/// let constructed = Ga {
 ///     base: BasicSetting {
-///         pop_num: 300,
+///         pop_num: 200,
 ///         ..Default::default()
-///     }
+///     },
+///     ..Default::default()
 /// };
+/// let from_macro = setting!(Ga {
+///     +base: { pop_num: 200 }
+/// });
+/// assert_eq!(constructed, from_macro);
 /// ```
 ///
-/// Please aware that [`Setting`](crate::utility::Setting) trait still needs to implement.
+/// In the above example, the "base" setting needs to add a plus sign "+" to indicate the base setting.
+/// Otherwise, all fields are listed as usual.
+///
+/// The single tuple type ("inherited" option) can use following syntax:
+///
+/// ```
+/// use metaheuristics_nature::{setting, utility::BasicSetting};
+///
+/// #[derive(Default, Debug, PartialEq)]
+/// struct Ga(BasicSetting);
+///
+/// let constructed = Ga(BasicSetting {
+///     pop_num: 200,
+///     ..Default::default()
+/// });
+/// let from_macro = setting!(Ga(pop_num: 200));
+/// assert_eq!(constructed, from_macro);
+/// ```
 #[macro_export]
 macro_rules! setting {
-    (
-        $(#[$attr:meta])*
-        $vis:vis struct $name:ident {
-            $(#[$base_attr:meta])*
-            $base_vis:vis $base:ident,
-            $(.$base_field:ident = $base_default:literal,)*
-            $($(#[$field_attr:meta])* $field_vis:vis $field:ident: $field_ty:ty = $field_default:expr),*
-            $(,)?
-        }
-    ) => {
-        $(#[$attr])*
-        $vis struct $name {
-            $(#[$base_attr])*
-            $base_vis $base: $crate::utility::BasicSetting,
-            $($(#[$field_attr])* $field_vis $field: $field_ty,)*
-        }
-        impl $name {
-            $crate::setting! { @$base }
-            $($(#[$field_attr])* pub fn $field(mut self, $field: $field_ty) -> Self {
-                self.$field = $field;
-                self
-            })*
-        }
-        impl Default for $name {
-            fn default() -> Self {
-                Self {
-                    $base: $crate::utility::BasicSetting {
-                        $($base_field: $base_default,)*
-                        ..Default::default()
-                    },
-                    $($field: $field_default,)*
-                }
-            }
+    (@base $(, $field:ident: $value:expr)*) => {
+        $crate::utility::BasicSetting {
+            $($field: $value,)*
+            ..Default::default()
         }
     };
-    ($(#[$attr:meta])* $vis:vis struct $name:ident($base_vis:vis _);) => {
-        $(#[$attr])*
-        #[derive(Default)]
-        $vis struct $name($base_vis $crate::utility::BasicSetting);
-        impl $name {
-            $crate::setting! { @0 }
+    ($name:ident{$(+$base:ident: {$($base_field:ident: $base_value:expr),* $(,)?})? $($field:ident: $value:expr),* $(,)?}) => {
+        $name {
+            $($base: $crate::setting!(@base, $($base_field: $base_value),*),)?
+            $($field: $value,)*
+            ..Default::default()
         }
     };
-    (@$base:tt) => {
-        $crate::setting! {
-            @$base,
-            /// Termination condition.
-            task: $crate::Task,
-            /// Population number.
-            pop_num: usize,
-            /// The report frequency. (per generation)
-            rpt: u32,
-        }
-    };
-    (@$base:tt, $($(#[$field_attr:meta])* $field:ident: $field_type:ty),+ $(,)?) => {
-        $($(#[$field_attr])* pub fn $field(mut self, $field: $field_type) -> Self {
-            self.$base.$field = $field;
-            self
-        })+
+    ($name:ident($($field:ident: $value:expr),* $(,)?)) => {
+        $name($crate::setting!(@base, $($field: $value),*))
     };
 }
 
@@ -177,8 +119,8 @@ pub mod methods;
 mod obj_func;
 pub mod random;
 mod report;
+mod setting;
 mod solver;
-mod task;
 #[cfg(test)]
 mod tests;
 pub mod thread_pool;

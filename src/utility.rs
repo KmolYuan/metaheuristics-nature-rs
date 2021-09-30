@@ -12,43 +12,7 @@ pub use crate::random::*;
 use crate::{thread_pool::ThreadPool, *};
 use alloc::{sync::Arc, vec::Vec};
 pub use ndarray::{s, Array1, Array2, AsArray};
-
-/// Setting base.
-///
-/// Please see [setting!] for more usage.
-pub struct BasicSetting {
-    /// Termination condition.
-    pub task: Task,
-    /// Population number.
-    pub pop_num: usize,
-    /// The report frequency. (per generation)
-    pub rpt: u32,
-}
-
-impl Default for BasicSetting {
-    fn default() -> Self {
-        Self {
-            task: Task::MaxGen(200),
-            pop_num: 200,
-            rpt: 1,
-        }
-    }
-}
-
-/// A trait that provides a conversion to original setting.
-///
-/// The setting type is actually a builder of the [`Setting::Algorithm`] type.
-///
-/// Before the implementation,
-/// the builder function of the setting type can be implemented by [`setting!`].
-pub trait Setting {
-    /// Associated algorithm.
-    type Algorithm: Algorithm;
-    /// Convert to original setting.
-    fn base(&self) -> &BasicSetting;
-    /// Create the algorithm.
-    fn create(self) -> Self::Algorithm;
-}
+pub use setting::{BasicSetting, Setting};
 
 /// The base class of algorithms.
 ///
@@ -218,12 +182,11 @@ impl<F: ObjFunc> Context<F> {
 /// ```
 /// use metaheuristics_nature::{setting, utility::*, ObjFunc};
 ///
-/// setting! {
-///     /// A setting with additional fields.
-///     pub struct MySetting1 {
-///         base,
-///         my_option: u32 = 20,
-///     }
+/// /// A setting with additional fields.
+/// #[derive(Default)]
+/// pub struct MySetting1 {
+///    base: BasicSetting,
+///    my_option: u32,
 /// }
 ///
 /// /// The implementation of the structure with fields.
@@ -237,10 +200,9 @@ impl<F: ObjFunc> Context<F> {
 ///     }
 /// }
 ///
-/// setting! {
-///     /// Tuple-like setting.
-///     pub struct MySetting2(_);
-/// }
+/// /// Tuple-like setting.
+/// #[derive(Default)]
+/// pub struct MySetting2(BasicSetting);
 ///
 /// /// The implementation of a tuple-like structure.
 /// impl Setting for MySetting2 {

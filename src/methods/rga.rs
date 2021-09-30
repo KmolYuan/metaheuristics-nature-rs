@@ -5,19 +5,32 @@
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 use crate::{thread_pool::ThreadPool, utility::*, *};
 
-setting! {
-    /// Real-coded Genetic Algorithm settings.
-    pub struct Rga {
-        base,
-        .pop_num = 500,
-        /// Crossing probability.
-        cross: f64 = 0.95,
-        /// Mutation probability.
-        mutate: f64 = 0.05,
-        /// Winning probability.
-        win: f64 = 0.95,
-        /// Delta factor.
-        delta: f64 = 5.,
+/// Real-coded Genetic Algorithm settings.
+pub struct Rga {
+    /// Base setting.
+    pub base: BasicSetting,
+    /// Crossing probability.
+    pub cross: f64,
+    /// Mutation probability.
+    pub mutate: f64,
+    /// Winning probability.
+    pub win: f64,
+    /// Delta factor.
+    pub delta: f64,
+}
+
+impl Default for Rga {
+    fn default() -> Self {
+        Self {
+            base: BasicSetting {
+                pop_num: 500,
+                ..Default::default()
+            },
+            cross: 0.95,
+            mutate: 0.05,
+            win: 0.95,
+            delta: 5.,
+        }
     }
 }
 

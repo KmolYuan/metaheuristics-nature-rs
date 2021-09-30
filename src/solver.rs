@@ -17,7 +17,7 @@ use std::time::Instant;
 /// This type can infer the algorithm by [`Setting::Algorithm`].
 ///
 /// ```
-/// use metaheuristics_nature::{Rga, Solver, Task};
+/// use metaheuristics_nature::{setting, Rga, Solver, Task};
 /// # use metaheuristics_nature::{ObjFunc, Report};
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
@@ -37,7 +37,7 @@ use std::time::Instant;
 ///
 /// let s = Solver::solve(
 ///     MyFunc::new(),
-///     Rga::default().task(Task::MinFit(1e-20)),
+///     setting!(Rga { +base: { task: Task::MinFit(1e-20) }}),
 ///     |_| true, // Run without callback
 /// );
 /// // Get the result from objective function
@@ -80,15 +80,15 @@ impl<F: ObjFunc> Solver<F> {
             let diff = ctx.report.diff;
             method.generation(&mut ctx);
             ctx.report.diff = best_f - ctx.report.best_f;
-            {
+            ctx.report.average = {
                 let mut count = 0.;
-                ctx.report.average = 0.;
+                let mut average = 0.;
                 for v in ctx.fitness.iter().filter(|v| v.is_finite()) {
-                    ctx.report.average += v;
+                    average += v;
                     count += 1.;
                 }
-                ctx.report.average /= count;
-            }
+                average / count
+            };
             if ctx.report.gen % ctx.rpt == 0 {
                 if !callback(&ctx.report) {
                     break;
