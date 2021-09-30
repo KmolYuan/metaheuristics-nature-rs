@@ -1,7 +1,7 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::{utility::*, ObjFunc, Report, Task};
+use crate::{utility::*, Adaptive, ObjFunc, Report, Task};
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::time::Instant;
@@ -80,15 +80,26 @@ impl<F: ObjFunc> Solver<F> {
             let diff = ctx.report.diff;
             method.generation(&mut ctx);
             ctx.report.diff = best_f - ctx.report.best_f;
-            ctx.report.average = {
-                let mut count = 0.;
-                let mut average = 0.;
-                for v in ctx.fitness.iter().filter(|v| v.is_finite()) {
-                    average += v;
-                    count += 1.;
+            if ctx.average || ctx.adaptive != Adaptive::Disable {
+                ctx.report.average = {
+                    let mut average = 0.;
+                    let mut count = 0;
+                    for v in ctx.fitness.iter().filter(|v| v.is_finite()) {
+                        average += v;
+                        count += 1;
+                    }
+                    average / count as f64
+                };
+                if ctx.adaptive != Adaptive::Disable {
+                    let threshold = match ctx.adaptive {
+                        Adaptive::Constant(ada) => ada,
+                        Adaptive::Average => ctx.report.average,
+                        Adaptive::Disable => panic!(),
+                    };
+                    let feasible = ctx.fitness.iter().filter(|&&f| f > threshold).count();
+                    ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
                 }
-                average / count
-            };
+            }
             if ctx.report.gen % ctx.rpt == 0 {
                 if !callback(&ctx.report) {
                     break;

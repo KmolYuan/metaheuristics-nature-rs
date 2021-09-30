@@ -32,6 +32,8 @@ pub struct Context<F> {
     pub report: Report,
     pub(crate) reports: Vec<Report>,
     pub(crate) rpt: u32,
+    pub(crate) average: bool,
+    pub(crate) adaptive: Adaptive,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -52,6 +54,8 @@ impl<F: ObjFunc> Context<F> {
             report: Report::default(),
             reports: Vec::new(),
             rpt: s.rpt,
+            average: s.average,
+            adaptive: s.adaptive.clone(),
             func: Arc::new(func),
         }
     }

@@ -16,6 +16,8 @@ pub struct Report {
     ///
     /// The first value might be [`f64::NaN`].
     pub average: f64,
+    /// Adaptive factor.
+    pub adaptive: f64,
     /// Time duration.
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
@@ -29,6 +31,7 @@ impl Default for Report {
             best_f: f64::INFINITY,
             diff: 0.,
             average: f64::NAN,
+            adaptive: 0.,
             #[cfg(feature = "std")]
             time: 0.,
         }

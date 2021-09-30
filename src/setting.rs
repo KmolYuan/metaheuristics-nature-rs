@@ -14,7 +14,7 @@ pub struct BasicSetting {
     /// Calculate the average of the fitness at [`Report`]. Default to false.
     pub average: bool,
     /// Threshold of the adaptive factor. Default to disable this function.
-    pub adaptive_threshold: Adaptive,
+    pub adaptive: Adaptive,
 }
 
 impl Default for BasicSetting {
@@ -24,7 +24,7 @@ impl Default for BasicSetting {
             pop_num: 200,
             rpt: 1,
             average: false,
-            adaptive_threshold: Adaptive::Disable,
+            adaptive: Adaptive::Disable,
         }
     }
 }
@@ -62,7 +62,10 @@ pub enum Task {
 /// Adaptive factor option.
 ///
 /// The adaptive function will provide a factor for "adaptive penalty factor".
-#[derive(Debug, PartialEq)]
+///
+/// The factor is calculated by dividing the "feasible individuals" by the "total individuals",
+/// where the "feasible individuals" is decided by the threshold.
+#[derive(Clone, Debug, PartialEq)]
 pub enum Adaptive {
     /// Use constant threshold.
     Constant(f64),
