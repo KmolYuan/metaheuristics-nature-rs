@@ -46,9 +46,8 @@ extern crate core as std;
 pub use crate::methods::*;
 pub use crate::obj_func::ObjFunc;
 pub use crate::report::Report;
-pub use crate::respond::Respond;
-pub use crate::setting::{Adaptive, Task};
 pub use crate::solver::Solver;
+pub use crate::utility::setting::{Adaptive, Task};
 
 /// The setting expression, used to fill the algorithm options.
 ///
@@ -116,13 +115,10 @@ macro_rules! setting {
     };
 }
 
-mod context;
 pub mod methods;
 mod obj_func;
 pub mod random;
 mod report;
-mod respond;
-mod setting;
 mod solver;
 #[cfg(test)]
 mod tests;

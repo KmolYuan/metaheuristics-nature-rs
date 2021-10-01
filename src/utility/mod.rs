@@ -8,13 +8,18 @@
 //!
 //! In other hand, if you went to fork the task manually by using parallel structure,
 //! import [`thread_pool::ThreadPool`] is required.
-use crate::obj_func::ObjFunc;
-pub use crate::{
+pub use self::{
     context::Context,
-    random::*,
+    respond::Respond,
     setting::{BasicSetting, Setting},
 };
+pub use crate::random::*;
+use crate::ObjFunc;
 pub use ndarray::{s, Array1, Array2, AsArray};
+
+mod context;
+mod respond;
+pub(crate) mod setting;
 
 /// The methods of the meta-heuristic algorithms.
 ///

@@ -1,7 +1,10 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::{utility::*, Adaptive, ObjFunc, Report, Task};
+use crate::{
+    utility::{Algorithm, Context, Setting},
+    Adaptive, ObjFunc, Report, Task,
+};
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::time::Instant;
