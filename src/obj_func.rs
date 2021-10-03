@@ -1,4 +1,4 @@
-use crate::Report;
+use crate::{utility::Respond, Report};
 
 /// The base of the objective function.
 ///
@@ -13,6 +13,7 @@ use crate::Report;
 ///
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
+///     type Respond = f64;
 ///
 ///     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
@@ -34,6 +35,8 @@ use crate::Report;
 pub trait ObjFunc: Sync + Send + 'static {
     /// The result type.
     type Result;
+    /// Representation of the fitness value.
+    type Respond: Respond;
 
     /// Return fitness, the smaller value represents a good result.
     ///

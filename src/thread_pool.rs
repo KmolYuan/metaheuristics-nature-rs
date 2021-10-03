@@ -29,6 +29,7 @@ use std::thread::{spawn, JoinHandle};
 /// # }
 /// # impl ObjFunc for MyFunc {
 /// #     type Result = f64;
+/// #     type Respond = f64;
 /// #     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
 /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 /// #     }
