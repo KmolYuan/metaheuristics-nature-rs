@@ -80,7 +80,7 @@ pub(crate) mod setting;
 /// All you have to do is implement the "initialization" method and
 /// "generation" method, which are corresponded to the [`Algorithm::init`] and
 /// [`Algorithm::generation`] respectively.
-pub trait Algorithm {
+pub trait Algorithm<F: ObjFunc> {
     /// Initialization implementation.
     ///
     /// The information of the [`Context`] can be obtained or modified at this phase preliminarily.
@@ -88,10 +88,10 @@ pub trait Algorithm {
     /// The default behavior is do nothing.
     #[inline(always)]
     #[allow(unused_variables)]
-    fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {}
+    fn init(&mut self, ctx: &mut Context<F>) {}
 
     /// Processing implementation of each generation.
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>);
+    fn generation(&mut self, ctx: &mut Context<F>);
 }
 
 /// Product two iterators together.

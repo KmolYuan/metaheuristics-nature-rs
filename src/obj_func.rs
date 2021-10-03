@@ -65,7 +65,7 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness(&self, v: &[f64], r: &Report) -> f64;
+    fn fitness(&self, v: &[f64], r: &Report) -> Self::Respond;
 
     /// Return the final result of the problem.
     ///

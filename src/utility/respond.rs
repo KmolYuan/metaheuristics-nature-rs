@@ -3,7 +3,7 @@
 /// Usually, the fitness will only use the [`f64`] type,
 /// but if the [`Adaptive::Custom`](crate::Adaptive::Custom) is selected,
 /// the objective function can use `(f64, bool)` as return value.
-pub trait Respond: Clone {
+pub trait Respond: Sync + Send + Clone + 'static {
     /// Infinity value of the respond.
     const INFINITY: Self;
     /// Create from fitness value.

@@ -1,4 +1,5 @@
 use crate::utility::Algorithm;
+use crate::ObjFunc;
 
 /// Setting base. This type store the basic configurations that provides to the algorithm framework.
 ///
@@ -36,9 +37,9 @@ impl Default for BasicSetting {
 ///
 /// Before the implementation,
 /// the builder function of the setting type can be implemented by [`setting!`].
-pub trait Setting {
+pub trait Setting<F: ObjFunc> {
     /// Associated algorithm.
-    type Algorithm: Algorithm;
+    type Algorithm: Algorithm<F>;
     /// Convert to original setting.
     fn base(&self) -> &BasicSetting;
     /// Create the algorithm.

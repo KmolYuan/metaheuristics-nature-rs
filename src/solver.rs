@@ -2,7 +2,7 @@
 extern crate std;
 
 use crate::{
-    utility::{Algorithm, Context, Setting},
+    utility::{Algorithm, Context, Respond, Setting},
     Adaptive, ObjFunc, Report, Task,
 };
 use alloc::vec::Vec;
@@ -61,7 +61,7 @@ impl<F: ObjFunc> Solver<F> {
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
     pub fn solve<S, C>(func: F, setting: S, mut callback: C) -> Self
     where
-        S: Setting,
+        S: Setting<F>,
         C: FnMut(&Report) -> bool,
     {
         let mut ctx = Context::new(func, setting.base());
@@ -88,8 +88,8 @@ impl<F: ObjFunc> Solver<F> {
                 ctx.report.average = {
                     let mut average = 0.;
                     let mut count = 0;
-                    for v in ctx.fitness.iter().filter(|v| v.is_finite()) {
-                        average += v;
+                    for v in ctx.fitness.iter().filter(|v| v.value().is_finite()) {
+                        average += v.value();
                         count += 1;
                     }
                     average / count as f64
@@ -100,7 +100,7 @@ impl<F: ObjFunc> Solver<F> {
                         Adaptive::Average => ctx.report.average,
                         _ => panic!(),
                     };
-                    let feasible = ctx.fitness.iter().filter(|&&f| f > threshold).count();
+                    let feasible = ctx.fitness.iter().filter(|f| f.value() > threshold).count();
                     ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
                 }
             }

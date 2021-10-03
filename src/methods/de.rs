@@ -74,7 +74,7 @@ impl Default for De {
     }
 }
 
-impl Setting for De {
+impl<F: ObjFunc> Setting<F> for De {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
@@ -161,8 +161,8 @@ impl Method {
     }
 }
 
-impl Algorithm for Method {
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+impl<F: ObjFunc> Algorithm<F> for Method {
+    fn generation(&mut self, ctx: &mut Context<F>) {
         'a: for i in 0..ctx.pop_num() {
             // Generate Vector
             let mut v = Array1::zeros(self.num);
@@ -180,7 +180,7 @@ impl Algorithm for Method {
                 }
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);
-            if tmp_f < ctx.fitness[i] {
+            if tmp_f.value() < ctx.fitness[i].value() {
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }

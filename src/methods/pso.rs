@@ -29,7 +29,7 @@ impl Default for Pso {
     }
 }
 
-impl Setting for Pso {
+impl<F: ObjFunc> Setting<F> for Pso {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
@@ -61,18 +61,18 @@ impl Method {
         self.best_past
             .slice_mut(s![i, ..])
             .assign(&ctx.pool.slice(s![i, ..]));
-        self.best_f_past[i] = ctx.fitness[i];
+        self.best_f_past[i] = ctx.fitness[i].value();
     }
 }
 
-impl Algorithm for Method {
+impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
-    fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn init(&mut self, ctx: &mut Context<F>) {
         self.best_past = ctx.pool.clone();
-        self.best_f_past = ctx.fitness.clone();
+        self.best_f_past = Array1::from_iter(ctx.fitness.iter().map(|r| r.value()));
     }
 
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Context<F>) {
         let mut tasks = ThreadPool::new();
         for i in 0..ctx.pop_num() {
             let alpha = rand_float(0., self.cognition);
@@ -92,10 +92,10 @@ impl Algorithm for Method {
         }
         for (i, f) in tasks {
             ctx.fitness[i] = f;
-            if ctx.fitness[i] < self.best_f_past[i] {
+            if ctx.fitness[i].value() < self.best_f_past[i].value() {
                 self.set_past(ctx, i);
             }
-            if ctx.fitness[i] < ctx.report.best_f {
+            if ctx.fitness[i].value() < ctx.report.best_f {
                 ctx.set_best(i);
             }
         }

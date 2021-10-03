@@ -31,7 +31,7 @@ impl Default for Fa {
     }
 }
 
-impl Setting for Fa {
+impl<F: ObjFunc> Setting<F> for Fa {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
@@ -59,7 +59,7 @@ pub struct Method {
 impl Method {
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for (i, j) in product(0..ctx.pop_num(), 0..ctx.pop_num()) {
-            if ctx.fitness[i] <= ctx.fitness[j] {
+            if ctx.fitness[i].value() <= ctx.fitness[j].value() {
                 continue;
             }
             let mut tmp = Array1::zeros(ctx.dim());
@@ -84,16 +84,16 @@ impl Method {
                 tmp[s] = ctx.check(s, v);
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);
-            if tmp_f < ctx.fitness[i] {
+            if tmp_f.value() < ctx.fitness[i].value() {
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }
     }
 }
 
-impl Algorithm for Method {
+impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Context<F>) {
         self.move_fireflies(ctx);
         ctx.find_best();
     }

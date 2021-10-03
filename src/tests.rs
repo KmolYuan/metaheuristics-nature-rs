@@ -30,7 +30,7 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test(setting: impl Setting) {
+fn test(setting: impl Setting<TestObj>) {
     let a = Solver::solve(TestObj::default(), setting, |_| true);
     let ans = a.result();
     let x = a.best_parameters();

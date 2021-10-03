@@ -9,7 +9,7 @@ use crate::{utility::*, *};
 #[derive(Default)]
 pub struct Tlbo(pub BasicSetting);
 
-impl Setting for Tlbo {
+impl<F: ObjFunc> Setting<F> for Tlbo {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
@@ -27,11 +27,12 @@ pub struct Method;
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Context<F>, i: usize, student: &Array1<f64>) {
         let f_new = ctx.func.fitness(student.as_slice().unwrap(), &ctx.report);
-        if f_new < ctx.fitness[i] {
+        let f = f_new.value();
+        if f < ctx.fitness[i].value() {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
             ctx.fitness[i] = f_new;
         }
-        if f_new < ctx.report.best_f {
+        if f < ctx.report.best_f {
             ctx.set_best(i);
         }
     }
@@ -60,7 +61,7 @@ impl Method {
             }
         };
         for s in 0..ctx.dim() {
-            let diff = if ctx.fitness[j] < ctx.fitness[i] {
+            let diff = if ctx.fitness[j].value() < ctx.fitness[i].value() {
                 ctx.pool[[i, s]] - ctx.pool[[j, s]]
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]
@@ -72,9 +73,9 @@ impl Method {
     }
 }
 
-impl Algorithm for Method {
+impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num() {
             let mut student = Array1::zeros(ctx.dim());
             self.teaching(ctx, i, &mut student);

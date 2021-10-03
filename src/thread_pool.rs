@@ -5,7 +5,10 @@
 #[cfg(feature = "parallel")]
 extern crate std;
 
-use crate::{utility::AsArray, ObjFunc, Report};
+use crate::{
+    utility::{AsArray, Respond},
+    ObjFunc, Report,
+};
 use alloc::{sync::Arc, vec::Vec};
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
@@ -48,15 +51,20 @@ use std::thread::{spawn, JoinHandle};
 ///     assert_eq!(f, 0.);
 /// }
 /// ```
-#[derive(Default)]
-pub struct ThreadPool {
+pub struct ThreadPool<R: Respond> {
     #[cfg(feature = "parallel")]
-    tasks: Vec<(usize, JoinHandle<f64>)>,
+    tasks: Vec<(usize, JoinHandle<R>)>,
     #[cfg(not(feature = "parallel"))]
-    tasks: Vec<(usize, f64)>,
+    tasks: Vec<(usize, R)>,
 }
 
-impl ThreadPool {
+impl<R: Respond> Default for ThreadPool<R> {
+    fn default() -> Self {
+        Self { tasks: Vec::new() }
+    }
+}
+
+impl<R: Respond> ThreadPool<R> {
     /// Create a new thread pool.
     pub fn new() -> Self {
         Self::default()
@@ -65,7 +73,7 @@ impl ThreadPool {
     /// Spawn a objective function task.
     pub fn insert<'a, F, V>(&mut self, i: usize, f: Arc<F>, report: Report, v: V)
     where
-        F: ObjFunc,
+        F: ObjFunc<Respond = R>,
         V: AsArray<'a, f64>,
     {
         #[cfg(feature = "parallel")]
@@ -83,8 +91,8 @@ impl ThreadPool {
     }
 }
 
-impl IntoIterator for ThreadPool {
-    type Item = (usize, f64);
+impl<R: Respond> IntoIterator for ThreadPool<R> {
+    type Item = (usize, R);
     type IntoIter = <Vec<Self::Item> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {

@@ -36,8 +36,8 @@ impl Default for Rga {
     }
 }
 
-impl Setting for Rga {
-    type Algorithm = Method;
+impl<F: ObjFunc> Setting<F> for Rga {
+    type Algorithm = Method<F::Respond>;
 
     fn base(&self) -> &BasicSetting {
         &self.base
@@ -49,8 +49,8 @@ impl Setting for Rga {
             mutate: self.mutate,
             win: self.win,
             delta: self.delta,
+            fitness_new: Vec::new(),
             pool_new: Array2::zeros((1, 1)),
-            fitness_new: Array1::ones(1) * f64::INFINITY,
         }
     }
 }
@@ -65,23 +65,25 @@ fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
 }
 
 /// Real-coded Genetic Algorithm type.
-pub struct Method {
+pub struct Method<R: Respond> {
     cross: f64,
     mutate: f64,
     win: f64,
     delta: f64,
-    fitness_new: Array1<f64>,
+    fitness_new: Vec<R>,
     pool_new: Array2<f64>,
 }
 
-impl Method {
-    fn crossover<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+impl<R: Respond> Method<R> {
+    fn crossover<F>(&mut self, ctx: &mut Context<F>)
+    where
+        F: ObjFunc<Respond = R>,
+    {
         for i in (0..(ctx.pop_num() - 1)).step_by(2) {
             if !maybe(self.cross) {
                 continue;
             }
             let mut tmp = Array2::zeros((3, ctx.dim()));
-            let mut f_tmp = Array1::zeros(3);
             for s in 0..ctx.dim() {
                 tmp[[0, s]] = 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]];
                 let v = 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]];
@@ -98,33 +100,34 @@ impl Method {
                     tmp.slice(s![j, ..]),
                 );
             }
-            for (j, f) in tasks {
-                f_tmp[j] = f;
-            }
-            if f_tmp[0] > f_tmp[1] {
+            let mut f_tmp: Vec<_> = tasks.into_iter().map(|(_, f)| f).collect();
+            if f_tmp[0].value() > f_tmp[1].value() {
                 f_tmp.swap(0, 1);
                 for j in 0..2 {
                     tmp.swap([0, j], [1, j]);
                 }
             }
-            if f_tmp[0] > f_tmp[2] {
+            if f_tmp[0].value() > f_tmp[2].value() {
                 f_tmp.swap(0, 2);
                 for j in 0..2 {
                     tmp.swap([0, j], [2, j]);
                 }
             }
-            if f_tmp[1] > f_tmp[2] {
+            if f_tmp[1].value() > f_tmp[2].value() {
                 f_tmp.swap(1, 2);
                 for j in 0..2 {
                     tmp.swap([1, j], [2, j]);
                 }
             }
-            ctx.assign_from(i, f_tmp[0], tmp.slice(s![0, ..]));
-            ctx.assign_from(i + 1, f_tmp[1], tmp.slice(s![1, ..]));
+            ctx.assign_from(i, f_tmp[0].clone(), tmp.slice(s![0, ..]));
+            ctx.assign_from(i + 1, f_tmp[1].clone(), tmp.slice(s![1, ..]));
         }
     }
 
-    fn get_delta<F: ObjFunc>(&self, ctx: &Context<F>, y: f64) -> f64 {
+    fn get_delta<F>(&self, ctx: &Context<F>, y: f64) -> f64
+    where
+        F: ObjFunc<Respond = R>,
+    {
         let r = match ctx.task {
             Task::MaxGen(v) if v > 0 => ctx.report.gen as f64 / v as f64,
             _ => 1.,
@@ -132,7 +135,10 @@ impl Method {
         y * rand() * (1. - r).powf(self.delta)
     }
 
-    fn mutate<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn mutate<F>(&mut self, ctx: &mut Context<F>)
+    where
+        F: ObjFunc<Respond = R>,
+    {
         for i in 0..ctx.pop_num() {
             if !maybe(self.mutate) {
                 continue;
@@ -148,40 +154,47 @@ impl Method {
         ctx.find_best();
     }
 
-    fn select<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn select<F>(&mut self, ctx: &mut Context<F>)
+    where
+        F: ObjFunc<Respond = R>,
+    {
         for i in 0..ctx.pop_num() {
             let (j, k) = {
                 let mut v = [i, 0, 0];
                 rand_vector(&mut v, 1, 0, ctx.pop_num());
                 (v[1], v[2])
             };
-            if ctx.fitness[j] > ctx.fitness[k] && maybe(self.win) {
-                self.fitness_new[i] = ctx.fitness[k];
+            if ctx.fitness[j].value() > ctx.fitness[k].value() && maybe(self.win) {
+                self.fitness_new[i] = ctx.fitness[k].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![k, ..]));
             } else {
-                self.fitness_new[i] = ctx.fitness[j];
+                self.fitness_new[i] = ctx.fitness[j].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![j, ..]));
             }
-            ctx.fitness.assign(&self.fitness_new);
+            ctx.fitness = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
             ctx.assign_from_best(rand_int(0, ctx.pop_num()));
         }
     }
 }
 
-impl Algorithm for Method {
+impl<F, R> Algorithm<F> for Method<R>
+where
+    F: ObjFunc<Respond = R>,
+    R: Respond,
+{
     #[inline(always)]
-    fn init<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn init(&mut self, ctx: &mut Context<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());
-        self.fitness_new = Array1::ones(ctx.fitness.raw_dim()) * f64::INFINITY;
+        self.fitness_new = vec![R::INFINITY; ctx.fitness.len()];
     }
 
     #[inline(always)]
-    fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Context<F>) {
         self.select(ctx);
         self.crossover(ctx);
         self.mutate(ctx);
