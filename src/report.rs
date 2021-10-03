@@ -9,7 +9,7 @@ pub struct Report {
     pub diff: f64,
     /// Average of the finite-fitness individuals.
     ///
-    /// The first value might be [`f64::NaN`].
+    /// The first value might be [`f64::NAN`].
     pub average: f64,
     /// Adaptive factor.
     pub adaptive: f64,

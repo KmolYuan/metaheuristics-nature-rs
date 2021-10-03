@@ -7,7 +7,7 @@
 //! ```
 //!
 //! In other hand, if you went to fork the task manually by using parallel structure,
-//! import [`thread_pool::ThreadPool`] is required.
+//! import [`thread_pool::ThreadPool`](crate::thread_pool::ThreadPool) is required.
 pub use self::{
     context::Context,
     respond::Respond,
@@ -76,7 +76,7 @@ pub(crate) mod setting;
 /// }
 /// ```
 ///
-/// Your algorithm will be implemented by [Solver] automatically.
+/// Your algorithm will be implemented by the [`Solver`](crate::Solver) type automatically.
 /// All you have to do is implement the "initialization" method and
 /// "generation" method, which are corresponded to the [`Algorithm::init`] and
 /// [`Algorithm::generation`] respectively.

@@ -1,4 +1,8 @@
 /// The return value of the objective function.
+///
+/// Usually, the fitness will only use the [`f64`] type,
+/// but if the [`Adaptive::Custom`](crate::Adaptive::Custom) is selected,
+/// the objective function can use `(f64, bool)` as return value.
 pub trait Respond: Clone {
     /// Infinity value of the respond.
     const INFINITY: Self;
@@ -26,11 +30,11 @@ impl Respond for f64 {
     }
 }
 
-impl<T: Respond> Respond for (T, bool) {
-    const INFINITY: Self = (T::INFINITY, false);
+impl Respond for (f64, bool) {
+    const INFINITY: Self = (f64::INFINITY, false);
 
     fn from_value(v: f64, feasible: bool) -> Self {
-        (T::from_value(v, feasible), feasible)
+        (f64::from_value(v, feasible), feasible)
     }
 
     fn value(&self) -> f64 {

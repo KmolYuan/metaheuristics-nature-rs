@@ -11,7 +11,8 @@ pub struct BasicSetting {
     pub pop_num: usize,
     /// Report frequency. (per generation)
     pub rpt: u32,
-    /// Calculate the average of the fitness at [`Report`]. Default to false.
+    /// Calculate the average of the fitness at [`Report`](crate::Report).
+    /// Default to false.
     pub average: bool,
     /// Threshold of the adaptive factor. Default to disable this function.
     pub adaptive: Adaptive,
@@ -71,6 +72,10 @@ pub enum Adaptive {
     Constant(f64),
     /// Use the average of the finite fitness as threshold.
     Average,
+    /// Custom mark from objective function.
+    ///
+    /// See [`Respond`](crate::utility::Respond) for more information.
+    Custom,
     /// Disable this option.
     Disable,
 }

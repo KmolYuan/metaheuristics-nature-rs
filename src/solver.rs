@@ -97,7 +97,7 @@ impl<F: ObjFunc> Solver<F> {
                     let threshold = match ctx.adaptive {
                         Adaptive::Constant(ada) => ada,
                         Adaptive::Average => ctx.report.average,
-                        Adaptive::Disable => panic!(),
+                        _ => panic!(),
                     };
                     let feasible = ctx.fitness.iter().filter(|&&f| f > threshold).count();
                     ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
