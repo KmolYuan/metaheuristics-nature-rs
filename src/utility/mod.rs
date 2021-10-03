@@ -42,7 +42,7 @@ pub(crate) mod setting;
 /// }
 ///
 /// /// The implementation of the structure with fields.
-/// impl Setting for MySetting1 {
+/// impl<F: ObjFunc> Setting<F> for MySetting1 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
 ///         &self.base
@@ -57,7 +57,7 @@ pub(crate) mod setting;
 /// pub struct MySetting2(BasicSetting);
 ///
 /// /// The implementation of a tuple-like structure.
-/// impl Setting for MySetting2 {
+/// impl<F: ObjFunc> Setting<F> for MySetting2 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
 ///         &self.0
@@ -69,8 +69,8 @@ pub(crate) mod setting;
 ///
 /// pub struct Method;
 ///
-/// impl Algorithm for Method {
-///     fn generation<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+/// impl<F: ObjFunc> Algorithm<F> for Method {
+///     fn generation(&mut self, ctx: &mut Context<F>) {
 ///         unimplemented!()
 ///     }
 /// }
