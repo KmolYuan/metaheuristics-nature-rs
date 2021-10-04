@@ -132,7 +132,11 @@ impl<R: Respond> Method<R> {
             Task::MaxGen(v) if v > 0 => ctx.report.gen as f64 / v as f64,
             _ => 1.,
         };
-        y * rand() * (1. - r).powf(self.delta)
+        #[cfg(feature = "std")]
+        let pow_f = (1. - r).powf(self.delta);
+        #[cfg(feature = "libm")]
+        let pow_f = libm::pow(1. - r, self.delta);
+        y * rand() * pow_f
     }
 
     fn mutate<F>(&mut self, ctx: &mut Context<F>)

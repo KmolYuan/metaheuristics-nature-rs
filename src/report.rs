@@ -5,6 +5,7 @@ pub struct Report {
     pub gen: u32,
     /// Best fitness.
     pub best_f: f64,
+    /// Is the best fitness feasible.
     pub best_feasible: bool,
     /// Gradient of the best fitness, between the current and the previous.
     pub diff: f64,

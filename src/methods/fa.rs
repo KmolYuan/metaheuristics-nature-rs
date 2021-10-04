@@ -76,7 +76,11 @@ impl Method {
                 }
                 dist
             };
-            let beta = (self.beta0 - self.beta_min) * (-self.gamma * r).exp() + self.beta_min;
+            #[cfg(feature = "std")]
+            let gamma_r = (-self.gamma * r).exp();
+            #[cfg(feature = "libm")]
+            let gamma_r = libm::exp(-self.gamma * r);
+            let beta = (self.beta0 - self.beta_min) * gamma_r + self.beta_min;
             for s in 0..ctx.dim() {
                 let v = ctx.pool[[i, s]]
                     + beta * (pool_j[s] - ctx.pool[[i, s]])

@@ -20,7 +20,7 @@ wasm = ["getrandom/js"]
 getrandom = "0.2"
 oorandom = "11"
 ndarray = { version = "0.15", default-features = false }
+libm = { version = "0.2", optional = true }
 
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "doc_cfg"]
