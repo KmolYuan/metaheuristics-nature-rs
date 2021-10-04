@@ -5,6 +5,7 @@ pub struct Report {
     pub gen: u32,
     /// Best fitness.
     pub best_f: f64,
+    pub best_feasible: bool,
     /// Gradient of the best fitness, between the current and the previous.
     pub diff: f64,
     /// Average of the finite-fitness individuals.
@@ -24,6 +25,7 @@ impl Default for Report {
         Self {
             gen: 0,
             best_f: f64::INFINITY,
+            best_feasible: false,
             diff: 0.,
             average: f64::NAN,
             adaptive: 0.,

@@ -109,14 +109,14 @@ impl<F: ObjFunc> Context<F> {
     #[inline(always)]
     pub fn set_best(&mut self, i: usize) {
         self.report.best_f = self.fitness[i].value();
+        self.report.best_feasible = self.fitness[i].feasible();
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
     /// Assign the index from best.
     #[inline(always)]
     pub fn assign_from_best(&mut self, i: usize) {
-        let feasible = self.fitness[i].feasible().unwrap_or(false);
-        self.fitness[i] = F::Respond::from_value(self.report.best_f, feasible);
+        self.fitness[i] = F::Respond::from_value(self.report.best_f, self.report.best_feasible);
         self.pool.slice_mut(s![i, ..]).assign(&self.best);
     }
 

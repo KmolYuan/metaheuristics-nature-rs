@@ -11,7 +11,7 @@ pub trait Respond: Sync + Send + Clone + 'static {
     /// The fitness value.
     fn value(&self) -> f64;
     /// Return true if this respond is feasible.
-    fn feasible(&self) -> Option<bool>;
+    fn feasible(&self) -> bool;
 }
 
 impl Respond for f64 {
@@ -25,8 +25,8 @@ impl Respond for f64 {
         *self
     }
 
-    fn feasible(&self) -> Option<bool> {
-        None
+    fn feasible(&self) -> bool {
+        false
     }
 }
 
@@ -41,7 +41,7 @@ impl Respond for (f64, bool) {
         self.0.value()
     }
 
-    fn feasible(&self) -> Option<bool> {
-        Some(self.1)
+    fn feasible(&self) -> bool {
+        self.1
     }
 }

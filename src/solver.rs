@@ -84,7 +84,7 @@ impl<F: ObjFunc> Solver<F> {
             let diff = ctx.report.diff;
             method.generation(&mut ctx);
             ctx.report.diff = best_f - ctx.report.best_f;
-            if ctx.average || ctx.adaptive != Adaptive::Disable {
+            if ctx.average || ctx.adaptive == Adaptive::Average {
                 ctx.report.average = {
                     let mut average = 0.;
                     let mut count = 0;
@@ -94,15 +94,16 @@ impl<F: ObjFunc> Solver<F> {
                     }
                     average / count as f64
                 };
-                if ctx.adaptive != Adaptive::Disable {
-                    let threshold = match ctx.adaptive {
-                        Adaptive::Constant(ada) => ada,
-                        Adaptive::Average => ctx.report.average,
-                        _ => panic!(),
-                    };
-                    let feasible = ctx.fitness.iter().filter(|f| f.value() > threshold).count();
-                    ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
-                }
+            }
+            if ctx.adaptive != Adaptive::Disable {
+                let iter = ctx.fitness.iter();
+                let feasible = match ctx.adaptive {
+                    Adaptive::Constant(ada) => iter.filter(|f| f.value() > ada).count(),
+                    Adaptive::Average => iter.filter(|f| f.value() > ctx.report.average).count(),
+                    Adaptive::Custom => iter.filter(|f| f.feasible()).count(),
+                    Adaptive::Disable => panic!(),
+                };
+                ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
             }
             if ctx.report.gen % ctx.rpt == 0 {
                 if !callback(&ctx.report) {
