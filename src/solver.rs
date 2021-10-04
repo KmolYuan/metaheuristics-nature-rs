@@ -85,15 +85,13 @@ impl<F: ObjFunc> Solver<F> {
             method.generation(&mut ctx);
             ctx.report.diff = best_f - ctx.report.best_f;
             if ctx.average || ctx.adaptive == Adaptive::Average {
-                ctx.report.average = {
-                    let mut average = 0.;
-                    let mut count = 0;
-                    for v in ctx.fitness.iter().filter(|v| v.value().is_finite()) {
-                        average += v.value();
-                        count += 1;
-                    }
-                    average / count as f64
-                };
+                let mut average = 0.;
+                let mut count = 0;
+                for v in ctx.fitness.iter().filter(|v| v.value().is_finite()) {
+                    average += v.value();
+                    count += 1;
+                }
+                ctx.report.average = average / count as f64;
             }
             if ctx.adaptive != Adaptive::Disable {
                 let iter = ctx.fitness.iter();
