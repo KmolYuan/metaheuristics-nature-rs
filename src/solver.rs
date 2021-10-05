@@ -29,7 +29,7 @@ use std::time::Instant;
 /// # impl ObjFunc for MyFunc {
 /// #     type Result = f64;
 /// #     type Respond = f64;
-/// #     fn fitness(&self, v: &[f64], _: &Report) -> f64 {
+/// #     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
 /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 /// #     }
 /// #     fn result(&self, v: &[f64]) -> Self::Result {

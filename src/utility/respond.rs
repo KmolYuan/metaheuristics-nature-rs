@@ -16,15 +16,15 @@ pub trait Respond: Sync + Send + Clone + 'static {
 
 impl Respond for f64 {
     const INFINITY: Self = Self::INFINITY;
-
+    #[inline(always)]
     fn from_value(v: f64, _: bool) -> Self {
         v
     }
-
+    #[inline(always)]
     fn value(&self) -> f64 {
         *self
     }
-
+    #[inline(always)]
     fn feasible(&self) -> bool {
         false
     }
@@ -32,15 +32,15 @@ impl Respond for f64 {
 
 impl Respond for (f64, bool) {
     const INFINITY: Self = (f64::INFINITY, false);
-
+    #[inline(always)]
     fn from_value(v: f64, feasible: bool) -> Self {
         (f64::from_value(v, feasible), feasible)
     }
-
+    #[inline(always)]
     fn value(&self) -> f64 {
         self.0.value()
     }
-
+    #[inline(always)]
     fn feasible(&self) -> bool {
         self.1
     }

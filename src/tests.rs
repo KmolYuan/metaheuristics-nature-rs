@@ -14,11 +14,11 @@ impl ObjFunc for TestObj {
     type Result = f64;
     type Respond = f64;
 
-    fn fitness(&self, v: &[f64], _: &Report) -> f64 {
+    fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
         OFFSET + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
     }
 
-    fn result(&self, v: &[f64]) -> f64 {
+    fn result(&self, v: &[f64]) -> Self::Result {
         self.fitness(v, &Default::default())
     }
 
