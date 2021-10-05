@@ -17,7 +17,7 @@ Each algorithm gives same API and default parameters to help you test different 
 test another algorithm by simply replacing `Rga` to `De`.
 
 ```rust
-use metaheuristics_nature::{Rga, Solver, Task};
+use metaheuristics_nature::{setting, Rga, Solver, Task};
 
 let s = Solver::solve(
     MyFunc::new(),
