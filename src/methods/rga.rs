@@ -100,7 +100,8 @@ impl<R: Respond> Method<R> {
                     tmp.slice(s![j, ..]),
                 );
             }
-            let mut f_tmp: Vec<_> = tasks.into_iter().map(|(_, f)| f).collect();
+            let mut f_tmp = Vec::with_capacity(3);
+            f_tmp.extend(tasks.join());
             if f_tmp[0].value() > f_tmp[1].value() {
                 f_tmp.swap(0, 1);
                 for j in 0..2 {

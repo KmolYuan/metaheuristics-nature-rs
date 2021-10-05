@@ -70,6 +70,18 @@ impl<R: Respond> ThreadPool<R> {
         Self::default()
     }
 
+    /// Return the length of the pool.
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.tasks.len()
+    }
+
+    /// Return true if the pool is empty.
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.tasks.is_empty()
+    }
+
     /// Spawn a objective function task.
     pub fn insert<'a, F, V>(&mut self, i: usize, f: Arc<F>, report: Report, v: V)
     where
@@ -85,8 +97,49 @@ impl<R: Respond> ThreadPool<R> {
         #[cfg(not(feature = "parallel"))]
         {
             let v = v.into();
-            self.tasks
-                .push((i, f.fitness(v.as_slice().unwrap(), &report)));
+            let ans = f.fitness(v.as_slice().unwrap(), &report);
+            self.tasks.push((i, ans));
+        }
+    }
+
+    /// Join and consume the pool, get an iterable result list.
+    ///
+    /// Instead of calling [`IntoIterator::into_iter`] method,
+    /// this method will ignore the index (job number).
+    ///
+    /// ```
+    /// # use std::sync::Arc;
+    /// # use metaheuristics_nature::{ObjFunc, thread_pool::ThreadPool, utility::Array1, Report};
+    /// # struct MyFunc([f64; 3], [f64; 3]);
+    /// # impl MyFunc {
+    /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
+    /// # }
+    /// # impl ObjFunc for MyFunc {
+    /// #     type Result = f64;
+    /// #     type Respond = f64;
+    /// #     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
+    /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+    /// #     }
+    /// #     fn result(&self, v: &[f64]) -> Self::Result {
+    /// #         self.fitness(v, &Default::default())
+    /// #     }
+    /// #     fn ub(&self) -> &[f64] { &self.1 }
+    /// #     fn lb(&self) -> &[f64] { &self.0 }
+    /// # }
+    /// # let mut tasks = ThreadPool::new();
+    /// # tasks.insert(0, Arc::new(MyFunc::new()), Report::default(), &Array1::zeros(3));
+    /// let mut ans = Vec::with_capacity(1);
+    /// ans.extend(tasks.join());
+    /// # assert_eq!(ans[0], 0.);
+    /// ```
+    pub fn join(self) -> impl Iterator<Item = R> {
+        #[cfg(feature = "parallel")]
+        {
+            self.tasks.into_iter().map(|(_, f)| f.join().unwrap())
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            self.tasks.into_iter().map(|(_, f)| f)
         }
     }
 }
@@ -105,6 +158,8 @@ impl<R: Respond> IntoIterator for ThreadPool<R> {
                 .into_iter()
         }
         #[cfg(not(feature = "parallel"))]
-        self.tasks.into_iter()
+        {
+            self.tasks.into_iter()
+        }
     }
 }
