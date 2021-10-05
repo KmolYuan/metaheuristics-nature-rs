@@ -3,7 +3,7 @@ use crate::ObjFunc;
 
 /// Setting base. This type store the basic configurations that provides to the algorithm framework.
 ///
-/// Please see [setting!] for more usage.
+/// This type should be included in the custom setting, which implements [`Setting`].
 #[derive(Debug, PartialEq)]
 pub struct BasicSetting {
     /// Termination condition.
@@ -34,9 +34,6 @@ impl Default for BasicSetting {
 /// A trait that provides a conversion to original setting.
 ///
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
-///
-/// Before the implementation,
-/// the builder function of the setting type can be implemented by [`setting!`].
 pub trait Setting<F: ObjFunc> {
     /// Associated algorithm.
     type Algorithm: Algorithm<F>;

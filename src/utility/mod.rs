@@ -23,7 +23,7 @@ pub(crate) mod setting;
 
 /// The methods of the meta-heuristic algorithms.
 ///
-/// + First, use [`setting!`] macro to build a "setting" type.
+/// + First, build a "setting" type includes [`BasicSetting`].
 /// + Second, implement [`Setting`] trait then indicate to a "method" type.
 /// + Last, implement `Algorithm` trait on the "method" type.
 ///
