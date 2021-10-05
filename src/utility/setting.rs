@@ -75,6 +75,8 @@ pub enum Adaptive {
     Average,
     /// Custom mark from objective function.
     ///
+    /// The return type [`ObjFunc::Respond`] can be set to `(f64, bool)`.
+    ///
     /// See [`Respond`](crate::utility::Respond) for more information.
     Custom,
     /// Disable this option.

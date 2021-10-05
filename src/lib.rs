@@ -50,6 +50,7 @@ pub use crate::solver::Solver;
 pub use crate::utility::setting::{Adaptive, Task};
 
 /// The setting expression, used to fill the algorithm options.
+/// This is the syntax shorter than the regular constructor.
 ///
 /// Please make sure all fields are visible.
 ///
@@ -69,10 +70,11 @@ pub use crate::utility::setting::{Adaptive, Task};
 ///         pop_num: 200,
 ///         ..Default::default()
 ///     },
-///     ..Default::default()
+///     mutate: 0.9,
 /// };
 /// let from_macro = setting!(Ga {
-///     +base: { pop_num: 200 }
+///     +base: { pop_num: 200 },
+///     mutate: 0.9,
 /// });
 /// assert_eq!(constructed, from_macro);
 /// ```
@@ -103,7 +105,7 @@ macro_rules! setting {
             ..Default::default()
         }
     };
-    ($name:ident{$(+$base:ident: {$($base_field:ident: $base_value:expr),* $(,)?})? $($field:ident: $value:expr),* $(,)?}) => {
+    ($name:ident{$(+$base:ident: {$($base_field:ident: $base_value:expr),* $(,)?})? $(, $field:ident: $value:expr)* $(,)?}) => {
         $name {
             $($base: $crate::setting!(@base, $($base_field: $base_value),*),)?
             $($field: $value,)*
