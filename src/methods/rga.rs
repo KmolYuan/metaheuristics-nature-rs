@@ -133,6 +133,7 @@ impl<R: Respond> Method<R> {
             _ => 1.,
         };
         #[cfg(feature = "std")]
+        #[allow(unused)]
         let pow_f = (1. - r).powf(self.delta);
         #[cfg(feature = "libm")]
         let pow_f = libm::pow(1. - r, self.delta);

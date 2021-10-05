@@ -77,6 +77,7 @@ impl Method {
                 dist
             };
             #[cfg(feature = "std")]
+            #[allow(unused)]
             let gamma_r = (-self.gamma * r).exp();
             #[cfg(feature = "libm")]
             let gamma_r = libm::exp(-self.gamma * r);

@@ -39,6 +39,7 @@ impl Method {
 
     fn teaching<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
         #[cfg(feature = "std")]
+        #[allow(unused)]
         let tf = (rand() + 1.).round();
         #[cfg(feature = "libm")]
         let tf = libm::round(rand() + 1.);

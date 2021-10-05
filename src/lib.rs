@@ -39,7 +39,7 @@
 //! + `libm`: If the standard library is not provided, some math functions might missing.
 //!   This will disable some pre-implemented algorithms.
 //!   However, there is a math library implemented in pure Rust, the name is same as `libm`.
-//!   This feature can re-enable the algorithms by using the `libm` crate.
+//!   This feature can re-enable (or replace) the math functions by using the `libm` crate.
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
