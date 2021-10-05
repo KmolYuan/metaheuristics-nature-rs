@@ -14,12 +14,10 @@
 //!
 //! # Objective Function
 //!
-//! You can define your question as a objective function through implementing [`ObjFunc`].
+//! You can define your question as a objective function through implementing [`ObjFunc`],
+//! and then the upper bound, lower bound, and objective function [`ObjFunc::fitness`] should be defined.
 //!
-//! First of all, the array types are [`ndarray::ArrayBase`].
-//! And then you should define the upper bound, lower bound, and objective function [`ObjFunc::fitness`] by yourself.
-//!
-//! The final answer is [`ObjFunc::result`], which is generated from the design parameters.
+//! The final answer is [`ObjFunc::result`], which is calculated from the design parameters.
 //!
 //! # Random Function
 //!
