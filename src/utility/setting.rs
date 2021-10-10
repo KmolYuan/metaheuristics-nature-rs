@@ -1,5 +1,4 @@
-use crate::utility::Algorithm;
-use crate::ObjFunc;
+use crate::{utility::Algorithm, ObjFunc};
 
 /// Setting base. This type store the basic configurations that provides to the algorithm framework.
 ///

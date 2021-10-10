@@ -1,13 +1,12 @@
 //! Pre-implemented optimization methods.
 
-pub use self::de::De;
 #[cfg(any(feature = "std", feature = "libm"))]
 pub use self::fa::Fa;
-pub use self::pso::Pso;
 #[cfg(any(feature = "std", feature = "libm"))]
 pub use self::rga::Rga;
 #[cfg(any(feature = "std", feature = "libm"))]
 pub use self::tlbo::Tlbo;
+pub use self::{de::De, pso::Pso};
 
 pub mod de;
 #[cfg(any(feature = "std", feature = "libm"))]

@@ -45,11 +45,13 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use crate::methods::*;
-pub use crate::obj_func::ObjFunc;
-pub use crate::report::Report;
-pub use crate::solver::Solver;
-pub use crate::utility::setting::{Adaptive, Task};
+pub use crate::{
+    methods::*,
+    obj_func::ObjFunc,
+    report::Report,
+    solver::Solver,
+    utility::setting::{Adaptive, Task},
+};
 
 /// The setting expression, used to fill the algorithm options.
 /// This is the syntax shorter than the regular constructor.
