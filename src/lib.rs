@@ -45,7 +45,11 @@ extern crate alloc;
 extern crate core as std;
 
 pub use crate::{
-    methods::*, obj_func::ObjFunc, report::Report, solver::Solver, utility::setting::*,
+    methods::*,
+    obj_func::ObjFunc,
+    report::Report,
+    solver::Solver,
+    utility::setting::{Adaptive, Setting, Task},
 };
 
 pub mod methods;
