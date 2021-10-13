@@ -1,4 +1,7 @@
-use crate::{utility::Setting, *};
+use crate::{
+    utility::{Algorithm, Setting},
+    *,
+};
 
 const OFFSET: f64 = 7.;
 
@@ -30,7 +33,7 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test(setting: impl Setting<TestObj>) {
+fn test(setting: impl Setting<Algorithm = impl Algorithm<TestObj>>) {
     let a = Solver::solve(TestObj::default(), setting, |_| true);
     let ans = a.result();
     let x = a.best_parameters();
@@ -46,33 +49,25 @@ fn test(setting: impl Setting<TestObj>) {
 
 #[test]
 fn de() {
-    test(setting!(De {
-        +base: { task: Task::MinFit(OFFSET) }
-    }));
+    test(De::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn pso() {
-    test(setting!(Pso {
-        +base: { task: Task::MinFit(OFFSET) }
-    }));
+    test(Pso::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn fa() {
-    test(setting!(Fa {
-        +base: { task: Task::MinFit(OFFSET) }
-    }));
+    test(Fa::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn rga() {
-    test(setting!(Rga {
-        +base: { task: Task::MinFit(OFFSET) }
-    }));
+    test(Rga::default().task(Task::MinFit(OFFSET)));
 }
 
 #[test]
 fn tlbo() {
-    test(setting!(Tlbo(task: Task::MinFit(OFFSET))));
+    test(Tlbo::default().task(Task::MinFit(OFFSET)));
 }

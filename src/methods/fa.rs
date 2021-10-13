@@ -31,11 +31,15 @@ impl Default for Fa {
     }
 }
 
-impl<F: ObjFunc> Setting<F> for Fa {
+impl Setting for Fa {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
         &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut BasicSetting {
+        &mut self.base
     }
 
     fn create(self) -> Self::Algorithm {

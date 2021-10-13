@@ -29,11 +29,15 @@ impl Default for Pso {
     }
 }
 
-impl<F: ObjFunc> Setting<F> for Pso {
+impl Setting for Pso {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
         &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut BasicSetting {
+        &mut self.base
     }
 
     fn create(self) -> Self::Algorithm {

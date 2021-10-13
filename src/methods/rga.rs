@@ -6,9 +6,10 @@
 //!
 //! This method require floating point power function.
 use crate::{thread_pool::ThreadPool, utility::*, *};
+use core::marker::PhantomData;
 
 /// Real-coded Genetic Algorithm settings.
-pub struct Rga {
+pub struct Rga<R: Respond> {
     /// Base setting.
     pub base: BasicSetting,
     /// Crossing probability.
@@ -19,9 +20,10 @@ pub struct Rga {
     pub win: f64,
     /// Delta factor.
     pub delta: f64,
+    _marker: PhantomData<R>,
 }
 
-impl Default for Rga {
+impl<R: Respond> Default for Rga<R> {
     fn default() -> Self {
         Self {
             base: BasicSetting {
@@ -32,15 +34,20 @@ impl Default for Rga {
             mutate: 0.05,
             win: 0.95,
             delta: 5.,
+            _marker: PhantomData,
         }
     }
 }
 
-impl<F: ObjFunc> Setting<F> for Rga {
-    type Algorithm = Method<F::Respond>;
+impl<R: Respond> Setting for Rga<R> {
+    type Algorithm = Method<R>;
 
     fn base(&self) -> &BasicSetting {
         &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut BasicSetting {
+        &mut self.base
     }
 
     fn create(self) -> Self::Algorithm {

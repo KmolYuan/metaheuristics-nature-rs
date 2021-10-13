@@ -1,4 +1,12 @@
-use crate::{utility::Algorithm, ObjFunc};
+macro_rules! impl_base_setting {
+    ($name: ident, $ty:ty) => {
+        /// Set the base option.
+        fn $name(mut self, $name: $ty) -> Self {
+            self.base_mut().$name = $name;
+            self
+        }
+    };
+}
 
 /// Setting base. This type store the basic configurations that provides to the algorithm framework.
 ///
@@ -33,13 +41,21 @@ impl Default for BasicSetting {
 /// A trait that provides a conversion to original setting.
 ///
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
-pub trait Setting<F: ObjFunc> {
+pub trait Setting: Sized {
     /// Associated algorithm.
-    type Algorithm: Algorithm<F>;
-    /// Convert to original setting.
+    type Algorithm;
+    /// Get original setting.
     fn base(&self) -> &BasicSetting;
+    /// Get mutable original setting.
+    fn base_mut(&mut self) -> &mut BasicSetting;
     /// Create the algorithm.
     fn create(self) -> Self::Algorithm;
+
+    impl_base_setting!(task, Task);
+    impl_base_setting!(pop_num, usize);
+    impl_base_setting!(rpt, u32);
+    impl_base_setting!(average, bool);
+    impl_base_setting!(adaptive, Adaptive);
 }
 
 /// Terminal condition of the algorithm setting.

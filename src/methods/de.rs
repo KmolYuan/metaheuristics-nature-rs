@@ -74,11 +74,15 @@ impl Default for De {
     }
 }
 
-impl<F: ObjFunc> Setting<F> for De {
+impl Setting for De {
     type Algorithm = Method;
 
     fn base(&self) -> &BasicSetting {
         &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut BasicSetting {
+        &mut self.base
     }
 
     fn create(self) -> Self::Algorithm {

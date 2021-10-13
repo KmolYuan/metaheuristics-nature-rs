@@ -61,7 +61,8 @@ impl<F: ObjFunc> Solver<F> {
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
     pub fn solve<S, C>(func: F, setting: S, mut callback: C) -> Self
     where
-        S: Setting<F>,
+        S: Setting,
+        S::Algorithm: Algorithm<F>,
         C: FnMut(&Report) -> bool,
     {
         let mut ctx = Context::new(func, setting.base());
