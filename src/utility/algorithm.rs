@@ -3,7 +3,7 @@ use crate::{utility::Context, ObjFunc};
 /// The methods of the meta-heuristic algorithms.
 ///
 /// + First, build a "setting" type includes [`BasicSetting`](crate::utility::BasicSetting).
-/// + Second, implement [`Setting`](crate::utility::Setting) trait then indicate to a "method" type.
+/// + Second, implement [`Setting`](crate::Setting) trait then indicate to a "method" type.
 /// + Last, implement `Algorithm` trait on the "method" type.
 ///
 /// Usually, the "method" type that implements this trait will not leak from the API.
@@ -11,20 +11,23 @@ use crate::{utility::Context, ObjFunc};
 /// So the "method" type is used to store the additional data if any.
 ///
 /// ```
-/// use metaheuristics_nature::{setting, utility::*, ObjFunc};
+/// use metaheuristics_nature::{utility::*, ObjFunc, Setting};
 ///
 /// /// A setting with additional fields.
 /// #[derive(Default)]
 /// pub struct MySetting1 {
-///    base: BasicSetting,
-///    my_option: u32,
+///     base: BasicSetting,
+///     my_option: u32,
 /// }
 ///
 /// /// The implementation of the structure with fields.
-/// impl<F: ObjFunc> Setting<F> for MySetting1 {
+/// impl Setting for MySetting1 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
 ///         &self.base
+///     }
+///     fn base_mut(&mut self) -> &mut BasicSetting {
+///         &mut self.base
 ///     }
 ///     fn create(self) -> Self::Algorithm {
 ///         Method
@@ -36,10 +39,13 @@ use crate::{utility::Context, ObjFunc};
 /// pub struct MySetting2(BasicSetting);
 ///
 /// /// The implementation of a tuple-like structure.
-/// impl<F: ObjFunc> Setting<F> for MySetting2 {
+/// impl Setting for MySetting2 {
 ///     type Algorithm = Method;
 ///     fn base(&self) -> &BasicSetting {
 ///         &self.0
+///     }
+///     fn base_mut(&mut self) -> &mut BasicSetting {
+///         &mut self.0
 ///     }
 ///     fn create(self) -> Self::Algorithm {
 ///         Method

@@ -2,8 +2,7 @@
 //!
 //! # Algorithm
 //!
-//! There are two traits [`Algorithm`](crate::utility::Algorithm) and
-//! [`Setting`](crate::utility::Setting) ([`setting!`]).
+//! There are two traits [`Algorithm`](crate::utility::Algorithm) and [`Setting`].
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -46,11 +45,7 @@ extern crate alloc;
 extern crate core as std;
 
 pub use crate::{
-    methods::*,
-    obj_func::ObjFunc,
-    report::Report,
-    solver::Solver,
-    utility::setting::{Adaptive, Task},
+    methods::*, obj_func::ObjFunc, report::Report, solver::Solver, utility::setting::*,
 };
 
 pub mod methods;

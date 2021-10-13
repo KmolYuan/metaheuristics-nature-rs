@@ -2,8 +2,8 @@
 extern crate std;
 
 use crate::{
-    utility::{Algorithm, Context, Respond, Setting},
-    Adaptive, ObjFunc, Report, Task,
+    utility::{Algorithm, Context, Respond},
+    Adaptive, ObjFunc, Report, Setting, Task,
 };
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
@@ -20,7 +20,7 @@ use std::time::Instant;
 /// This type can infer the algorithm by [`Setting::Algorithm`].
 ///
 /// ```
-/// use metaheuristics_nature::{setting, Rga, Solver, Task};
+/// use metaheuristics_nature::{Rga, Setting, Solver, Task};
 /// # use metaheuristics_nature::{ObjFunc, Report};
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
@@ -41,7 +41,7 @@ use std::time::Instant;
 ///
 /// let s = Solver::solve(
 ///     MyFunc::new(),
-///     setting!(Rga { +base: { task: Task::MinFit(1e-20) }}),
+///     Rga::default().task(Task::MinFit(1e-20)),
 ///     |_| true, // Run without callback
 /// );
 /// // Get the result from objective function

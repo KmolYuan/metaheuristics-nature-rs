@@ -8,12 +8,7 @@
 //!
 //! In other hand, if you went to fork the task manually by using parallel structure,
 //! import [`thread_pool::ThreadPool`](crate::thread_pool::ThreadPool) is required.
-pub use self::{
-    algorithm::Algorithm,
-    context::Context,
-    respond::Respond,
-    setting::{BasicSetting, Setting},
-};
+pub use self::{algorithm::Algorithm, context::Context, respond::Respond, setting::BasicSetting};
 pub use crate::random::*;
 use crate::ObjFunc;
 pub use ndarray::{s, Array1, Array2, AsArray};

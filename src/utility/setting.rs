@@ -43,6 +43,8 @@ impl Default for BasicSetting {
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
 pub trait Setting: Sized {
     /// Associated algorithm.
+    ///
+    /// This type should implement [`Algorithm`](crate::utility::Algorithm) trait.
     type Algorithm;
     /// Get original setting.
     fn base(&self) -> &BasicSetting;
@@ -87,7 +89,7 @@ pub enum Adaptive {
     Average,
     /// Custom mark from objective function.
     ///
-    /// The return type [`ObjFunc::Respond`] can be set to `(f64, bool)`.
+    /// The return type [`ObjFunc::Respond`](crate::ObjFunc::Respond) can be set to `(f64, bool)`.
     ///
     /// See [`Respond`](crate::utility::Respond) for more information.
     Custom,
