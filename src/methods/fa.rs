@@ -7,14 +7,16 @@ use crate::{utility::*, *};
 
 /// Firefly Algorithm settings.
 pub struct Fa {
-    /// Base setting.
-    pub base: BasicSetting,
-    /// Alpha factor.
-    pub alpha: f64,
-    /// Minimum beta factor.
-    pub beta_min: f64,
-    /// Gamma factor.
-    pub gamma: f64,
+    base: BasicSetting,
+    alpha: f64,
+    beta_min: f64,
+    gamma: f64,
+}
+
+impl Fa {
+    impl_builder!(alpha, f64, "Alpha factor.");
+    impl_builder!(beta_min, f64, "Minimum beta factor.");
+    impl_builder!(gamma, f64, "Gamma factor.");
 }
 
 impl Default for Fa {

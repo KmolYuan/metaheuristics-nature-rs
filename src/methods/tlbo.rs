@@ -7,7 +7,7 @@ use crate::{utility::*, *};
 
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]
-pub struct Tlbo(pub BasicSetting);
+pub struct Tlbo(BasicSetting);
 
 impl Setting for Tlbo {
     type Algorithm = Method;

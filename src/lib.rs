@@ -52,6 +52,18 @@ pub use crate::{
     utility::setting::{Adaptive, Setting, Task},
 };
 
+/// A tool macro used to build the builder function.
+#[macro_export]
+macro_rules! impl_builder {
+    ($name:ident, $ty:ty, $description:literal) => {
+        #[doc = $description]
+        pub fn $name(mut self, $name: $ty) -> Self {
+            self.$name = $name;
+            self
+        }
+    };
+}
+
 pub mod methods;
 mod obj_func;
 pub mod random;

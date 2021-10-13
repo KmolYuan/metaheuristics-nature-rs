@@ -11,17 +11,19 @@ use core::marker::PhantomData;
 
 /// Real-coded Genetic Algorithm settings.
 pub struct Rga<R: Respond> {
-    /// Base setting.
-    pub base: BasicSetting,
-    /// Crossing probability.
-    pub cross: f64,
-    /// Mutation probability.
-    pub mutate: f64,
-    /// Winning probability.
-    pub win: f64,
-    /// Delta factor.
-    pub delta: f64,
+    base: BasicSetting,
+    cross: f64,
+    mutate: f64,
+    win: f64,
+    delta: f64,
     _marker: PhantomData<R>,
+}
+
+impl<R: Respond> Rga<R> {
+    impl_builder!(cross, f64, "Crossing probability.");
+    impl_builder!(mutate, f64, "Mutation probability.");
+    impl_builder!(win, f64, "Winning probability.");
+    impl_builder!(delta, f64, "Delta factor.");
 }
 
 impl<R: Respond> Default for Rga<R> {

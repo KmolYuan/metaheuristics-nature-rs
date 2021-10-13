@@ -1,5 +1,5 @@
 macro_rules! impl_base_setting {
-    ($name: ident, $ty:ty) => {
+    ($name:ident, $ty:ty) => {
         /// Set the base option.
         fn $name(mut self, $name: $ty) -> Self {
             self.base_mut().$name = $name;

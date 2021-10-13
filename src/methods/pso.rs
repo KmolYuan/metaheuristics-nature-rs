@@ -5,14 +5,16 @@ use crate::{thread_pool::ThreadPool, utility::*, *};
 
 /// Particle Swarm Optimization settings.
 pub struct Pso {
-    /// Base setting.
-    pub base: BasicSetting,
-    /// Cognition factor.
-    pub cognition: f64,
-    /// Social factor.
-    pub social: f64,
-    /// Moving velocity.
-    pub velocity: f64,
+    base: BasicSetting,
+    cognition: f64,
+    social: f64,
+    velocity: f64,
+}
+
+impl Pso {
+    impl_builder!(cognition, f64, "Cognition factor.");
+    impl_builder!(social, f64, "Social factor.");
+    impl_builder!(velocity, f64, "Moving velocity.");
 }
 
 impl Default for Pso {

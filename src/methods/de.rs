@@ -50,14 +50,16 @@ pub enum Strategy {
 
 /// Differential Evolution settings.
 pub struct De {
-    /// Base setting.
-    pub base: BasicSetting,
-    /// Strategy of the formula.
-    pub strategy: Strategy,
-    /// F factor.
-    pub f: f64,
-    /// Crossing probability.
-    pub cross: f64,
+    base: BasicSetting,
+    strategy: Strategy,
+    f: f64,
+    cross: f64,
+}
+
+impl De {
+    impl_builder!(strategy, Strategy, "Strategy of the formula.");
+    impl_builder!(f, f64, "F factor.");
+    impl_builder!(cross, f64, "Crossing probability.");
 }
 
 impl Default for De {
