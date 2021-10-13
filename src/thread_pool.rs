@@ -23,8 +23,8 @@ use std::thread::{spawn, JoinHandle};
 /// and the tasks can be wait by a for-loop.
 ///
 /// ```
-/// use std::sync::Arc;
 /// use metaheuristics_nature::{thread_pool::ThreadPool, utility::Array1, Report};
+/// use std::sync::Arc;
 /// # use metaheuristics_nature::ObjFunc;
 /// # struct MyFunc([f64; 3], [f64; 3]);
 /// # impl MyFunc {
@@ -44,7 +44,12 @@ use std::thread::{spawn, JoinHandle};
 /// # }
 ///
 /// let mut tasks = ThreadPool::new();
-/// tasks.insert(0, Arc::new(MyFunc::new()), Report::default(), &Array1::zeros(3));
+/// tasks.insert(
+///     0,
+///     Arc::new(MyFunc::new()),
+///     Report::default(),
+///     &Array1::zeros(3),
+/// );
 ///
 /// for (i, f) in tasks {
 ///     assert_eq!(i, 0);
