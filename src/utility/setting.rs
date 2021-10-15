@@ -18,7 +18,7 @@ pub struct BasicSetting {
     /// Population number.
     pub pop_num: usize,
     /// Report frequency. (per generation)
-    pub rpt: u32,
+    pub rpt: u64,
     /// Calculate the average of the fitness at [`Report`](crate::Report).
     /// Default to false.
     pub average: bool,
@@ -55,7 +55,7 @@ pub trait Setting: Sized {
 
     impl_base_setting!(task, Task);
     impl_base_setting!(pop_num, usize);
-    impl_base_setting!(rpt, u32);
+    impl_base_setting!(rpt, u64);
     impl_base_setting!(average, bool);
     impl_base_setting!(adaptive, Adaptive);
 }
@@ -64,7 +64,7 @@ pub trait Setting: Sized {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Task {
     /// Max generation.
-    MaxGen(u32),
+    MaxGen(u64),
     /// Minimum fitness.
     MinFit(f64),
     /// Max time in second.

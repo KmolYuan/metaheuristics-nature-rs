@@ -18,7 +18,7 @@ pub struct Context<F: ObjFunc> {
     /// The current information of the algorithm.
     pub report: Report,
     pub(crate) reports: Vec<Report>,
-    pub(crate) rpt: u32,
+    pub(crate) rpt: u64,
     pub(crate) average: bool,
     pub(crate) adaptive: Adaptive,
     /// The objective function.

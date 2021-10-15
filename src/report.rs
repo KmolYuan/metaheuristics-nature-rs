@@ -2,7 +2,7 @@
 #[derive(Clone, Debug)]
 pub struct Report {
     /// Generation.
-    pub gen: u32,
+    pub gen: u64,
     /// Best fitness.
     pub best_f: f64,
     /// Is the best fitness feasible.
