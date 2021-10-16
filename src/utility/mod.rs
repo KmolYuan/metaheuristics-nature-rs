@@ -1,17 +1,12 @@
 //! The utility API used to create a new algorithm.
 //!
-//! When building a new method, just import this module as prelude.
+//! When building a new method, just import [`prelude`] of this module.
 //!
 //! ```
-//! use metaheuristics_nature::{utility::*, *};
+//! use metaheuristics_nature::utility::prelude::*;
 //! ```
-//!
-//! In other hand, if you went to fork the task manually by using parallel structure,
-//! import [`thread_pool::ThreadPool`](crate::thread_pool::ThreadPool) is required.
 pub use self::{algorithm::Algorithm, context::Context, respond::Respond, setting::BasicSetting};
 pub use crate::random::*;
-use crate::ObjFunc;
-pub use ndarray::{s, Array1, Array2, AsArray};
 
 mod algorithm;
 mod context;
@@ -28,4 +23,14 @@ where
     I2: Iterator<Item = A> + Clone,
 {
     iter1.flat_map(move |e| core::iter::repeat(e).zip(iter2.clone()))
+}
+
+/// A prelude module for algorithm implementation.
+///
+/// This module includes all items of this crate,
+/// and some items from "ndarray".
+pub mod prelude {
+    pub use super::*;
+    pub use crate::{random::*, thread_pool::ThreadPool, *};
+    pub use ndarray::{s, Array1, Array2, AsArray};
 }

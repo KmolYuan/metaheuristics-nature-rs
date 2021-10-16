@@ -11,6 +11,8 @@
 //!
 //! All provided methods are listed in the module [`methods`].
 //!
+//! For making your owned method, please see [`utility::prelude`].
+//!
 //! # Objective Function
 //!
 //! You can define your question as a objective function through implementing [`ObjFunc`],

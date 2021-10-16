@@ -5,7 +5,7 @@
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 //!
 //! This method require floating point power function.
-use crate::{thread_pool::ThreadPool, utility::*, *};
+use crate::utility::prelude::*;
 use alloc::{vec, vec::Vec};
 use core::marker::PhantomData;
 

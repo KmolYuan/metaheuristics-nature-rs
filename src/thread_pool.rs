@@ -5,10 +5,7 @@
 #[cfg(feature = "parallel")]
 extern crate std;
 
-use crate::{
-    utility::{AsArray, Respond},
-    ObjFunc, Report,
-};
+use crate::utility::prelude::*;
 use alloc::{sync::Arc, vec::Vec};
 #[cfg(feature = "parallel")]
 use std::thread::{spawn, JoinHandle};
@@ -23,7 +20,7 @@ use std::thread::{spawn, JoinHandle};
 /// and the tasks can be wait by a for-loop.
 ///
 /// ```
-/// use metaheuristics_nature::{thread_pool::ThreadPool, utility::Array1, Report};
+/// use metaheuristics_nature::utility::prelude::*;
 /// use std::sync::Arc;
 /// # use metaheuristics_nature::ObjFunc;
 /// # struct MyFunc([f64; 3], [f64; 3]);
@@ -114,7 +111,7 @@ impl<R: Respond> ThreadPool<R> {
     ///
     /// ```
     /// # use std::sync::Arc;
-    /// # use metaheuristics_nature::{ObjFunc, thread_pool::ThreadPool, utility::Array1, Report};
+    /// # use metaheuristics_nature::utility::prelude::*;
     /// # struct MyFunc([f64; 3], [f64; 3]);
     /// # impl MyFunc {
     /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }

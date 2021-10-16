@@ -1,4 +1,4 @@
-use crate::{thread_pool::ThreadPool, utility::*, *};
+use crate::utility::prelude::*;
 use alloc::{sync::Arc, vec, vec::Vec};
 
 /// The base class of algorithms.

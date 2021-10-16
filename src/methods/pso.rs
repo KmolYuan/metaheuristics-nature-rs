@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization.
 //!
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
-use crate::{thread_pool::ThreadPool, utility::*, *};
+use crate::utility::prelude::*;
 
 /// Particle Swarm Optimization settings.
 pub struct Pso {

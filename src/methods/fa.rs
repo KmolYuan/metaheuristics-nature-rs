@@ -3,7 +3,7 @@
 //! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 //!
 //! This method require exponential function.
-use crate::{utility::*, *};
+use crate::utility::prelude::*;
 
 /// Firefly Algorithm settings.
 pub struct Fa {

@@ -3,7 +3,7 @@
 //! <https://doi.org/10.1016/j.cad.2010.12.015>
 //!
 //! This method require round function.
-use crate::{utility::*, *};
+use crate::utility::prelude::*;
 
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]

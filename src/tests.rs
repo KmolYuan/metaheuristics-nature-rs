@@ -1,4 +1,4 @@
-use crate::{utility::Algorithm, *};
+use crate::{utility::prelude::*, *};
 
 const OFFSET: f64 = 7.;
 
