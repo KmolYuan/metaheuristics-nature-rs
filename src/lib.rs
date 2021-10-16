@@ -53,6 +53,22 @@ pub use crate::{
 };
 
 /// A tool macro used to build the builder function.
+///
+/// The macro will generate following code:
+///
+/// ```
+/// # type Ty = bool;
+/// # struct S {
+/// #     name: Ty,
+/// # }
+/// # impl S {
+/// #[doc = "description"]
+/// pub fn name(mut self, name: Ty) -> Self {
+///     self.name = name;
+///     self
+/// }
+/// # }
+/// ```
 #[macro_export]
 macro_rules! impl_builder {
     ($name:ident, $ty:ty, $description:literal) => {
