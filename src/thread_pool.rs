@@ -93,15 +93,15 @@ impl<R: Respond> ThreadPool<R> {
         F: ObjFunc<Respond = R>,
         V: AsArray<'a, f64>,
     {
+        let v = v.into();
         #[cfg(feature = "parallel")]
         {
-            let v = v.into().to_shared();
+            let v = v.to_shared();
             let job = spawn(move || f.fitness(v.as_slice().unwrap(), &report));
             self.tasks.push((i, job));
         }
         #[cfg(not(feature = "parallel"))]
         {
-            let v = v.into();
             let ans = f.fitness(v.as_slice().unwrap(), &report);
             self.tasks.push((i, ans));
         }
