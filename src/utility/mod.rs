@@ -14,12 +14,30 @@ pub(crate) mod setting;
 
 /// Product two iterators together.
 ///
-/// For example, `[a, b, c]` and `[1, 2, 3]` will become `[a1, a2, a3, b1, b2, b3, c1, c2, c3]`.
-pub fn product<A, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, A)>
+/// ```
+/// use metaheuristics_nature::utility::product;
+///
+/// let ans = product(['a', 'b', 'c'].into_iter().cloned(), 0..3).collect::<Vec<_>>();
+/// assert_eq!(
+///     vec![
+///         ('a', 0),
+///         ('a', 1),
+///         ('a', 2),
+///         ('b', 0),
+///         ('b', 1),
+///         ('b', 2),
+///         ('c', 0),
+///         ('c', 1),
+///         ('c', 2),
+///     ],
+///     ans
+/// );
+/// ```
+pub fn product<A, B, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, B)>
 where
     A: Clone,
     I1: Iterator<Item = A>,
-    I2: Iterator<Item = A> + Clone,
+    I2: Iterator<Item = B> + Clone,
 {
     iter1.flat_map(move |e| core::iter::repeat(e).zip(iter2.clone()))
 }
