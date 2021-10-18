@@ -13,7 +13,7 @@ categories = ["algorithms", "no-std"]
 [features]
 default = ["std"]
 std = ["ndarray/std"]
-parallel = ["std", "rayon"]
+parallel = ["std", "rayon", "ndarray/rayon"]
 wasm = ["getrandom/js"]
 
 [dependencies]

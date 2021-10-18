@@ -1,5 +1,7 @@
 use crate::utility::prelude::*;
 use alloc::{sync::Arc, vec, vec::Vec};
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
 /// The base class of algorithms.
 ///
@@ -83,26 +85,34 @@ impl<F: ObjFunc> Context<F> {
     }
 
     pub(crate) fn init_pop(&mut self) {
-        let mut tasks = ThreadPool::new();
-        let mut best = 0;
-        for i in 0..self.pop_num() {
-            for s in 0..self.dim() {
-                self.pool[[i, s]] = rand_float(self.lb(s), self.ub(s));
-            }
-            tasks.insert(
-                i,
-                self.func.clone(),
-                self.report.clone(),
-                self.pool.slice(s![i, ..]),
-            );
+        let pool = Array2::from_shape_fn([self.pop_num(), self.dim()], |(_, s)| {
+            rand_float(self.lb(s), self.ub(s))
+        });
+        let mut fitness = self.fitness.clone();
+        #[cfg(not(feature = "parallel"))]
+        {
+            Zip::from(&mut fitness)
+                .and(pool.axis_iter(Axis(0)))
+                .for_each(|f, v| {
+                    *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
+                });
+            self.find_best();
         }
-        for (i, f) in tasks {
-            self.fitness[i] = f;
-            if self.fitness[i].value() < self.fitness[best].value() {
-                best = i;
-            }
+        #[cfg(feature = "parallel")]
+        {
+            let (f, v) = Zip::from(&mut fitness)
+                .and(pool.axis_iter(Axis(0)))
+                .into_par_iter()
+                .map(|(f, v)| {
+                    *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
+                    (f.value(), v)
+                })
+                .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            self.set_best_from(f, v);
         }
-        self.set_best(best);
+        self.pool = pool;
+        self.fitness = fitness;
     }
 
     /// Set the index to best.
@@ -111,6 +121,16 @@ impl<F: ObjFunc> Context<F> {
         self.report.best_f = self.fitness[i].value();
         self.report.best_feasible = self.fitness[i].feasible();
         self.best.assign(&self.pool.slice(s![i, ..]));
+    }
+
+    /// Set the fitness and variables to best.
+    #[inline(always)]
+    pub fn set_best_from<'a, A>(&mut self, f: f64, v: A)
+    where
+        A: AsArray<'a, f64>,
+    {
+        self.report.best_f = f;
+        self.best.assign(&v.into());
     }
 
     /// Assign the index from best.
