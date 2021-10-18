@@ -13,7 +13,7 @@ categories = ["algorithms", "no-std"]
 [features]
 default = ["std"]
 std = ["ndarray/std"]
-parallel = ["std"]
+parallel = ["std", "rayon"]
 wasm = ["getrandom/js"]
 
 [dependencies]
@@ -21,6 +21,7 @@ getrandom = "0.2"
 oorandom = "11"
 ndarray = { version = "0.15", default-features = false }
 libm = { version = "0.2", optional = true }
+rayon = { version = "1.5", optional = true }
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "doc_cfg"]
