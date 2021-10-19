@@ -50,4 +50,6 @@ pub mod prelude {
     pub use super::*;
     pub use crate::{random::*, thread_pool::ThreadPool, *};
     pub use ndarray::{s, Array1, Array2, AsArray, Axis, Zip};
+    #[cfg(feature = "parallel")]
+    pub use rayon::prelude::*;
 }

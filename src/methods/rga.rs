@@ -93,45 +93,34 @@ impl<R: Respond> Method<R> {
             if !maybe(self.cross) {
                 continue;
             }
-            let mut tmp = Array2::zeros((3, ctx.dim()));
-            for s in 0..ctx.dim() {
-                tmp[[0, s]] = 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]];
-                let v = 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]];
-                tmp[[1, s]] = check(ctx, s, v);
-                let v = -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]];
-                tmp[[2, s]] = check(ctx, s, v);
+            use TmpId::*;
+            enum TmpId {
+                I1,
+                I2,
+                I3,
             }
-            let mut tasks = ThreadPool::new();
-            for j in 0..3 {
-                tasks.insert(
-                    j,
-                    ctx.func.clone(),
-                    ctx.report.clone(),
-                    tmp.slice(s![j, ..]),
-                );
-            }
-            let mut f_tmp = Vec::with_capacity(3);
-            f_tmp.extend(tasks.join());
-            if f_tmp[0].value() > f_tmp[1].value() {
-                f_tmp.swap(0, 1);
-                for j in 0..2 {
-                    tmp.swap([0, j], [1, j]);
-                }
-            }
-            if f_tmp[0].value() > f_tmp[2].value() {
-                f_tmp.swap(0, 2);
-                for j in 0..2 {
-                    tmp.swap([0, j], [2, j]);
-                }
-            }
-            if f_tmp[1].value() > f_tmp[2].value() {
-                f_tmp.swap(1, 2);
-                for j in 0..2 {
-                    tmp.swap([1, j], [2, j]);
-                }
-            }
-            ctx.assign_from(i, f_tmp[0].clone(), tmp.slice(s![0, ..]));
-            ctx.assign_from(i + 1, f_tmp[1].clone(), tmp.slice(s![1, ..]));
+            #[cfg(feature = "parallel")]
+            let iter = [I1, I2, I3].into_par_iter();
+            #[cfg(not(feature = "parallel"))]
+            let iter = IntoIterator::into_iter([I1, I2, I3]);
+            let mut v = iter
+                .map(|id| {
+                    let mut v = Array1::zeros(ctx.dim());
+                    for s in 0..ctx.dim() {
+                        let variable = match id {
+                            I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
+                            I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
+                            I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
+                        };
+                        v[s] = check(ctx, s, variable);
+                    }
+                    let f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
+                    (f, v)
+                })
+                .collect::<Vec<_>>();
+            v.sort_unstable_by(|(a, _), (b, _)| a.value().partial_cmp(&b.value()).unwrap());
+            ctx.assign_from(i, v[0].0.clone(), &v[0].1);
+            ctx.assign_from(i + 1, v[1].0.clone(), &v[1].1);
         }
     }
 
