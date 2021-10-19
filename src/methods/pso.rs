@@ -48,7 +48,7 @@ impl Setting for Pso {
             social: self.social,
             velocity: self.velocity,
             best_past: Array2::zeros((1, 1)),
-            best_f_past: Array1::ones(1) * f64::INFINITY,
+            best_past_f: Array1::ones(1) * f64::INFINITY,
         }
     }
 }
@@ -59,51 +59,71 @@ pub struct Method {
     social: f64,
     velocity: f64,
     best_past: Array2<f64>,
-    best_f_past: Array1<f64>,
-}
-
-impl Method {
-    fn set_past<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize) {
-        self.best_past
-            .slice_mut(s![i, ..])
-            .assign(&ctx.pool.slice(s![i, ..]));
-        self.best_f_past[i] = ctx.fitness[i].value();
-    }
+    best_past_f: Array1<f64>,
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
     fn init(&mut self, ctx: &mut Context<F>) {
         self.best_past = ctx.pool.clone();
-        self.best_f_past = Array1::from_iter(ctx.fitness.iter().map(|r| r.value()));
+        self.best_past_f = Array1::from_iter(ctx.fitness.iter().map(|r| r.value()));
     }
 
     fn generation(&mut self, ctx: &mut Context<F>) {
-        let mut tasks = ThreadPool::new();
-        for i in 0..ctx.pop_num() {
-            let alpha = rand_float(0., self.cognition);
-            let beta = rand_float(0., self.social);
-            for s in 0..ctx.dim() {
-                let v = self.velocity * ctx.pool[[i, s]]
-                    + alpha * (self.best_past[[i, s]] - ctx.pool[[i, s]])
-                    + beta * (ctx.best[s] - ctx.pool[[i, s]]);
-                ctx.pool[[i, s]] = ctx.check(s, v);
-            }
-            tasks.insert(
-                i,
-                ctx.func.clone(),
-                ctx.report.clone(),
-                ctx.pool.slice(s![i, ..]),
-            );
+        let mut fitness = ctx.fitness.clone();
+        let mut pool = ctx.pool.clone();
+        let mut best_past = self.best_past.clone();
+        let mut best_past_f = self.best_past_f.clone();
+        let zip = Zip::from(&mut fitness)
+            .and(pool.axis_iter_mut(Axis(0)))
+            .and(best_past.axis_iter_mut(Axis(0)))
+            .and(&mut best_past_f);
+        #[cfg(not(feature = "parallel"))]
+        {
+            zip.for_each(|f, mut v, mut past, f_past| {
+                let alpha = rand_float(0., self.cognition);
+                let beta = rand_float(0., self.social);
+                for s in 0..ctx.dim() {
+                    let variable = self.velocity * v[s]
+                        + alpha * (past[s] - v[s])
+                        + beta * (ctx.best[s] - v[s]);
+                    v[s] = ctx.check(s, variable);
+                }
+                *f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
+                if f.value() < *f_past {
+                    *f_past = f.value();
+                    past.assign(&v);
+                }
+            });
+            ctx.find_best();
         }
-        for (i, f) in tasks {
-            ctx.fitness[i] = f;
-            if ctx.fitness[i].value() < self.best_f_past[i].value() {
-                self.set_past(ctx, i);
-            }
-            if ctx.fitness[i].value() < ctx.report.best_f {
-                ctx.set_best(i);
-            }
+        #[cfg(feature = "parallel")]
+        {
+            let (f, v) = zip
+                .into_par_iter()
+                .map(|(f, mut v, mut past, past_f)| {
+                    let alpha = rand_float(0., self.cognition);
+                    let beta = rand_float(0., self.social);
+                    for s in 0..ctx.dim() {
+                        let variable = self.velocity * v[s]
+                            + alpha * (past[s] - v[s])
+                            + beta * (ctx.best[s] - v[s]);
+                        v[s] = ctx.check(s, variable);
+                    }
+                    *f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
+                    if f.value() < *past_f {
+                        *past_f = f.value();
+                        past.assign(&v);
+                    }
+                    (f.value(), v)
+                })
+                .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+                .unwrap();
+            ctx.set_best_from(f, &v);
         }
+        ctx.fitness = fitness;
+        ctx.pool = pool;
+        self.best_past = best_past;
+        self.best_past_f = best_past_f;
     }
 }

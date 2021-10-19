@@ -1,7 +1,5 @@
 use crate::utility::prelude::*;
 use alloc::{sync::Arc, vec, vec::Vec};
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
 
 /// The base class of algorithms.
 ///
@@ -89,19 +87,17 @@ impl<F: ObjFunc> Context<F> {
             rand_float(self.lb(s), self.ub(s))
         });
         let mut fitness = self.fitness.clone();
+        let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));
         #[cfg(not(feature = "parallel"))]
         {
-            Zip::from(&mut fitness)
-                .and(pool.axis_iter(Axis(0)))
-                .for_each(|f, v| {
-                    *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
-                });
+            zip.for_each(|f, v| {
+                *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
+            });
             self.find_best();
         }
         #[cfg(feature = "parallel")]
         {
-            let (f, v) = Zip::from(&mut fitness)
-                .and(pool.axis_iter(Axis(0)))
+            let (f, v) = zip
                 .into_par_iter()
                 .map(|(f, v)| {
                     *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
