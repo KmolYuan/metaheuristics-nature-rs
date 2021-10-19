@@ -29,7 +29,7 @@
 //! # Features
 //!
 //! + `std`: Default feature. Enable standard library function, such as timing and threading.
-//! + `parallel`: Enable parallel function, let objective function running without ordered, uses [`rayon`].
+//! + `parallel`: Enable parallel function, let objective function running without ordered, uses `rayon`.
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
 //!   This feature required `std`.
