@@ -88,5 +88,4 @@ mod report;
 mod solver;
 #[cfg(test)]
 mod tests;
-pub mod thread_pool;
 pub mod utility;
