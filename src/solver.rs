@@ -100,7 +100,7 @@ impl<F: ObjFunc> Solver<F> {
                     Adaptive::Constant(ada) => iter.filter(|f| f.value() > ada).count(),
                     Adaptive::Average => iter.filter(|f| f.value() > ctx.report.average).count(),
                     Adaptive::Custom => iter.filter(|f| f.feasible()).count(),
-                    Adaptive::Disable => panic!(),
+                    Adaptive::Disable => unreachable!(),
                 };
                 ctx.report.adaptive = feasible as f64 / ctx.pop_num() as f64;
             }
