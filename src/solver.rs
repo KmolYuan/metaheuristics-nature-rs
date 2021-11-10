@@ -122,8 +122,8 @@ impl<F: ObjFunc> Solver<F> {
                     }
                 }
                 #[cfg(feature = "std")]
-                Task::MaxTime(v) => {
-                    if (Instant::now() - time_start).as_secs_f32() >= v {
+                Task::MaxTime(d) => {
+                    if Instant::now() - time_start >= d {
                         break;
                     }
                 }

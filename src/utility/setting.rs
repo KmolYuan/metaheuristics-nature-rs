@@ -67,10 +67,10 @@ pub enum Task {
     MaxGen(u64),
     /// Minimum fitness.
     MinFit(f64),
-    /// Max time in second.
+    /// Max time.
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    MaxTime(f32),
+    MaxTime(std::time::Duration),
     /// Minimum delta value.
     SlowDown(f64),
 }
