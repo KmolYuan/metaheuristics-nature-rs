@@ -137,6 +137,15 @@ impl<F: ObjFunc> Solver<F> {
         Self(ctx)
     }
 
+    /// Get the reference of the objective function.
+    ///
+    /// It's useful when you need to get the preprocessed data from the initialization process,
+    /// which is stored in the objective function.
+    #[inline(always)]
+    pub fn func(&self) -> &F {
+        &self.0.func
+    }
+
     /// Get the history for plotting.
     #[inline(always)]
     pub fn reports(&self) -> Vec<Report> {
