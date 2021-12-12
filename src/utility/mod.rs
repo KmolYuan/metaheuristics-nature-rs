@@ -5,12 +5,11 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{algorithm::Algorithm, context::Context, respond::Respond, setting::BasicSetting};
+pub use self::{algorithm::Algorithm, context::Context, respond::Respond};
 
 mod algorithm;
 mod context;
 mod respond;
-pub(crate) mod setting;
 
 /// Product two iterators together.
 ///
@@ -44,11 +43,11 @@ where
 
 /// A prelude module for algorithm implementation.
 ///
-/// This module includes all items of this crate, and external items from "ndarray" and "rayon"
-/// (if `parallel` feature enabled).
+/// This module includes all items of this crate, some hidden types,
+/// and external items from "ndarray" and "rayon" (if `parallel` feature enabled).
 pub mod prelude {
     pub use super::*;
-    pub use crate::{random::*, *};
+    pub use crate::{random::*, solver::*, *};
     #[doc(no_inline)]
     pub use ndarray::{s, Array1, Array2, AsArray, Axis, Zip};
     #[cfg(feature = "parallel")]

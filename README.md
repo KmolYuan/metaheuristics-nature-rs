@@ -17,13 +17,11 @@ Each algorithm gives same API and default parameters to help you test different 
 test another algorithm by simply replacing `Rga` to `De`.
 
 ```rust
-use metaheuristics_nature::{Rga, Setting, Solver, Task};
+use metaheuristics_nature::{Rga, Solver, Task};
 
-let s = Solver::solve(
-    MyFunc::new(),
-    Rga::default().task(Task::MinFit(1e-20)),
-    |_| true, // Run without callback
-);
+let s = Solver::build(Rga::default())
+    .task(Task::MinFit(1e-20))
+    .solve(MyFunc::new(), |_| true); // Run without callback
 // Get the result from objective function
 let ans = s.result();
 // Get the optimized XY value of your function

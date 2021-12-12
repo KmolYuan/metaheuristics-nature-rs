@@ -49,8 +49,7 @@ pub use crate::{
     methods::*,
     obj_func::ObjFunc,
     report::Report,
-    solver::Solver,
-    utility::setting::{Adaptive, Setting, Task},
+    solver::{Adaptive, Setting, Solver, Task},
 };
 
 /// A tool macro used to build the builder function.

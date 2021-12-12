@@ -7,7 +7,6 @@ use crate::utility::prelude::*;
 
 /// Firefly Algorithm settings.
 pub struct Fa {
-    base: BasicSetting,
     alpha: f64,
     beta_min: f64,
     gamma: f64,
@@ -22,10 +21,6 @@ impl Fa {
 impl Default for Fa {
     fn default() -> Self {
         Self {
-            base: BasicSetting {
-                pop_num: 80,
-                ..Default::default()
-            },
             alpha: 0.05,
             beta_min: 0.2,
             gamma: 1.,
@@ -36,20 +31,19 @@ impl Default for Fa {
 impl Setting for Fa {
     type Algorithm = Method;
 
-    fn base(&self) -> &BasicSetting {
-        &self.base
-    }
-
-    fn base_mut(&mut self) -> &mut BasicSetting {
-        &mut self.base
-    }
-
-    fn create(self) -> Self::Algorithm {
+    fn algorithm(self) -> Self::Algorithm {
         Method {
             alpha: self.alpha,
             beta_min: self.beta_min,
             gamma: self.gamma,
             beta0: 1.,
+        }
+    }
+
+    fn default_basic() -> BasicSetting {
+        BasicSetting {
+            pop_num: 80,
+            ..Default::default()
         }
     }
 }

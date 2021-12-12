@@ -7,20 +7,12 @@ use crate::utility::prelude::*;
 
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]
-pub struct Tlbo(BasicSetting);
+pub struct Tlbo;
 
 impl Setting for Tlbo {
     type Algorithm = Method;
 
-    fn base(&self) -> &BasicSetting {
-        &self.0
-    }
-
-    fn base_mut(&mut self) -> &mut BasicSetting {
-        &mut self.0
-    }
-
-    fn create(self) -> Self::Algorithm {
+    fn algorithm(self) -> Self::Algorithm {
         Method
     }
 }

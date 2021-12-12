@@ -5,7 +5,6 @@ use crate::utility::prelude::*;
 
 /// Particle Swarm Optimization settings.
 pub struct Pso {
-    base: BasicSetting,
     cognition: f64,
     social: f64,
     velocity: f64,
@@ -20,10 +19,6 @@ impl Pso {
 impl Default for Pso {
     fn default() -> Self {
         Self {
-            base: BasicSetting {
-                pop_num: 200,
-                ..Default::default()
-            },
             cognition: 2.05,
             social: 2.05,
             velocity: 1.3,
@@ -34,21 +29,20 @@ impl Default for Pso {
 impl Setting for Pso {
     type Algorithm = Method;
 
-    fn base(&self) -> &BasicSetting {
-        &self.base
-    }
-
-    fn base_mut(&mut self) -> &mut BasicSetting {
-        &mut self.base
-    }
-
-    fn create(self) -> Self::Algorithm {
+    fn algorithm(self) -> Self::Algorithm {
         Method {
             cognition: self.cognition,
             social: self.social,
             velocity: self.velocity,
             best_past: Array2::zeros((1, 1)),
             best_past_f: Array1::ones(1) * f64::INFINITY,
+        }
+    }
+
+    fn default_basic() -> BasicSetting {
+        BasicSetting {
+            pop_num: 200,
+            ..Default::default()
         }
     }
 }

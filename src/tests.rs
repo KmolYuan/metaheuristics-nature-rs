@@ -30,16 +30,18 @@ impl ObjFunc for TestObj {
     }
 }
 
-fn test<S>(setting: S)
+fn test<S>()
 where
-    S: Setting,
+    S: Setting + Default,
     S::Algorithm: Algorithm<TestObj>,
 {
-    let a = Solver::solve(TestObj::default(), setting, |_| true);
-    let ans = a.result();
-    let x = a.best_parameters();
-    let y = a.best_fitness();
-    let reports = a.reports();
+    let s = Solver::build(S::default())
+        .task(Task::MinFit(OFFSET))
+        .solve(TestObj::default(), |_| true);
+    let ans = s.result();
+    let x = s.best_parameters();
+    let y = s.best_fitness();
+    let reports = s.reports();
     assert!(reports.len() > 0, "{}", reports.len());
     assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
     for i in 0..4 {
@@ -50,25 +52,25 @@ where
 
 #[test]
 fn de() {
-    test(De::default().task(Task::MinFit(OFFSET)));
+    test::<De>();
 }
 
 #[test]
 fn pso() {
-    test(Pso::default().task(Task::MinFit(OFFSET)));
+    test::<Pso>();
 }
 
 #[test]
 fn fa() {
-    test(Fa::default().task(Task::MinFit(OFFSET)));
+    test::<Fa>();
 }
 
 #[test]
 fn rga() {
-    test(Rga::default().task(Task::MinFit(OFFSET)));
+    test::<Rga<_>>();
 }
 
 #[test]
 fn tlbo() {
-    test(Tlbo::default().task(Task::MinFit(OFFSET)));
+    test::<Tlbo>();
 }

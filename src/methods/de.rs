@@ -50,7 +50,6 @@ pub enum Strategy {
 
 /// Differential Evolution settings.
 pub struct De {
-    base: BasicSetting,
     strategy: Strategy,
     f: f64,
     cross: f64,
@@ -65,10 +64,6 @@ impl De {
 impl Default for De {
     fn default() -> Self {
         Self {
-            base: BasicSetting {
-                pop_num: 400,
-                ..Default::default()
-            },
             strategy: S1,
             f: 0.6,
             cross: 0.9,
@@ -79,15 +74,7 @@ impl Default for De {
 impl Setting for De {
     type Algorithm = Method;
 
-    fn base(&self) -> &BasicSetting {
-        &self.base
-    }
-
-    fn base_mut(&mut self) -> &mut BasicSetting {
-        &mut self.base
-    }
-
-    fn create(self) -> Self::Algorithm {
+    fn algorithm(self) -> Self::Algorithm {
         let num = match self.strategy {
             S1 | S3 | S6 | S8 => 2,
             S2 | S7 => 3,
@@ -99,6 +86,13 @@ impl Setting for De {
             cross: self.cross,
             num,
             strategy: self.strategy,
+        }
+    }
+
+    fn default_basic() -> BasicSetting {
+        BasicSetting {
+            pop_num: 400,
+            ..Default::default()
         }
     }
 }

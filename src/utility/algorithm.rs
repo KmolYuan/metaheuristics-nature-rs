@@ -2,7 +2,7 @@ use crate::{utility::Context, ObjFunc};
 
 /// The methods of the meta-heuristic algorithms.
 ///
-/// + First, build a "setting" type includes [`BasicSetting`](crate::utility::BasicSetting).
+/// + First, build a "setting" type includes [`BasicSetting`](crate::solver::BasicSetting).
 /// + Second, implement [`Setting`](crate::Setting) trait then indicate to a "method" type.
 /// + Last, implement `Algorithm` trait on the "method" type.
 ///
@@ -16,38 +16,27 @@ use crate::{utility::Context, ObjFunc};
 /// /// A setting with additional fields.
 /// #[derive(Default)]
 /// pub struct MySetting1 {
-///     base: BasicSetting,
 ///     my_option: u32,
 /// }
 ///
 /// /// The implementation of the structure with fields.
 /// impl Setting for MySetting1 {
 ///     type Algorithm = Method;
-///     fn base(&self) -> &BasicSetting {
-///         &self.base
-///     }
-///     fn base_mut(&mut self) -> &mut BasicSetting {
-///         &mut self.base
-///     }
-///     fn create(self) -> Self::Algorithm {
+///
+///     fn algorithm(self) -> Self::Algorithm {
 ///         Method
 ///     }
 /// }
 ///
 /// /// Tuple-like setting.
 /// #[derive(Default)]
-/// pub struct MySetting2(BasicSetting);
+/// pub struct MySetting2;
 ///
 /// /// The implementation of a tuple-like structure.
 /// impl Setting for MySetting2 {
 ///     type Algorithm = Method;
-///     fn base(&self) -> &BasicSetting {
-///         &self.0
-///     }
-///     fn base_mut(&mut self) -> &mut BasicSetting {
-///         &mut self.0
-///     }
-///     fn create(self) -> Self::Algorithm {
+///
+///     fn algorithm(self) -> Self::Algorithm {
 ///         Method
 ///     }
 /// }

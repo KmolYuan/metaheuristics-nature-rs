@@ -11,7 +11,6 @@ use core::marker::PhantomData;
 
 /// Real-coded Genetic Algorithm settings.
 pub struct Rga<R: Respond> {
-    base: BasicSetting,
     cross: f64,
     mutate: f64,
     win: f64,
@@ -29,10 +28,6 @@ impl<R: Respond> Rga<R> {
 impl<R: Respond> Default for Rga<R> {
     fn default() -> Self {
         Self {
-            base: BasicSetting {
-                pop_num: 500,
-                ..Default::default()
-            },
             cross: 0.95,
             mutate: 0.05,
             win: 0.95,
@@ -45,15 +40,7 @@ impl<R: Respond> Default for Rga<R> {
 impl<R: Respond> Setting for Rga<R> {
     type Algorithm = Method<R>;
 
-    fn base(&self) -> &BasicSetting {
-        &self.base
-    }
-
-    fn base_mut(&mut self) -> &mut BasicSetting {
-        &mut self.base
-    }
-
-    fn create(self) -> Self::Algorithm {
+    fn algorithm(self) -> Self::Algorithm {
         Method {
             cross: self.cross,
             mutate: self.mutate,
@@ -61,6 +48,13 @@ impl<R: Respond> Setting for Rga<R> {
             delta: self.delta,
             fitness_new: Vec::new(),
             pool_new: Array2::zeros((1, 1)),
+        }
+    }
+
+    fn default_basic() -> BasicSetting {
+        BasicSetting {
+            pop_num: 500,
+            ..Default::default()
         }
     }
 }
