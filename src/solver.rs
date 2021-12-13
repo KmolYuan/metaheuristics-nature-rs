@@ -170,10 +170,9 @@ impl<S: Setting, F: ObjFunc> SolverBuilder<S, F> {
     ///
     /// Argument `callback` is a progress feedback function,
     /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve<C>(self, func: F, mut callback: C) -> Solver<F>
+    pub fn solve(self, func: F, mut callback: impl FnMut(&Report) -> bool) -> Solver<F>
     where
         S::Algorithm: Algorithm<F>,
-        C: FnMut(&Report) -> bool,
     {
         let mut method = self.setting.algorithm();
         let mut ctx = Context::new(func, self.basic);
