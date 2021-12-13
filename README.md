@@ -19,9 +19,10 @@ test another algorithm by simply replacing `Rga` to `De`.
 ```rust
 use metaheuristics_nature::{Rga, Solver, Task};
 
+// Build and run the solver
 let s = Solver::build(Rga::default())
     .task(Task::MinFit(1e-20))
-    .solve(MyFunc::new(), |_| true); // Run without callback
+    .solve(MyFunc::new());
 // Get the result from objective function
 let ans = s.result();
 // Get the optimized XY value of your function

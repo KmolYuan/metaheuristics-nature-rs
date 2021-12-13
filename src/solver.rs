@@ -135,9 +135,10 @@ pub enum Adaptive {
 /// #     fn lb(&self) -> &[f64] { &self.0 }
 /// # }
 ///
+/// // Build and run the solver
 /// let s = Solver::build(Rga::default())
 ///     .task(Task::MinFit(1e-20))
-///     .solve(MyFunc::new(), |_| true); // Run without callback
+///     .solve(MyFunc::new());
 /// // Get the result from objective function
 /// let ans = s.result();
 /// // Get the optimized XY value of your function
@@ -151,13 +152,18 @@ pub struct Solver<F: ObjFunc>(Context<F>);
 /// Collect configuration and build the solver.
 ///
 /// This type is created by [`Solver::build`] method.
-pub struct SolverBuilder<S: Setting, F: ObjFunc> {
+#[must_use = "solver builder do nothing unless call the \"solve\" method"]
+pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     basic: BasicSetting,
     setting: S,
+    callback: Box<dyn FnMut(&Report) -> bool + 'a>,
     _phantom: PhantomData<F>,
 }
 
-impl<S: Setting, F: ObjFunc> SolverBuilder<S, F> {
+impl<'a, S: Setting, F: ObjFunc> SolverBuilder<'a, S, F>
+where
+    S::Algorithm: Algorithm<F>,
+{
     impl_basic_setting! {
         fn task(Task)
         fn pop_num(usize)
@@ -166,16 +172,55 @@ impl<S: Setting, F: ObjFunc> SolverBuilder<S, F> {
         fn adaptive(Adaptive)
     }
 
-    /// Create the task and run the algorithm, which may takes a lot of time.
+    /// Set callback function.
     ///
-    /// Argument `callback` is a progress feedback function,
-    /// returns true to keep algorithm running, same as the behavior of the while-loop.
-    pub fn solve(self, func: F, mut callback: impl FnMut(&Report) -> bool) -> Solver<F>
-    where
-        S::Algorithm: Algorithm<F>,
-    {
+    /// The return value of the callback controls when to break the iteration.
+    ///
+    /// Return false to break, same as the while loop condition.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver, Task};
+    /// # use metaheuristics_nature::{ObjFunc, Report};
+    /// # struct MyFunc([f64; 3], [f64; 3]);
+    /// # impl MyFunc {
+    /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
+    /// # }
+    /// # impl ObjFunc for MyFunc {
+    /// #     type Result = f64;
+    /// #     type Respond = f64;
+    /// #     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
+    /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+    /// #     }
+    /// #     fn result(&self, v: &[f64]) -> Self::Result {
+    /// #         self.fitness(v, &Default::default())
+    /// #     }
+    /// #     fn ub(&self) -> &[f64] { &self.1 }
+    /// #     fn lb(&self) -> &[f64] { &self.0 }
+    /// # }
+    /// # struct App { is_stop: bool }
+    /// # impl App {
+    /// #     fn show_generation(&self, _gen: u64) {}
+    /// # }
+    /// # let app = App { is_stop: false };
+    ///
+    /// let s = Solver::build(Rga::default())
+    ///     .task(Task::MinFit(0.))
+    ///     .callback(&mut |r| {
+    ///         app.show_generation(r.gen);
+    ///         !app.is_stop
+    ///     })
+    ///     .solve(MyFunc::new());
+    /// ```
+    pub fn callback(mut self, callback: &'a mut dyn FnMut(&Report) -> bool) -> Self {
+        self.callback = Box::new(callback);
+        self
+    }
+
+    /// Create the task and run the algorithm, which may takes a lot of time.
+    pub fn solve(self, func: F) -> Solver<F> {
         let mut method = self.setting.algorithm();
         let mut ctx = Context::new(func, self.basic);
+        let mut callback = self.callback;
         #[cfg(feature = "std")]
         let time_start = Instant::now();
         ctx.init_pop();
@@ -248,11 +293,15 @@ impl<S: Setting, F: ObjFunc> SolverBuilder<S, F> {
 }
 
 impl<F: ObjFunc> Solver<F> {
-    /// Build the solver.
-    pub fn build<S: Setting>(setting: S) -> SolverBuilder<S, F> {
+    /// Build the solver. Take a setting and setup the configurations.
+    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F>
+    where
+        S: Setting,
+    {
         SolverBuilder {
             basic: S::default_basic(),
             setting,
+            callback: Box::new(|_| true),
             _phantom: PhantomData,
         }
     }

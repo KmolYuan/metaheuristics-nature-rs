@@ -37,7 +37,7 @@ where
 {
     let s = Solver::build(S::default())
         .task(Task::MinFit(OFFSET))
-        .solve(TestObj::default(), |_| true);
+        .solve(TestObj::default());
     let ans = s.result();
     let x = s.best_parameters();
     let y = s.best_fitness();

@@ -8,7 +8,9 @@ use crate::{utility::Respond, Report};
 /// struct MyFunc([f64; 3], [f64; 3]);
 ///
 /// impl MyFunc {
-///     fn new() -> Self { Self([0.; 3], [50.; 3]) }
+///     fn new() -> Self {
+///         Self([0.; 3], [50.; 3])
+///     }
 /// }
 ///
 /// impl ObjFunc for MyFunc {
@@ -23,8 +25,12 @@ use crate::{utility::Respond, Report};
 ///         self.fitness(v, &Default::default())
 ///     }
 ///
-///     fn ub(&self) -> &[f64] { &self.1 }
-///     fn lb(&self) -> &[f64] { &self.0 }
+///     fn ub(&self) -> &[f64] {
+///         &self.1
+///     }
+///     fn lb(&self) -> &[f64] {
+///         &self.0
+///     }
 /// }
 /// ```
 /// The objective function returns fitness value that used to evaluate the objective.
