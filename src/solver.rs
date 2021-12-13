@@ -1,11 +1,8 @@
-#[cfg(feature = "std")]
-extern crate std;
-
 use crate::{
     utility::{Algorithm, Context, Respond},
     ObjFunc, Report,
 };
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::time::Instant;
