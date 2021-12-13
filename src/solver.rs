@@ -160,8 +160,10 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     _phantom: PhantomData<F>,
 }
 
-impl<'a, S: Setting, F: ObjFunc> SolverBuilder<'a, S, F>
+impl<'a, S, F> SolverBuilder<'a, S, F>
 where
+    S: Setting,
+    F: ObjFunc,
     S::Algorithm: Algorithm<F>,
 {
     impl_basic_setting! {
