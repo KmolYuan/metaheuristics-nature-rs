@@ -119,7 +119,7 @@ impl<R: Respond> Method<R> {
         }
     }
 
-    fn get_delta<F>(&self, ctx: &mut Context<F>, y: f64) -> f64
+    fn get_delta<F>(&self, ctx: &Context<F>, y: f64) -> f64
     where
         F: ObjFunc<Respond = R>,
     {

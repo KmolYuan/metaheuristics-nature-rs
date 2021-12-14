@@ -137,7 +137,7 @@ impl Method {
 
     fn c1<F: ObjFunc>(
         &mut self,
-        ctx: &mut Context<F>,
+        ctx: &Context<F>,
         tmp: &mut Array1<f64>,
         v: Vec<usize>,
         mut n: usize,
@@ -153,7 +153,7 @@ impl Method {
 
     fn c2<F: ObjFunc>(
         &mut self,
-        ctx: &mut Context<F>,
+        ctx: &Context<F>,
         tmp: &mut Array1<f64>,
         v: Vec<usize>,
         mut n: usize,
