@@ -7,20 +7,19 @@ use core::{
 use getrandom::getrandom;
 use oorandom::Rand64;
 
+union Converter128 {
+    n: u128,
+    s: [u64; 2],
+}
+
 fn concat_u128(v0: u64, v1: u64) -> u128 {
-    let mut buf = [0; size_of::<u128>()];
-    buf[0..size_of::<u64>()].clone_from_slice(&v0.to_le_bytes());
-    buf[size_of::<u64>()..size_of::<u128>()].clone_from_slice(&v1.to_le_bytes());
-    u128::from_le_bytes(buf)
+    let c = Converter128 { s: [v0, v1] };
+    unsafe { c.n }
 }
 
 fn split_u128(v: u128) -> (u64, u64) {
-    let buf = v.to_le_bytes();
-    let mut buf1 = [0; size_of::<u64>()];
-    let mut buf2 = [0; size_of::<u64>()];
-    buf1.clone_from_slice(&buf[0..size_of::<u64>()]);
-    buf2.clone_from_slice(&buf[size_of::<u64>()..size_of::<u128>()]);
-    (u64::from_le_bytes(buf1), u64::from_le_bytes(buf2))
+    let c = Converter128 { n: v };
+    unsafe { (c.s[0], c.s[1]) }
 }
 
 /// An uniformed random number generator.
