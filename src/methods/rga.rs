@@ -65,15 +65,6 @@ impl<R: Respond> Setting for Rga<R> {
     }
 }
 
-#[inline(always)]
-fn check<F: ObjFunc>(ctx: &mut Context<F>, s: usize, v: f64) -> f64 {
-    if ctx.ub(s) < v || v < ctx.lb(s) {
-        ctx.rng.float(ctx.lb(s)..ctx.ub(s))
-    } else {
-        v
-    }
-}
-
 /// Real-coded Genetic Algorithm type.
 pub struct Method<R: Respond> {
     cross: f64,
@@ -107,12 +98,16 @@ impl<R: Respond> Method<R> {
                 .map(|id| {
                     let mut v = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
-                        let variable = match id {
+                        let var = match id {
                             I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
                             I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
-                        v[s] = check(ctx, s, variable);
+                        v[s] = if ctx.ub(s) < var || var < ctx.lb(s) {
+                            ctx.rng.float(ctx.lb(s)..ctx.ub(s))
+                        } else {
+                            var
+                        };
                     }
                     let f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
                     (f, v)

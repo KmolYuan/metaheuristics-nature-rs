@@ -170,12 +170,8 @@ where
         fn average(bool)
         /// Threshold of the adaptive factor. Default to disable this function.
         fn adaptive(Adaptive)
-    }
-
-    /// Set initial random seed.
-    pub fn seed(mut self, seed: u128) -> Self {
-        self.basic.seed = Some(seed);
-        self
+        /// Set initial random seed.
+        fn seed(Option<u128>)
     }
 
     /// Set callback function.
