@@ -66,9 +66,9 @@ impl<R: Respond> Setting for Rga<R> {
 }
 
 #[inline(always)]
-fn check<F: ObjFunc>(ctx: &Context<F>, s: usize, v: f64) -> f64 {
+fn check<F: ObjFunc>(ctx: &mut Context<F>, s: usize, v: f64) -> f64 {
     if ctx.ub(s) < v || v < ctx.lb(s) {
-        rand_float(ctx.lb(s), ctx.ub(s))
+        ctx.rng.rand_float(ctx.lb(s), ctx.ub(s))
     } else {
         v
     }
@@ -90,7 +90,7 @@ impl<R: Respond> Method<R> {
         F: ObjFunc<Respond = R>,
     {
         for i in (0..(ctx.pop_num() - 1)).step_by(2) {
-            if !maybe(self.cross) {
+            if !ctx.rng.maybe(self.cross) {
                 continue;
             }
             use TmpId::*;
@@ -124,7 +124,7 @@ impl<R: Respond> Method<R> {
         }
     }
 
-    fn get_delta<F>(&self, ctx: &Context<F>, y: f64) -> f64
+    fn get_delta<F>(&self, ctx: &mut Context<F>, y: f64) -> f64
     where
         F: ObjFunc<Respond = R>,
     {
@@ -132,12 +132,11 @@ impl<R: Respond> Method<R> {
             Task::MaxGen(v) if v > 0 => ctx.report.gen as f64 / v as f64,
             _ => 1.,
         };
-        #[cfg(feature = "std")]
-        #[allow(unused)]
+        #[cfg(all(feature = "std", not(feature = "libm")))]
         let pow_f = (1. - r).powf(self.delta);
         #[cfg(feature = "libm")]
         let pow_f = libm::pow(1. - r, self.delta);
-        y * rand() * pow_f
+        y * ctx.rng.rand() * pow_f
     }
 
     fn mutate<F>(&mut self, ctx: &mut Context<F>)
@@ -145,11 +144,11 @@ impl<R: Respond> Method<R> {
         F: ObjFunc<Respond = R>,
     {
         for i in 0..ctx.pop_num() {
-            if !maybe(self.mutate) {
+            if !ctx.rng.maybe(self.mutate) {
                 continue;
             }
-            let s = rand_int(0, ctx.dim());
-            if maybe(0.5) {
+            let s = ctx.rng.rand_int(0, ctx.dim());
+            if ctx.rng.maybe(0.5) {
                 ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
             } else {
                 ctx.pool[[i, s]] -= self.get_delta(ctx, ctx.pool[[i, s]] - ctx.lb(s));
@@ -166,10 +165,10 @@ impl<R: Respond> Method<R> {
         for i in 0..ctx.pop_num() {
             let (j, k) = {
                 let mut v = [i, 0, 0];
-                rand_vector(&mut v, 1, 0, ctx.pop_num());
+                ctx.rng.rand_vector(&mut v, 1, 0, ctx.pop_num());
                 (v[1], v[2])
             };
-            if ctx.fitness[j].value() > ctx.fitness[k].value() && maybe(self.win) {
+            if ctx.fitness[j].value() > ctx.fitness[k].value() && ctx.rng.maybe(self.win) {
                 self.fitness_new[i] = ctx.fitness[k].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
@@ -182,7 +181,8 @@ impl<R: Respond> Method<R> {
             }
             ctx.fitness = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
-            ctx.assign_from_best(rand_int(0, ctx.pop_num()));
+            let i = ctx.rng.rand_int(0, ctx.pop_num());
+            ctx.assign_from_best(i);
         }
     }
 }

@@ -34,18 +34,18 @@ impl Method {
     }
 
     fn teaching<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
-        #[cfg(feature = "std")]
-        #[allow(unused)]
-        let tf = (rand() + 1.).round();
+        #[cfg(all(feature = "std", not(feature = "libm")))]
+        let tf = (ctx.rng.rand() + 1.).round();
         #[cfg(feature = "libm")]
-        let tf = libm::round(rand() + 1.);
+        let tf = libm::round(ctx.rng.rand() + 1.);
         for s in 0..ctx.dim() {
             let mut mean = 0.;
             for j in 0..ctx.pop_num() {
                 mean += ctx.pool[[j, s]];
             }
             mean /= ctx.dim() as f64;
-            let v = ctx.pool[[i, s]] + rand_float(1., ctx.dim() as f64) * (ctx.best[s] - tf * mean);
+            let v = ctx.pool[[i, s]]
+                + ctx.rng.rand_float(1., ctx.dim() as f64) * (ctx.best[s] - tf * mean);
             student[s] = ctx.check(s, v);
         }
         Self::register(ctx, i, student);
@@ -53,7 +53,7 @@ impl Method {
 
     fn learning<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
         let j = {
-            let j = rand_int(0, ctx.pop_num() - 1);
+            let j = ctx.rng.rand_int(0, ctx.pop_num() - 1);
             if j >= i {
                 j + 1
             } else {
@@ -66,7 +66,7 @@ impl Method {
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]
             };
-            let v = ctx.pool[[i, s]] + rand_float(1., ctx.dim() as f64) * diff;
+            let v = ctx.pool[[i, s]] + ctx.rng.rand_float(1., ctx.dim() as f64) * diff;
             student[s] = ctx.check(s, v);
         }
         Self::register(ctx, i, student);

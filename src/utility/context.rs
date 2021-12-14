@@ -7,6 +7,8 @@ use alloc::{sync::Arc, vec, vec::Vec};
 ///
 /// Please see [`Algorithm`] for the implementation.
 pub struct Context<F: ObjFunc> {
+    /// Random number generator.
+    pub rng: Rng,
     /// Termination condition.
     pub task: Task,
     /// The best variables.
@@ -34,6 +36,7 @@ impl<F: ObjFunc> Context<F> {
             "different dimension of the variables!"
         );
         Self {
+            rng: Rng::new(s.seed),
             task: s.task,
             best: Array1::zeros(dim),
             fitness: vec![F::Respond::INFINITY; s.pop_num],
@@ -84,7 +87,7 @@ impl<F: ObjFunc> Context<F> {
 
     pub(crate) fn init_pop(&mut self) {
         let pool = Array2::from_shape_fn([self.pop_num(), self.dim()], |(_, s)| {
-            rand_float(self.lb(s), self.ub(s))
+            self.rng.rand_float(self.lb(s), self.ub(s))
         });
         let mut fitness = self.fitness.clone();
         let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));

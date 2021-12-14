@@ -3,6 +3,7 @@
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
 use crate::utility::prelude::*;
+use alloc::{vec, vec::Vec};
 
 /// The Differential Evolution strategy.
 ///
@@ -111,7 +112,7 @@ pub struct Method {
 }
 
 impl Method {
-    fn f45<F: ObjFunc>(&self, ctx: &Context<F>, v: &Array1<usize>, n: usize) -> f64 {
+    fn f45<F: ObjFunc>(&self, ctx: &Context<F>, v: &[usize], n: usize) -> f64 {
         (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]] - ctx.pool[[v[3], n]])
             * self.f
     }
@@ -120,7 +121,7 @@ impl Method {
         &self,
         ctx: &Context<F>,
         tmp: &Array1<f64>,
-        v: &Array1<usize>,
+        v: &[usize],
         n: usize,
     ) -> f64 {
         match self.strategy {
@@ -136,15 +137,15 @@ impl Method {
 
     fn c1<F: ObjFunc>(
         &mut self,
-        ctx: &Context<F>,
+        ctx: &mut Context<F>,
         tmp: &mut Array1<f64>,
-        v: Array1<usize>,
+        v: Vec<usize>,
         mut n: usize,
     ) {
         for _ in 0..ctx.dim() {
             tmp[n] = self.formula(ctx, tmp, &v, n);
             n = (n + 1) % ctx.dim();
-            if !maybe(self.cross) {
+            if !ctx.rng.maybe(self.cross) {
                 break;
             }
         }
@@ -152,13 +153,13 @@ impl Method {
 
     fn c2<F: ObjFunc>(
         &mut self,
-        ctx: &Context<F>,
+        ctx: &mut Context<F>,
         tmp: &mut Array1<f64>,
-        v: Array1<usize>,
+        v: Vec<usize>,
         mut n: usize,
     ) {
         for lv in 0..ctx.dim() {
-            if !maybe(self.cross) || lv == ctx.dim() - 1 {
+            if !ctx.rng.maybe(self.cross) || lv == ctx.dim() - 1 {
                 tmp[n] = self.formula(ctx, tmp, &v, n);
             }
             n = (n + 1) % ctx.dim();
@@ -170,11 +171,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Context<F>) {
         'a: for i in 0..ctx.pop_num() {
             // Generate Vector
-            let mut v = Array1::zeros(self.num);
-            rand_vector(v.as_slice_mut().unwrap(), 0, 0, ctx.pop_num());
+            let mut v = vec![0; self.num];
+            ctx.rng.rand_vector(&mut v, 0, 0, ctx.pop_num());
             // Recombination
             let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
-            let n = rand_int(0, ctx.dim());
+            let n = ctx.rng.rand_int(0, ctx.dim());
             match self.strategy {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, v, n),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, v, n),

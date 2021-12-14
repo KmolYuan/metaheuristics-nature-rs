@@ -8,8 +8,8 @@ use core::marker::PhantomData;
 use std::time::Instant;
 
 macro_rules! impl_basic_setting {
-    ($(fn $name:ident($ty:ty))+) => {$(
-        /// Set the base option.
+    ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
+        $(#[$meta])*
         pub fn $name(mut self, $name: $ty) -> Self {
             self.basic.$name = $name;
             self
@@ -22,17 +22,12 @@ macro_rules! impl_basic_setting {
 /// This type should be included in the custom setting, which implements [`Setting`].
 #[derive(Debug, PartialEq)]
 pub struct BasicSetting {
-    /// Termination condition.
-    pub task: Task,
-    /// Population number.
-    pub pop_num: usize,
-    /// Report frequency. (per generation)
-    pub rpt: u64,
-    /// Calculate the average of the fitness at [`Report`](crate::Report).
-    /// Default to false.
-    pub average: bool,
-    /// Threshold of the adaptive factor. Default to disable this function.
-    pub adaptive: Adaptive,
+    pub(crate) task: Task,
+    pub(crate) pop_num: usize,
+    pub(crate) rpt: u64,
+    pub(crate) average: bool,
+    pub(crate) adaptive: Adaptive,
+    pub(crate) seed: Option<u128>,
 }
 
 impl Default for BasicSetting {
@@ -43,6 +38,7 @@ impl Default for BasicSetting {
             rpt: 1,
             average: false,
             adaptive: Adaptive::Disable,
+            seed: None,
         }
     }
 }
@@ -164,11 +160,22 @@ where
     S::Algorithm: Algorithm<F>,
 {
     impl_basic_setting! {
+        /// Termination condition.
         fn task(Task)
+        /// Population number.
         fn pop_num(usize)
+        /// Report frequency. (per generation)
         fn rpt(u64)
+        /// Calculate the average of the fitness at [`Report`]. Default to false.
         fn average(bool)
+        /// Threshold of the adaptive factor. Default to disable this function.
         fn adaptive(Adaptive)
+    }
+
+    /// Set initial random seed.
+    pub fn seed(mut self, seed: u128) -> Self {
+        self.basic.seed = Some(seed);
+        self
     }
 
     /// Set callback function.
