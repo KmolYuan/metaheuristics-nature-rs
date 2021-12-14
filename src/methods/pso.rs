@@ -80,8 +80,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         #[cfg(not(feature = "parallel"))]
         {
             zip.for_each(|f, mut v, mut past, f_past| {
-                let alpha = ctx.rng.rand_float(0., self.cognition);
-                let beta = ctx.rng.rand_float(0., self.social);
+                let alpha = ctx.rng.float(0.0..self.cognition);
+                let beta = ctx.rng.float(0.0..self.social);
                 for s in 0..ctx.dim() {
                     let variable = self.velocity * v[s]
                         + alpha * (past[s] - v[s])

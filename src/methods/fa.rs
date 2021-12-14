@@ -89,7 +89,7 @@ impl Method {
             for s in 0..ctx.dim() {
                 let v = ctx.pool[[i, s]]
                     + beta * (pool_j[s] - ctx.pool[[i, s]])
-                    + self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.rand_float(-0.5, 0.5);
+                    + self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
                 tmp[s] = ctx.check(s, v);
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);

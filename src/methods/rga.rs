@@ -68,7 +68,7 @@ impl<R: Respond> Setting for Rga<R> {
 #[inline(always)]
 fn check<F: ObjFunc>(ctx: &mut Context<F>, s: usize, v: f64) -> f64 {
     if ctx.ub(s) < v || v < ctx.lb(s) {
-        ctx.rng.rand_float(ctx.lb(s), ctx.ub(s))
+        ctx.rng.float(ctx.lb(s)..ctx.ub(s))
     } else {
         v
     }
@@ -147,7 +147,7 @@ impl<R: Respond> Method<R> {
             if !ctx.rng.maybe(self.mutate) {
                 continue;
             }
-            let s = ctx.rng.rand_int(0, ctx.dim());
+            let s = ctx.rng.int(0..ctx.dim());
             if ctx.rng.maybe(0.5) {
                 ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
             } else {
@@ -165,7 +165,7 @@ impl<R: Respond> Method<R> {
         for i in 0..ctx.pop_num() {
             let (j, k) = {
                 let mut v = [i, 0, 0];
-                ctx.rng.rand_vector(&mut v, 1, 0, ctx.pop_num());
+                ctx.rng.vector(&mut v, 1, 0..ctx.pop_num());
                 (v[1], v[2])
             };
             if ctx.fitness[j].value() > ctx.fitness[k].value() && ctx.rng.maybe(self.win) {
@@ -181,7 +181,7 @@ impl<R: Respond> Method<R> {
             }
             ctx.fitness = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
-            let i = ctx.rng.rand_int(0, ctx.pop_num());
+            let i = ctx.rng.int(0..ctx.pop_num());
             ctx.assign_from_best(i);
         }
     }

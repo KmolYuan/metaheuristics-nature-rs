@@ -1,5 +1,5 @@
 //! The random function for building algorithm.
-use core::mem::size_of;
+use core::{mem::size_of, ops::Range};
 use getrandom::getrandom;
 use oorandom::Rand64;
 
@@ -30,22 +30,24 @@ impl Rng {
         self.rand() < v
     }
 
-    /// Generate a random values by range.
-    pub fn rand_float(&mut self, lb: f64, ub: f64) -> f64 {
-        self.rand() * (ub - lb) + lb
+    /// Generate a random floating point value by range.
+    pub fn float(&mut self, rng: Range<f64>) -> f64 {
+        self.rand() * (rng.end - rng.start) + rng.start
     }
 
-    /// Generate a random values by range.
-    pub fn rand_int(&mut self, lb: usize, ub: usize) -> usize {
-        (self.rand() * (ub - lb) as f64) as usize + lb
+    /// Generate a random integer value by range.
+    pub fn int(&mut self, rng: Range<usize>) -> usize {
+        (self.rand() * (rng.end - rng.start) as f64) as usize + rng.start
     }
 
     /// Generate (fill) a random vector.
-    pub fn rand_vector(&mut self, v: &mut [usize], start: usize, lb: usize, ub: usize) {
+    ///
+    /// The start position of the vector can be set.
+    pub fn vector(&mut self, v: &mut [usize], start: usize, rng: Range<usize>) {
         for i in start..v.len() {
-            v[i] = self.rand_int(lb, ub);
+            v[i] = self.int(rng.clone());
             while v[..i].contains(&v[i]) {
-                v[i] = self.rand_int(lb, ub);
+                v[i] = self.int(rng.clone());
             }
         }
     }

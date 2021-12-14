@@ -87,7 +87,7 @@ impl<F: ObjFunc> Context<F> {
 
     pub(crate) fn init_pop(&mut self) {
         let pool = Array2::from_shape_fn([self.pop_num(), self.dim()], |(_, s)| {
-            self.rng.rand_float(self.lb(s), self.ub(s))
+            self.rng.float(self.lb(s)..self.ub(s))
         });
         let mut fitness = self.fitness.clone();
         let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));

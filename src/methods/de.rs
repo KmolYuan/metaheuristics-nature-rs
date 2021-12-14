@@ -172,10 +172,10 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         'a: for i in 0..ctx.pop_num() {
             // Generate Vector
             let mut v = vec![0; self.num];
-            ctx.rng.rand_vector(&mut v, 0, 0, ctx.pop_num());
+            ctx.rng.vector(&mut v, 0, 0..ctx.pop_num());
             // Recombination
             let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
-            let n = ctx.rng.rand_int(0, ctx.dim());
+            let n = ctx.rng.int(0..ctx.dim());
             match self.strategy {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, v, n),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, v, n),
