@@ -33,7 +33,7 @@
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
 //!   This feature required `std`.
-//! + `wasm`: Support for webassembly, especial for random seed generating.
+//! + `js`: Support JavaScript random seed generation, especially for WebAssembly.
 //! + `libm`: If the standard library is not provided, some math functions might missing.
 //!   This will disable some pre-implemented algorithms.
 //!   However, there is a math library implemented in pure Rust, the name is same as `libm`.

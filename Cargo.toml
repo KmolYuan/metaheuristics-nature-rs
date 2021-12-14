@@ -14,7 +14,7 @@ categories = ["algorithms", "no-std"]
 default = ["std"]
 std = ["ndarray/std"]
 parallel = ["std", "rayon", "ndarray/rayon"]
-wasm = ["getrandom/js"]
+js = ["getrandom/js"]
 
 [dependencies]
 getrandom = "0.2"
