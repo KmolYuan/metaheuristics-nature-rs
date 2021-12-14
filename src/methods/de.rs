@@ -56,9 +56,14 @@ pub struct De {
 }
 
 impl De {
-    impl_builder!(strategy, Strategy, "Strategy of the formula.");
-    impl_builder!(f, f64, "F factor.");
-    impl_builder!(cross, f64, "Crossing probability.");
+    impl_builders! {
+        /// Strategy of the formula.
+        fn strategy(Strategy)
+        /// F factor.
+        fn f(f64)
+        /// Crossing probability.
+        fn cross(f64)
+    }
 }
 
 impl Default for De {

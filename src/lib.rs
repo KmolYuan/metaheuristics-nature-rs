@@ -52,32 +52,57 @@ pub use crate::{
     solver::{Adaptive, Setting, Solver, Task},
 };
 
-/// A tool macro used to build the builder function.
+/// A tool macro used to generate multiple builder functions (methods).
 ///
-/// The macro will generate following code:
+/// For example,
+///
+/// ```
+/// # use metaheuristics_nature::impl_builders;
+/// # type Ty = bool;
+/// # struct S {
+/// #     name1: Ty,
+/// #     name2: Ty,
+/// # }
+/// impl S {
+///     impl_builders! {
+///         /// Doc 1
+///         fn name1(Ty)
+///         /// Doc 2
+///         fn name2(Ty)
+///     }
+/// }
+/// ```
+///
+/// will become
 ///
 /// ```
 /// # type Ty = bool;
 /// # struct S {
-/// #     name: Ty,
+/// #     name1: Ty,
+/// #     name2: Ty,
 /// # }
-/// # impl S {
-/// #[doc = "description"]
-/// pub fn name(mut self, name: Ty) -> Self {
-///     self.name = name;
-///     self
+/// impl S {
+///     /// Doc 1
+///     pub fn name1(mut self, name1: Ty) -> Self {
+///         self.name1 = name1;
+///         self
+///     }
+///     /// Doc 2
+///     pub fn name2(mut self, name2: Ty) -> Self {
+///         self.name2 = name2;
+///         self
+///     }
 /// }
-/// # }
 /// ```
 #[macro_export]
-macro_rules! impl_builder {
-    ($name:ident, $ty:ty, $description:literal) => {
-        #[doc = $description]
+macro_rules! impl_builders {
+    ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
+        $(#[$meta])*
         pub fn $name(mut self, $name: $ty) -> Self {
             self.$name = $name;
             self
         }
-    };
+    )+};
 }
 
 pub mod methods;

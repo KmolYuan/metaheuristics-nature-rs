@@ -11,9 +11,14 @@ pub struct Pso {
 }
 
 impl Pso {
-    impl_builder!(cognition, f64, "Cognition factor.");
-    impl_builder!(social, f64, "Social factor.");
-    impl_builder!(velocity, f64, "Moving velocity.");
+    impl_builders! {
+        /// Cognition factor.
+        fn cognition(f64)
+        /// Social factor.
+        fn social(f64)
+        /// Moving velocity.
+        fn velocity(f64)
+    }
 }
 
 impl Default for Pso {

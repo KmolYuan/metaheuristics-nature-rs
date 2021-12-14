@@ -19,10 +19,16 @@ pub struct Rga<R: Respond> {
 }
 
 impl<R: Respond> Rga<R> {
-    impl_builder!(cross, f64, "Crossing probability.");
-    impl_builder!(mutate, f64, "Mutation probability.");
-    impl_builder!(win, f64, "Winning probability.");
-    impl_builder!(delta, f64, "Delta factor.");
+    impl_builders! {
+        /// Crossing probability.
+        fn cross(f64)
+        /// Mutation probability.
+        fn mutate(f64)
+        /// Winning probability.
+        fn win(f64)
+        /// Delta factor.
+        fn delta(f64)
+    }
 }
 
 impl<R: Respond> Default for Rga<R> {

@@ -13,9 +13,14 @@ pub struct Fa {
 }
 
 impl Fa {
-    impl_builder!(alpha, f64, "Alpha factor.");
-    impl_builder!(beta_min, f64, "Minimum beta factor.");
-    impl_builder!(gamma, f64, "Gamma factor.");
+    impl_builders! {
+        /// Alpha factor.
+        fn alpha(f64)
+        /// Minimum beta factor.
+        fn beta_min(f64)
+        /// Gamma factor.
+        fn gamma(f64)
+    }
 }
 
 impl Default for Fa {
