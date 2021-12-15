@@ -1,12 +1,19 @@
-use crate::{utility::prelude::*, *};
+#![doc(hidden)]
+use crate::*;
 
 const OFFSET: f64 = 7.;
 
-struct TestObj([f64; 4], [f64; 4]);
+pub struct TestObj([f64; 4], [f64; 4]);
 
 impl Default for TestObj {
     fn default() -> Self {
         Self([0.; 4], [50.; 4])
+    }
+}
+
+impl TestObj {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -30,10 +37,11 @@ impl ObjFunc for TestObj {
     }
 }
 
+#[cfg(test)]
 fn test<S>()
 where
     S: Setting + Default,
-    S::Algorithm: Algorithm<TestObj>,
+    S::Algorithm: utility::Algorithm<TestObj>,
 {
     let s = Solver::build(S::default())
         .task(Task::MinFit(OFFSET))

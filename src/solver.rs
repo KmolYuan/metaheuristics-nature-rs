@@ -110,27 +110,11 @@ pub enum Adaptive {
 ///
 /// ```
 /// use metaheuristics_nature::{Rga, Solver, Task};
-/// # use metaheuristics_nature::{ObjFunc, Report};
-/// # struct MyFunc([f64; 3], [f64; 3]);
-/// # impl MyFunc {
-/// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
-/// # }
-/// # impl ObjFunc for MyFunc {
-/// #     type Result = f64;
-/// #     type Respond = f64;
-/// #     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
-/// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
-/// #     }
-/// #     fn result(&self, v: &[f64]) -> Self::Result {
-/// #         self.fitness(v, &Default::default())
-/// #     }
-/// #     fn ub(&self) -> &[f64] { &self.1 }
-/// #     fn lb(&self) -> &[f64] { &self.0 }
-/// # }
+/// # use metaheuristics_nature::tests::TestObj as MyFunc;
 ///
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default())
-///     .task(Task::MinFit(1e-20))
+///     .task(Task::MaxGen(20))
 ///     .solve(MyFunc::new());
 /// // Get the result from objective function
 /// let ans = s.result();
@@ -182,23 +166,7 @@ where
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver, Task};
-    /// # use metaheuristics_nature::{ObjFunc, Report};
-    /// # struct MyFunc([f64; 3], [f64; 3]);
-    /// # impl MyFunc {
-    /// #     fn new() -> Self { Self([0.; 3], [50.; 3]) }
-    /// # }
-    /// # impl ObjFunc for MyFunc {
-    /// #     type Result = f64;
-    /// #     type Respond = f64;
-    /// #     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
-    /// #         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
-    /// #     }
-    /// #     fn result(&self, v: &[f64]) -> Self::Result {
-    /// #         self.fitness(v, &Default::default())
-    /// #     }
-    /// #     fn ub(&self) -> &[f64] { &self.1 }
-    /// #     fn lb(&self) -> &[f64] { &self.0 }
-    /// # }
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     /// # struct App { is_stop: bool }
     /// # impl App {
     /// #     fn show_generation(&self, _gen: u64) {}
@@ -206,7 +174,7 @@ where
     /// # let app = App { is_stop: false };
     ///
     /// let s = Solver::build(Rga::default())
-    ///     .task(Task::MinFit(0.))
+    ///     .task(Task::MaxGen(20))
     ///     .callback(&mut |r| {
     ///         app.show_generation(r.gen);
     ///         !app.is_stop

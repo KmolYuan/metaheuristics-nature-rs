@@ -110,6 +110,5 @@ mod obj_func;
 pub mod random;
 mod report;
 mod solver;
-#[cfg(test)]
-mod tests;
+pub mod tests;
 pub mod utility;
