@@ -319,8 +319,8 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Get the history for plotting.
     #[inline(always)]
-    pub fn reports(&self) -> Vec<Report> {
-        self.0.reports.clone()
+    pub fn reports(&self) -> &[Report] {
+        &self.0.reports
     }
 
     /// Get the best parameters.
