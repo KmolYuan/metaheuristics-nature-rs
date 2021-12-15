@@ -2,7 +2,7 @@ use crate::{
     utility::{Algorithm, Context, Respond},
     ObjFunc, Report,
 };
-use alloc::{boxed::Box, vec::Vec};
+use alloc::boxed::Box;
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::time::Instant;
