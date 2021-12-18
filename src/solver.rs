@@ -134,10 +134,10 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     basic: BasicSetting,
     setting: S,
     callback: Box<dyn FnMut(&Report) -> bool + 'a>,
-    _phantom: PhantomData<F>,
+    _obj: PhantomData<F>,
 }
 
-impl<'a, S, F> SolverBuilder<'a, S, F>
+impl<S, F> SolverBuilder<'_, S, F>
 where
     S: Setting,
     F: ObjFunc,
@@ -164,26 +164,36 @@ where
     ///
     /// Return false to break, same as the while loop condition.
     ///
+    /// In the example below, `app` is a mutable variable that changes every time.
+    ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver, Task};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    /// # struct App { is_stop: bool }
+    /// # struct App;
     /// # impl App {
-    /// #     fn show_generation(&self, _gen: u64) {}
+    /// #     fn show_generation(&mut self, _gen: u64) {}
+    /// #     fn is_stop(&self) -> bool { false }
     /// # }
-    /// # let app = App { is_stop: false };
+    /// # let mut app = App;
     ///
     /// let s = Solver::build(Rga::default())
     ///     .task(Task::MaxGen(20))
-    ///     .callback(&mut |r| {
+    ///     .callback(|r| {
     ///         app.show_generation(r.gen);
-    ///         !app.is_stop
+    ///         !app.is_stop()
     ///     })
     ///     .solve(MyFunc::new());
     /// ```
-    pub fn callback(mut self, callback: &'a mut dyn FnMut(&Report) -> bool) -> Self {
-        self.callback = Box::new(callback);
-        self
+    pub fn callback<'a, C>(self, callback: C) -> SolverBuilder<'a, S, F>
+    where
+        C: FnMut(&Report) -> bool + 'a,
+    {
+        SolverBuilder {
+            basic: self.basic,
+            setting: self.setting,
+            callback: Box::new(callback),
+            _obj: PhantomData,
+        }
     }
 
     /// Create the task and run the algorithm, which may takes a lot of time.
@@ -272,7 +282,7 @@ impl<F: ObjFunc> Solver<F> {
             basic: S::default_basic(),
             setting,
             callback: Box::new(|_| true),
-            _phantom: PhantomData,
+            _obj: PhantomData,
         }
     }
 
