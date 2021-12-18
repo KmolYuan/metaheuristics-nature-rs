@@ -390,6 +390,6 @@ impl<F: ObjFunc, R> Solver<F, R> {
     /// Get the result of the objective function.
     #[inline(always)]
     pub fn result(&self) -> F::Result {
-        self.ctx.func.result(self.ctx.best.as_slice().unwrap())
+        self.func().result(self.best_parameters())
     }
 }
