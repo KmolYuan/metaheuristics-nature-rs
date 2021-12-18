@@ -17,10 +17,6 @@ pub struct Report {
     pub average: f64,
     /// Adaptive factor.
     pub adaptive: f64,
-    /// Time duration.
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    pub time: f64,
 }
 
 impl Default for Report {
@@ -32,8 +28,6 @@ impl Default for Report {
             diff: 0.,
             average: f64::NAN,
             adaptive: 0.,
-            #[cfg(feature = "std")]
-            time: 0.,
         }
     }
 }

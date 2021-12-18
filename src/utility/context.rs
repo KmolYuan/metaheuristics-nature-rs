@@ -17,6 +17,10 @@ pub struct Context<F: ObjFunc> {
     pub fitness: Vec<F::Respond>,
     /// Current variables of all individuals.
     pub pool: Array2<f64>,
+    /// Time duration.
+    #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+    pub time: f64,
     /// The current information of the algorithm.
     pub report: Report,
     pub(crate) rpt: u64,
@@ -40,6 +44,8 @@ impl<F: ObjFunc> Context<F> {
             best: Array1::zeros(dim),
             fitness: vec![F::Respond::INFINITY; s.pop_num],
             pool: Array2::zeros((s.pop_num, dim)),
+            #[cfg(feature = "std")]
+            time: 0.,
             report: Report::default(),
             rpt: s.rpt,
             average: s.average,
