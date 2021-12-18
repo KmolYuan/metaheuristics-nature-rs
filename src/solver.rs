@@ -263,6 +263,8 @@ where
     ///     .solve(MyFunc::new());
     /// ```
     ///
+    /// Please see [`record`](Self::record) method if you went to change the input type.
+    ///
     /// # Default
     ///
     /// By default, the callback function will not break the iteration and does nothing.
