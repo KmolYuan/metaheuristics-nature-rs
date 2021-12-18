@@ -191,21 +191,46 @@ where
     /// Due to memory allocation, this function should record as less information as possible.
     /// For example, return unit type `()` can totally disable this function.
     ///
+    /// The example below is record and use [`Report`](crate::Report) type on the callback.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Report, Rga, Solver, Task};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    /// # struct App;
+    /// # impl App {
+    /// #     fn show_generation(&mut self, _g: u64) {}
+    /// #     fn show_fitness(&mut self, _f: f64) {}
+    /// #     fn is_stop(&self) -> bool { false }
+    /// # }
+    /// # let mut app = App;
+    ///
+    /// let s = Solver::build(Rga::default())
+    ///     .task(Task::MaxGen(20))
+    ///     .record(|ctx| ctx.report.clone())
+    ///     .callback(|r| {
+    ///         app.show_generation(r.gen);
+    ///         app.show_fitness(r.best_f);
+    ///         !app.is_stop()
+    ///     })
+    ///     .solve(MyFunc::new());
+    /// let report: &[Report] = s.report();
+    /// ```
+    ///
     /// After calling [`solve`](Self::solve) function, you can take the report value with [`Solver::report`] method.
     ///
     /// # Default
     ///
     /// By default, the record function returns generation (`u64`) and best fitness (`f64`).
-    pub fn record<'b, C>(self, record: C) -> SolverBuilder<'b, S, F, R>
+    pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
     where
         'a: 'b,
-        C: Fn(&Context<F>) -> R + 'b,
+        C: Fn(&Context<F>) -> NR + 'b,
     {
         SolverBuilder {
             basic: self.basic,
             setting: self.setting,
             record: Box::new(record),
-            callback: self.callback,
+            callback: Box::new(|_| true),
         }
     }
 
