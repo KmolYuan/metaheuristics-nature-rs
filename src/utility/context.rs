@@ -19,7 +19,6 @@ pub struct Context<F: ObjFunc> {
     pub pool: Array2<f64>,
     /// The current information of the algorithm.
     pub report: Report,
-    pub(crate) reports: Vec<Report>,
     pub(crate) rpt: u64,
     pub(crate) average: bool,
     pub(crate) adaptive: Adaptive,
@@ -42,7 +41,6 @@ impl<F: ObjFunc> Context<F> {
             fitness: vec![F::Respond::INFINITY; s.pop_num],
             pool: Array2::zeros((s.pop_num, dim)),
             report: Report::default(),
-            reports: Vec::new(),
             rpt: s.rpt,
             average: s.average,
             adaptive: s.adaptive,
@@ -172,10 +170,5 @@ impl<F: ObjFunc> Context<F> {
         } else {
             v
         }
-    }
-
-    /// Record the performance.
-    pub(crate) fn report(&mut self) {
-        self.reports.push(self.report.clone());
     }
 }

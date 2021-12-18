@@ -1,4 +1,6 @@
-/// The data of generation sampling.
+/// Data of generation sampling.
+///
+/// [`ObjFunc`](crate::ObjFunc) type can read the information from this type.
 #[derive(Clone, Debug)]
 pub struct Report {
     /// Generation.
