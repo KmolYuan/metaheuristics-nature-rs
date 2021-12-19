@@ -17,15 +17,14 @@ pub struct Context<F: ObjFunc> {
     pub fitness: Vec<F::Respond>,
     /// Current variables of all individuals.
     pub pool: Array2<f64>,
+    /// Adaptive factor.
+    pub adaptive: f64,
     /// Time duration.
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     pub time: f64,
     /// The current information of the algorithm.
     pub report: Report,
-    pub(crate) rpt: u64,
-    pub(crate) average: bool,
-    pub(crate) adaptive: Adaptive,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -44,12 +43,10 @@ impl<F: ObjFunc> Context<F> {
             best: Array1::zeros(dim),
             fitness: vec![F::Respond::INFINITY; s.pop_num],
             pool: Array2::zeros((s.pop_num, dim)),
+            adaptive: 0.,
             #[cfg(feature = "std")]
             time: 0.,
             report: Report::default(),
-            rpt: s.rpt,
-            average: s.average,
-            adaptive: s.adaptive,
             func: Arc::new(func),
         }
     }
@@ -84,9 +81,10 @@ impl<F: ObjFunc> Context<F> {
 
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.fitness[i] = self
-            .func
-            .fitness(self.pool.slice(s![i, ..]).as_slice().unwrap(), &self.report);
+        self.fitness[i] = self.func.fitness(
+            self.pool.slice(s![i, ..]).as_slice().unwrap(),
+            self.adaptive,
+        );
     }
 
     pub(crate) fn init_pop(&mut self) {
@@ -107,7 +105,7 @@ impl<F: ObjFunc> Context<F> {
             let (f, v) = zip
                 .into_par_iter()
                 .map(|(f, v)| {
-                    *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
+                    *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
                     (f.value(), v)
                 })
                 .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())

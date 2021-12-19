@@ -109,7 +109,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                             + beta * (ctx.best[s] - v[s]);
                         v[s] = ctx.check(s, variable);
                     }
-                    *f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
+                    *f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
                     if f.value() < *past_f {
                         *past_f = f.value();
                         past.assign(&v);

@@ -185,7 +185,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                     continue 'a;
                 }
             }
-            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), &ctx.report);
+            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
             if tmp_f.value() < ctx.fitness[i].value() {
                 ctx.assign_from(i, tmp_f, &tmp);
             }

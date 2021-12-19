@@ -49,7 +49,7 @@ pub use crate::{
     methods::*,
     obj_func::ObjFunc,
     report::Report,
-    solver::{Adaptive, Setting, Solver, Task},
+    solver::{Setting, Solver, Task},
 };
 
 /// A tool macro used to generate multiple builder functions (methods).

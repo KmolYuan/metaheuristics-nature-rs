@@ -109,7 +109,7 @@ impl<R: Respond> Method<R> {
                             var
                         };
                     }
-                    let f = ctx.func.fitness(v.as_slice().unwrap(), &ctx.report);
+                    let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
                     (f, v)
                 })
                 .collect::<Vec<_>>();

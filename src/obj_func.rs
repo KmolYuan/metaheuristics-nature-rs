@@ -1,9 +1,9 @@
-use crate::{utility::Respond, Report};
+use crate::utility::Respond;
 
 /// The base of the objective function.
 ///
 /// ```
-/// use metaheuristics_nature::{ObjFunc, Report};
+/// use metaheuristics_nature::ObjFunc;
 ///
 /// struct MyFunc([f64; 3], [f64; 3]);
 ///
@@ -17,17 +17,18 @@ use crate::{utility::Respond, Report};
 ///     type Result = f64;
 ///     type Respond = f64;
 ///
-///     fn fitness(&self, v: &[f64], _: &Report) -> Self::Respond {
+///     fn fitness(&self, v: &[f64], _: f64) -> Self::Respond {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
 ///
 ///     fn result(&self, v: &[f64]) -> Self::Result {
-///         self.fitness(v, &Default::default())
+///         self.fitness(v, 0.)
 ///     }
 ///
 ///     fn ub(&self) -> &[f64] {
 ///         &self.1
 ///     }
+///
 ///     fn lb(&self) -> &[f64] {
 ///         &self.0
 ///     }
@@ -71,7 +72,7 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness(&self, v: &[f64], r: &Report) -> Self::Respond;
+    fn fitness(&self, v: &[f64], f: f64) -> Self::Respond;
 
     /// Return the final result of the problem.
     ///
