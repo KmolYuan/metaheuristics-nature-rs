@@ -49,8 +49,8 @@ where
     let ans = s.result();
     let x = s.best_parameters();
     let y = s.best_fitness();
-    let reports = s.report();
-    assert!(reports.len() > 0, "{}", reports.len());
+    let report = s.report();
+    assert!(report.len() > 0, "{}", report.len());
     assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
     for i in 0..4 {
         assert!(x[i].abs() < 1e-6, "x{} = {}", i, x[i]);

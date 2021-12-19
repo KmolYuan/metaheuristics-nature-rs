@@ -23,8 +23,14 @@ pub struct Context<F: ObjFunc> {
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     pub time: f64,
-    /// The current information of the algorithm.
-    pub report: Report,
+    /// Generation.
+    pub gen: u64,
+    /// Best fitness.
+    pub best_f: f64,
+    /// Is the best fitness feasible.
+    pub best_feasible: bool,
+    /// Gradient of the best fitness, between the current and the previous.
+    pub diff: f64,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -46,7 +52,10 @@ impl<F: ObjFunc> Context<F> {
             adaptive: 0.,
             #[cfg(feature = "std")]
             time: 0.,
-            report: Report::default(),
+            gen: 0,
+            best_f: f64::INFINITY,
+            best_feasible: false,
+            diff: 0.0,
             func: Arc::new(func),
         }
     }
@@ -119,8 +128,8 @@ impl<F: ObjFunc> Context<F> {
     /// Set the index to best.
     #[inline(always)]
     pub fn set_best(&mut self, i: usize) {
-        self.report.best_f = self.fitness[i].value();
-        self.report.best_feasible = self.fitness[i].feasible();
+        self.best_f = self.fitness[i].value();
+        self.best_feasible = self.fitness[i].feasible();
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
@@ -130,14 +139,14 @@ impl<F: ObjFunc> Context<F> {
     where
         A: AsArray<'a, f64>,
     {
-        self.report.best_f = f;
+        self.best_f = f;
         self.best.assign(&v.into());
     }
 
     /// Assign the index from best.
     #[inline(always)]
     pub fn assign_from_best(&mut self, i: usize) {
-        self.fitness[i] = F::Respond::from_value(self.report.best_f, self.report.best_feasible);
+        self.fitness[i] = F::Respond::from_value(self.best_f, self.best_feasible);
         self.pool.slice_mut(s![i, ..]).assign(&self.best);
     }
 
@@ -159,7 +168,7 @@ impl<F: ObjFunc> Context<F> {
                 best = i;
             }
         }
-        if self.fitness[best].value() < self.report.best_f {
+        if self.fitness[best].value() < self.best_f {
             self.set_best(best);
         }
     }

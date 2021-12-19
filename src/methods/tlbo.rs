@@ -28,7 +28,7 @@ impl Method {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
             ctx.fitness[i] = f_new;
         }
-        if f < ctx.report.best_f {
+        if f < ctx.best_f {
             ctx.set_best(i);
         }
     }

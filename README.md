@@ -29,7 +29,7 @@ let ans = s.result();
 let x = s.best_parameters();
 let y = s.best_fitness();
 // Get the history reports
-let reports = s.reports();
+let report = s.report();
 ```
 
 ### What kinds of problems can be solved?

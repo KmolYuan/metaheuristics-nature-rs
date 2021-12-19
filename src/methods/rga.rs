@@ -123,8 +123,8 @@ impl<R: Respond> Method<R> {
     where
         F: ObjFunc<Respond = R>,
     {
-        let r = if ctx.report.gen < 100 {
-            ctx.report.gen as f64 / 100.
+        let r = if ctx.gen < 100 {
+            ctx.gen as f64 / 100.
         } else {
             1.
         };

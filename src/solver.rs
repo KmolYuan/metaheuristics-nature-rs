@@ -160,7 +160,7 @@ where
     ///
     /// let s = Solver::build(Rga::default())
     ///     .task(Task::MaxGen(20))
-    ///     .adaptive(|ctx| ctx.report.gen as f64)
+    ///     .adaptive(|ctx| ctx.gen as f64)
     ///     .solve(MyFunc::new());
     /// ```
     ///
@@ -182,17 +182,17 @@ where
     /// For example, return unit type `()` can totally disable this function.
     ///
     /// After calling [`solve`](Self::solve) function, you can take the report value with [`Solver::report`] method.
-    /// The following example records [`Report`](crate::Report) type for the report.
+    /// The following example records generation and spent time for the report.
     ///
     /// ```
-    /// use metaheuristics_nature::{Report, Rga, Solver, Task};
+    /// use metaheuristics_nature::{Rga, Solver, Task};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
     ///     .task(Task::MaxGen(20))
-    ///     .record(|ctx| ctx.report.clone())
+    ///     .record(|ctx| (ctx.gen, ctx.adaptive))
     ///     .solve(MyFunc::new());
-    /// let report: &[Report] = s.report();
+    /// let report: &[(u64, f64)] = s.report();
     /// ```
     ///
     /// # Default
@@ -233,8 +233,8 @@ where
     /// let s = Solver::build(Rga::default())
     ///     .task(Task::MaxGen(20))
     ///     .callback(|ctx| {
-    ///         app.show_generation(ctx.report.gen);
-    ///         app.show_fitness(ctx.report.best_f);
+    ///         app.show_generation(ctx.gen);
+    ///         app.show_fitness(ctx.best_f);
     ///         !app.is_stop()
     ///     })
     ///     .solve(MyFunc::new());
@@ -280,15 +280,15 @@ where
         }
         report.push(record(&ctx));
         loop {
-            ctx.report.gen += 1;
+            ctx.gen += 1;
             ctx.adaptive = adaptive(&ctx);
-            let best_f = ctx.report.best_f;
-            let diff = ctx.report.diff;
+            let best_f = ctx.best_f;
+            let diff = ctx.diff;
             method.generation(&mut ctx);
-            ctx.report.diff = best_f - ctx.report.best_f;
+            ctx.diff = best_f - ctx.best_f;
             #[cfg(feature = "std")]
             let _ = { ctx.time = (Instant::now() - time_start).as_secs_f64() };
-            if ctx.report.gen % rpt == 0 {
+            if ctx.gen % rpt == 0 {
                 if !callback(&ctx) {
                     break;
                 }
@@ -296,12 +296,12 @@ where
             }
             match ctx.task {
                 Task::MaxGen(v) => {
-                    if ctx.report.gen >= v {
+                    if ctx.gen >= v {
                         break;
                     }
                 }
                 Task::MinFit(v) => {
-                    if ctx.report.best_f <= v {
+                    if ctx.best_f <= v {
                         break;
                     }
                 }
@@ -312,7 +312,7 @@ where
                     }
                 }
                 Task::SlowDown(v) => {
-                    if ctx.report.diff / diff >= v {
+                    if ctx.diff / diff >= v {
                         break;
                     }
                 }
@@ -343,7 +343,7 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
             basic: S::default_basic(),
             setting,
             adaptive: Box::new(|_| 0.),
-            record: Box::new(|ctx| (ctx.report.gen, ctx.report.best_f)),
+            record: Box::new(|ctx| (ctx.gen, ctx.best_f)),
             callback: Box::new(|_| true),
         }
     }
@@ -374,7 +374,7 @@ impl<F: ObjFunc, R> Solver<F, R> {
     /// Get the best fitness.
     #[inline(always)]
     pub fn best_fitness(&self) -> f64 {
-        self.ctx.report.best_f
+        self.ctx.best_f
     }
 
     /// Get the result of the objective function.

@@ -48,7 +48,6 @@ extern crate core as std;
 pub use crate::{
     methods::*,
     obj_func::ObjFunc,
-    report::Report,
     solver::{Setting, Solver, Task},
 };
 
@@ -108,7 +107,6 @@ macro_rules! impl_builders {
 pub mod methods;
 mod obj_func;
 pub mod random;
-mod report;
 mod solver;
 pub mod tests;
 pub mod utility;
