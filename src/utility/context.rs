@@ -96,7 +96,7 @@ impl<F: ObjFunc> Context<F> {
         #[cfg(not(feature = "parallel"))]
         {
             zip.for_each(|f, v| {
-                *f = self.func.fitness(v.to_slice().unwrap(), &self.report);
+                *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
             });
             self.find_best();
         }
