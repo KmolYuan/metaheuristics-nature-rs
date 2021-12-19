@@ -123,9 +123,10 @@ impl<R: Respond> Method<R> {
     where
         F: ObjFunc<Respond = R>,
     {
-        let r = match ctx.task {
-            Task::MaxGen(v) if v > 0 => ctx.report.gen as f64 / v as f64,
-            _ => 1.,
+        let r = if ctx.report.gen < 100 {
+            ctx.report.gen as f64 / 100.
+        } else {
+            1.
         };
         #[cfg(all(feature = "std", not(feature = "libm")))]
         let pow_f = (1. - r).powf(self.delta);
