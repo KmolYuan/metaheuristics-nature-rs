@@ -135,11 +135,11 @@ pub struct Solver<F: ObjFunc, R> {
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     basic: BasicSetting,
     setting: S,
-    record: Box<dyn Fn(&Context<F>) -> R + 'a>,
+    record: Box<dyn Fn(&Context<F>) -> R + 'static>,
     callback: Box<dyn FnMut(&R) -> bool + 'a>,
 }
 
-impl<'a, S, F, R> SolverBuilder<'a, S, F, R>
+impl<S, F, R> SolverBuilder<'_, S, F, R>
 where
     S: Setting,
     F: ObjFunc,
@@ -221,10 +221,9 @@ where
     /// # Default
     ///
     /// By default, the record function returns generation (`u64`) and best fitness (`f64`).
-    pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
+    pub fn record<C, NR>(self, record: C) -> SolverBuilder<'static, S, F, NR>
     where
-        'a: 'b,
-        C: Fn(&Context<F>) -> NR + 'b,
+        C: Fn(&Context<F>) -> NR + 'static,
     {
         SolverBuilder {
             basic: self.basic,
@@ -268,10 +267,9 @@ where
     /// # Default
     ///
     /// By default, the callback function will not break the iteration and does nothing.
-    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F, R>
+    pub fn callback<'a, C>(self, callback: C) -> SolverBuilder<'a, S, F, R>
     where
-        'a: 'b,
-        C: FnMut(&R) -> bool + 'b,
+        C: FnMut(&R) -> bool + 'a,
     {
         SolverBuilder {
             basic: self.basic,
