@@ -1,4 +1,4 @@
-use crate::{utility::Context, ObjFunc};
+use crate::utility::prelude::*;
 
 /// The methods of the meta-heuristic algorithms.
 ///
