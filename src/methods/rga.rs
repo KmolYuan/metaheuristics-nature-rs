@@ -57,11 +57,8 @@ impl<R: Fitness> Setting for Rga<R> {
         }
     }
 
-    fn default_basic() -> BasicSetting {
-        BasicSetting {
-            pop_num: 500,
-            ..Default::default()
-        }
+    fn default_pop() -> usize {
+        500
     }
 }
 

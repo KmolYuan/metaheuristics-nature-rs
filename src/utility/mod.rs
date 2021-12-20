@@ -46,6 +46,14 @@ where
 ///
 /// This module includes all items of this crate, some hidden types,
 /// and external items from "ndarray" and "rayon" (if `parallel` feature enabled).
+///
+/// # Fitness
+///
+/// To customize a fitness type, please see [`Fitness`].
+///
+/// # Algorithm
+///
+/// To implement an algorithm, please see [`Algorithm`].
 pub mod prelude {
     pub use super::*;
     pub use crate::{solver::*, *};

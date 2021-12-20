@@ -48,11 +48,8 @@ impl<R: Fitness> Setting for Pso<R> {
         }
     }
 
-    fn default_basic() -> BasicSetting {
-        BasicSetting {
-            pop_num: 200,
-            ..Default::default()
-        }
+    fn default_pop() -> usize {
+        200
     }
 }
 

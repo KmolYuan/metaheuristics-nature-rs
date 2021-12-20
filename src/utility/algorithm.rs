@@ -2,9 +2,8 @@ use crate::utility::prelude::*;
 
 /// The methods of the meta-heuristic algorithms.
 ///
-/// + First, build a "setting" type includes [`BasicSetting`](crate::solver::BasicSetting).
-/// + Second, implement [`Setting`](crate::Setting) trait then indicate to a "method" type.
-/// + Last, implement `Algorithm` trait on the "method" type.
+/// 1. Implement [`Setting`](crate::Setting) trait then indicate to a "method" type.
+/// 1. Implement `Algorithm` trait on the "method" type.
 ///
 /// Usually, the "method" type that implements this trait will not leak from the API.
 /// All most common dataset is store in the [`Context`] type.

@@ -26,7 +26,7 @@ pub struct Context<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub(crate) fn new(func: F, s: BasicSetting) -> Self {
+    pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Self {
         let dim = func.lb().len();
         assert_eq!(
             dim,
@@ -34,10 +34,10 @@ impl<F: ObjFunc> Context<F> {
             "different dimension of the variables!"
         );
         Self {
-            rng: Rng::new(s.seed),
+            rng: Rng::new(seed),
             best: Array1::zeros(dim),
-            fitness: vec![F::Fitness::INFINITY; s.pop_num],
-            pool: Array2::zeros((s.pop_num, dim)),
+            fitness: vec![F::Fitness::INFINITY; pop_num],
+            pool: Array2::zeros((pop_num, dim)),
             adaptive: 0.,
             gen: 0,
             best_f: F::Fitness::INFINITY,

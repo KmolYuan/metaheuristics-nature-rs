@@ -45,11 +45,8 @@ impl Setting for Fa {
         }
     }
 
-    fn default_basic() -> BasicSetting {
-        BasicSetting {
-            pop_num: 80,
-            ..Default::default()
-        }
+    fn default_pop() -> usize {
+        80
     }
 }
 

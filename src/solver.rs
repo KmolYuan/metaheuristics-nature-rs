@@ -1,36 +1,6 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-macro_rules! impl_basic_setting {
-    ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
-        $(#[$meta])*
-        pub fn $name(mut self, $name: $ty) -> Self {
-            self.basic.$name = $name;
-            self
-        }
-    )+};
-}
-
-/// Setting base. This type store the basic configurations that provides to the algorithm framework.
-///
-/// This type should be included in the custom setting, which implements [`Setting`].
-#[derive(Debug, PartialEq)]
-pub struct BasicSetting {
-    pub(crate) pop_num: usize,
-    pub(crate) rpt: u64,
-    pub(crate) seed: Option<u128>,
-}
-
-impl Default for BasicSetting {
-    fn default() -> Self {
-        Self {
-            pop_num: 200,
-            rpt: 1,
-            seed: None,
-        }
-    }
-}
-
 /// A trait that provides a conversion to original setting.
 ///
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
@@ -43,9 +13,9 @@ pub trait Setting {
     /// Create the algorithm.
     fn algorithm(self) -> Self::Algorithm;
 
-    /// Default basic setting.
-    fn default_basic() -> BasicSetting {
-        Default::default()
+    /// Default population number.
+    fn default_pop() -> usize {
+        200
     }
 }
 
@@ -85,7 +55,8 @@ pub struct Solver<F: ObjFunc, R> {
 /// This type is created by [`Solver::build`] method.
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
-    basic: BasicSetting,
+    pop_num: usize,
+    seed: Option<u128>,
     setting: S,
     task: Box<dyn Fn(&Context<F>) -> bool + 'static>,
     record: Box<dyn Fn(&Context<F>) -> R + 'static>,
@@ -99,20 +70,13 @@ where
     F: ObjFunc,
     S::Algorithm: Algorithm<F>,
 {
-    impl_basic_setting! {
+    impl_builders! {
         /// Population number.
         ///
         /// # Default
         ///
         /// If not changed by the algorithm setting, the default number is 200.
         fn pop_num(usize)
-
-        /// Report frequency. (per generation)
-        ///
-        /// # Default
-        ///
-        /// By default, each generation will be reported.
-        fn rpt(u64)
 
         /// Set random seed.
         ///
@@ -151,7 +115,7 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    ///     .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 20)
     ///     .record(|ctx| (ctx.gen, ctx.adaptive))
     ///     .solve(MyFunc::new());
     /// let report: &[(u64, f64)] = s.report();
@@ -159,13 +123,14 @@ where
     ///
     /// # Default
     ///
-    /// By default, this function returns generation (`u64`) and best fitness (`f64`).
+    /// By default, this function returns a tuple includes the generation (`u64`) and the best fitness (`f64`).
     pub fn record<C, NR>(self, record: C) -> SolverBuilder<'a, S, F, NR>
     where
         C: Fn(&Context<F>) -> NR + 'static,
     {
         SolverBuilder {
-            basic: self.basic,
+            pop_num: self.pop_num,
+            seed: self.seed,
             setting: self.setting,
             task: self.task,
             record: Box::new(record),
@@ -271,10 +236,8 @@ where
     /// Create the task and run the algorithm, which may takes a lot of time.
     #[must_use = "the result cannot access unless to store the solver"]
     pub fn solve(self, func: F) -> Solver<F, R> {
-        let rpt = self.basic.rpt;
-        assert!(rpt > 0, "report interval should not be zero");
         let mut method = self.setting.algorithm();
-        let mut ctx = Context::new(func, self.basic);
+        let mut ctx = Context::new(func, self.seed, self.pop_num);
         let task = self.task;
         let record = self.record;
         let mut adaptive = self.adaptive;
@@ -288,9 +251,7 @@ where
             } else {
                 method.generation(&mut ctx);
             }
-            if ctx.gen % rpt == 0 {
-                report.push(record(&ctx));
-            }
+            report.push(record(&ctx));
             callback(&ctx);
             if task(&ctx) {
                 break;
@@ -308,18 +269,14 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
     ///
     /// If all things are well-setup, call [`SolverBuilder::solve`].
     ///
-    /// # Defaults
-    ///
-    /// + The basic setting is generate by [`Setting::default_basic`].
-    /// + `adaptive` function returns zero.
-    /// + `record` function returns generation (`u64`) and best fitness (`f64`).
-    /// + `callback` function will not break the iteration and does nothing.
+    /// The default value of each option can be found in their document.
     pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, (u64, F::Fitness)>
     where
         S: Setting,
     {
         SolverBuilder {
-            basic: S::default_basic(),
+            pop_num: S::default_pop(),
+            seed: None,
             setting,
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|ctx| (ctx.gen, ctx.best_f.clone())),

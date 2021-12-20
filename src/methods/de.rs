@@ -95,11 +95,8 @@ impl Setting for De {
         }
     }
 
-    fn default_basic() -> BasicSetting {
-        BasicSetting {
-            pop_num: 400,
-            ..Default::default()
-        }
+    fn default_pop() -> usize {
+        400
     }
 }
 
