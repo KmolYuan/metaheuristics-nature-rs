@@ -183,7 +183,7 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    ///     .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 20)
     ///     .adaptive(|ctx| ctx.gen as f64 / 20.)
     ///     .solve(MyFunc::new());
     /// ```
@@ -196,7 +196,7 @@ where
     ///
     /// let mut diff = None;
     /// let s = Solver::build(Rga::default())
-    ///     .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 20)
     ///     .adaptive(|ctx| {
     ///         if let Some(f) = diff {
     ///             let d = f - ctx.best_f;
@@ -277,6 +277,7 @@ where
     }
 
     /// Create the task and run the algorithm, which may takes a lot of time.
+    #[must_use = "the result cannot access unless to store the solver"]
     pub fn solve(self, func: F) -> Solver<F, R> {
         let rpt = self.basic.rpt;
         assert!(rpt > 0, "report interval should not be zero");

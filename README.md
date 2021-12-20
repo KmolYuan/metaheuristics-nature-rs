@@ -21,7 +21,7 @@ use metaheuristics_nature::{Rga, Solver};
 
 // Build and run the solver
 let s = Solver::build(Rga::default())
-    .task(|ctx| ctx.best_f < 1e-20)
+    .task(|ctx| ctx.gen == 20)
     .solve(MyFunc::new());
 // Get the result from objective function
 let ans = s.result();
