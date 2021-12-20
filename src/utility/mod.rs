@@ -5,10 +5,11 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{algorithm::Algorithm, context::Context, respond::Respond};
+pub use self::{algorithm::*, context::*, random::*, respond::*};
 
 mod algorithm;
 mod context;
+mod random;
 mod respond;
 
 /// Product two iterators together.
@@ -47,7 +48,7 @@ where
 /// and external items from "ndarray" and "rayon" (if `parallel` feature enabled).
 pub mod prelude {
     pub use super::*;
-    pub use crate::{random::*, solver::*, *};
+    pub use crate::{solver::*, *};
     #[doc(no_inline)]
     pub use ndarray::{s, Array1, Array2, AsArray, Axis, Zip};
     #[cfg(feature = "parallel")]

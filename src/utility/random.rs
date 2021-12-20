@@ -1,4 +1,3 @@
-//! The random function for building algorithm.
 use core::{
     mem::size_of,
     ops::Range,
