@@ -1,5 +1,13 @@
 //! A collection of nature-inspired meta-heuristic algorithms.
 //!
+//! # Terminology
+//!
+//! For unifying the terms, in this documentation,
+//!
+//! + "Iteration" is called "generation".
+//! + "Function" that evaluates value is called "objective function".
+//! + "Return value" of the objective function is called "fitness".
+//!
 //! # Algorithm
 //!
 //! There are two traits [`Algorithm`](crate::utility::Algorithm) and [`Setting`].
@@ -7,7 +15,7 @@
 //! and the latter is the setting interface.
 //!
 //! [`Solver`] is a simple interface for obtaining the solution, or analyzing the result.
-//! This type allows you to use the API without importing any traits.
+//! This type allows you to use the pre-defined methods without importing any traits.
 //!
 //! All provided methods are listed in the module [`methods`].
 //!

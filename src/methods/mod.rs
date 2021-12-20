@@ -1,4 +1,7 @@
 //! Pre-implemented optimization methods.
+//!
+//! Each methods are also has some variants on implementation,
+//! current methods are just designed for application.
 
 #[cfg(any(feature = "std", feature = "libm"))]
 pub use self::fa::Fa;
