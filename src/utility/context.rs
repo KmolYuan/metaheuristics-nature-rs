@@ -26,9 +26,7 @@ pub struct Context<F: ObjFunc> {
     /// Generation.
     pub gen: u64,
     /// Best fitness.
-    pub best_f: f64,
-    /// Is the best fitness feasible.
-    pub best_feasible: bool,
+    pub best_f: F::Respond,
     /// Gradient of the best fitness, between the current and the previous.
     pub diff: f64,
     /// The objective function.
@@ -53,8 +51,7 @@ impl<F: ObjFunc> Context<F> {
             #[cfg(feature = "std")]
             time: 0.,
             gen: 0,
-            best_f: f64::INFINITY,
-            best_feasible: false,
+            best_f: F::Respond::INFINITY,
             diff: 0.0,
             func: Arc::new(func),
         }
@@ -115,11 +112,11 @@ impl<F: ObjFunc> Context<F> {
                 .into_par_iter()
                 .map(|(f, v)| {
                     *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
-                    (f.value(), v)
+                    (f, v)
                 })
                 .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
                 .unwrap();
-            self.set_best_from(f, v);
+            self.set_best_from(f.clone(), v);
         }
         self.pool = pool;
         self.fitness = fitness;
@@ -128,14 +125,13 @@ impl<F: ObjFunc> Context<F> {
     /// Set the index to best.
     #[inline(always)]
     pub fn set_best(&mut self, i: usize) {
-        self.best_f = self.fitness[i].value();
-        self.best_feasible = self.fitness[i].feasible();
+        self.best_f = self.fitness[i].clone();
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
     /// Set the fitness and variables to best.
     #[inline(always)]
-    pub fn set_best_from<'a, A>(&mut self, f: f64, v: A)
+    pub fn set_best_from<'a, A>(&mut self, f: F::Respond, v: A)
     where
         A: AsArray<'a, f64>,
     {
@@ -146,7 +142,7 @@ impl<F: ObjFunc> Context<F> {
     /// Assign the index from best.
     #[inline(always)]
     pub fn assign_from_best(&mut self, i: usize) {
-        self.fitness[i] = F::Respond::from_value(self.best_f, self.best_feasible);
+        self.fitness[i] = self.best_f.clone();
         self.pool.slice_mut(s![i, ..]).assign(&self.best);
     }
 
@@ -168,7 +164,7 @@ impl<F: ObjFunc> Context<F> {
                 best = i;
             }
         }
-        if self.fitness[best].value() < self.best_f {
+        if self.fitness[best] < self.best_f {
             self.set_best(best);
         }
     }

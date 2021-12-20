@@ -1,3 +1,4 @@
+use crate::utility::Respond;
 use crate::{
     utility::{Algorithm, Context},
     ObjFunc,
@@ -282,10 +283,10 @@ where
         loop {
             ctx.gen += 1;
             ctx.adaptive = adaptive(&ctx);
-            let best_f = ctx.best_f;
+            let best_f = ctx.best_f.clone();
             let diff = ctx.diff;
             method.generation(&mut ctx);
-            ctx.diff = best_f - ctx.best_f;
+            ctx.diff = best_f.value() - ctx.best_f.value();
             #[cfg(feature = "std")]
             let _ = { ctx.time = (Instant::now() - time_start).as_secs_f64() };
             if ctx.gen % rpt == 0 {
@@ -301,7 +302,7 @@ where
                     }
                 }
                 Task::MinFit(v) => {
-                    if ctx.best_f <= v {
+                    if ctx.best_f.value() <= v {
                         break;
                     }
                 }
@@ -343,7 +344,7 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
             basic: S::default_basic(),
             setting,
             adaptive: Box::new(|_| 0.),
-            record: Box::new(|ctx| (ctx.gen, ctx.best_f)),
+            record: Box::new(|ctx| (ctx.gen, ctx.best_f.value())),
             callback: Box::new(|_| true),
         }
     }
@@ -374,7 +375,7 @@ impl<F: ObjFunc, R> Solver<F, R> {
     /// Get the best fitness.
     #[inline(always)]
     pub fn best_fitness(&self) -> f64 {
-        self.ctx.best_f
+        self.ctx.best_f.value()
     }
 
     /// Get the result of the objective function.

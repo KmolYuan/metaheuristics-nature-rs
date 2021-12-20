@@ -114,11 +114,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                         *past_f = f.value();
                         past.assign(&v);
                     }
-                    (f.value(), v)
+                    (f, v)
                 })
                 .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
                 .unwrap();
-            ctx.set_best_from(f, &v);
+            ctx.set_best_from(f.clone(), &v);
         }
         ctx.fitness = fitness;
         ctx.pool = pool;
