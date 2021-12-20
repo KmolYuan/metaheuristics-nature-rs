@@ -1,7 +1,5 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
-#[cfg(feature = "std")]
-use std::time::Instant;
 
 macro_rules! impl_basic_setting {
     ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
@@ -18,7 +16,6 @@ macro_rules! impl_basic_setting {
 /// This type should be included in the custom setting, which implements [`Setting`].
 #[derive(Debug, PartialEq)]
 pub struct BasicSetting {
-    pub(crate) task: Task,
     pub(crate) pop_num: usize,
     pub(crate) rpt: u64,
     pub(crate) seed: Option<u128>,
@@ -27,7 +24,6 @@ pub struct BasicSetting {
 impl Default for BasicSetting {
     fn default() -> Self {
         Self {
-            task: Task::MaxGen(200),
             pop_num: 200,
             rpt: 1,
             seed: None,
@@ -53,21 +49,6 @@ pub trait Setting {
     }
 }
 
-/// Terminal condition of the algorithm setting.
-#[derive(Debug, PartialEq)]
-pub enum Task {
-    /// Max generation.
-    MaxGen(u64),
-    /// Minimum fitness.
-    MinFit(f64),
-    /// Max time.
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    MaxTime(std::time::Duration),
-    /// Minimum delta value.
-    SlowDown(f64),
-}
-
 /// A public API for using optimization methods.
 ///
 /// Users can simply obtain their solution and see the result.
@@ -79,12 +60,12 @@ pub enum Task {
 /// The builder of this type can infer the algorithm by [`Setting::Algorithm`].
 ///
 /// ```
-/// use metaheuristics_nature::{Rga, Solver, Task};
+/// use metaheuristics_nature::{Rga, Solver};
 /// # use metaheuristics_nature::tests::TestObj as MyFunc;
 ///
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default())
-///     .task(Task::MaxGen(20))
+///     .task(|ctx| ctx.gen == 20)
 ///     .solve(MyFunc::new());
 /// // Get the result from objective function
 /// let ans = s.result();
@@ -106,9 +87,10 @@ pub struct Solver<F: ObjFunc, R> {
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     basic: BasicSetting,
     setting: S,
-    adaptive: Box<dyn Fn(&Context<F>) -> f64 + 'static>,
+    task: Box<dyn Fn(&Context<F>) -> bool + 'static>,
     record: Box<dyn Fn(&Context<F>) -> R + 'static>,
-    callback: Box<dyn FnMut(&Context<F>) -> bool + 'a>,
+    adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
+    callback: Box<dyn FnMut(&Context<F>) + 'a>,
 }
 
 impl<'a, S, F, R> SolverBuilder<'a, S, F, R>
@@ -118,13 +100,6 @@ where
     S::Algorithm: Algorithm<F>,
 {
     impl_basic_setting! {
-        /// Termination condition.
-        ///
-        /// # Default
-        ///
-        /// By default, the algorithm will iterate 200 generation.
-        fn task(Task)
-
         /// Population number.
         ///
         /// # Default
@@ -147,28 +122,18 @@ where
         fn seed(Option<u128>)
     }
 
-    /// Set adaptive function.
+    /// Termination condition.
     ///
-    /// The adaptive value can be access from [`ObjFunc::fitness`].
-    ///
-    /// ```
-    /// use metaheuristics_nature::{Rga, Solver, Task};
-    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    ///
-    /// let s = Solver::build(Rga::default())
-    ///     .task(Task::MaxGen(20))
-    ///     .adaptive(|ctx| ctx.gen as f64)
-    ///     .solve(MyFunc::new());
-    /// ```
+    /// The task function will be check every generation, break if it returns true.
     ///
     /// # Default
     ///
-    /// By default, this function returns zero.
-    pub fn adaptive<C>(mut self, adaptive: C) -> Self
+    /// By default, the algorithm will iterate 200 generation.
+    pub fn task<C>(mut self, task: C) -> Self
     where
-        C: Fn(&Context<F>) -> f64 + 'static,
+        C: Fn(&Context<F>) -> bool + 'static,
     {
-        self.adaptive = Box::new(adaptive);
+        self.task = Box::new(task);
         self
     }
 
@@ -182,11 +147,11 @@ where
     /// The following example records generation and spent time for the report.
     ///
     /// ```
-    /// use metaheuristics_nature::{Rga, Solver, Task};
+    /// use metaheuristics_nature::{Rga, Solver};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    ///     .task(Task::MaxGen(20))
+    ///     .task(|ctx| ctx.gen == 20)
     ///     .record(|ctx| (ctx.gen, ctx.adaptive))
     ///     .solve(MyFunc::new());
     /// let report: &[(u64, f64)] = s.report();
@@ -202,22 +167,76 @@ where
         SolverBuilder {
             basic: self.basic,
             setting: self.setting,
-            adaptive: self.adaptive,
+            task: self.task,
             record: Box::new(record),
+            adaptive: self.adaptive,
+            callback: self.callback,
+        }
+    }
+
+    /// Set adaptive function.
+    ///
+    /// The adaptive value can be access from [`ObjFunc::fitness`].
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    ///
+    /// let s = Solver::build(Rga::default())
+    ///     .task(|ctx| ctx.gen == 20)
+    ///     .adaptive(|ctx| ctx.gen as f64 / 20.)
+    ///     .solve(MyFunc::new());
+    /// ```
+    ///
+    /// The adaptive function is also allow to change the external variable.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    ///
+    /// let mut diff = None;
+    /// let s = Solver::build(Rga::default())
+    ///     .task(|ctx| ctx.gen == 20)
+    ///     .adaptive(|ctx| {
+    ///         if let Some(f) = diff {
+    ///             let d = f - ctx.best_f;
+    ///             diff = Some(d);
+    ///             d
+    ///         } else {
+    ///             diff = Some(ctx.best_f);
+    ///             ctx.best_f
+    ///         }
+    ///     })
+    ///     .solve(MyFunc::new());
+    /// ```
+    ///
+    /// # Default
+    ///
+    /// By default, this function returns zero.
+    pub fn adaptive<'b, C>(self, adaptive: C) -> SolverBuilder<'b, S, F, R>
+    where
+        'a: 'b,
+        C: FnMut(&Context<F>) -> f64 + 'b,
+    {
+        SolverBuilder {
+            basic: self.basic,
+            setting: self.setting,
+            task: self.task,
+            record: self.record,
+            adaptive: Box::new(adaptive),
             callback: self.callback,
         }
     }
 
     /// Set callback function.
     ///
-    /// The return value of the callback controls when to break the iteration.
-    ///
-    /// Return false to break, same as the while loop condition.
-    ///
     /// In the example below, `app` is a mutable variable that changes every time.
+    /// But we still need to use its method in [`task`](Self::task) condition,
+    /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock within a reference counter is required.
     ///
     /// ```
-    /// use metaheuristics_nature::{Rga, Solver, Task};
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// use std::{rc::Rc, sync::RwLock};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     /// # struct App;
     /// # impl App {
@@ -225,32 +244,34 @@ where
     /// #     fn show_fitness(&mut self, _f: f64) {}
     /// #     fn is_stop(&self) -> bool { false }
     /// # }
-    /// # let mut app = App;
     ///
+    /// let app = Rc::new(RwLock::new(App));
+    /// let app1 = app.clone();
+    /// let app2 = app.clone();
     /// let s = Solver::build(Rga::default())
-    ///     .task(Task::MaxGen(20))
-    ///     .callback(|ctx| {
+    ///     .task(move |ctx| ctx.gen == 20 || app1.read().unwrap().is_stop())
+    ///     .callback(move |ctx| {
+    ///         let mut app = app2.write().unwrap();
     ///         app.show_generation(ctx.gen);
     ///         app.show_fitness(ctx.best_f);
-    ///         !app.is_stop()
     ///     })
     ///     .solve(MyFunc::new());
     /// ```
     ///
-    /// Please see [`record`](Self::record) method if you went to change the input type.
-    ///
     /// # Default
     ///
-    /// By default, this function will not break the iteration and does nothing.
+    /// By default, this function does nothing.
     pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F, R>
     where
-        C: FnMut(&Context<F>) -> bool + 'b,
+        'a: 'b,
+        C: FnMut(&Context<F>) + 'b,
     {
         SolverBuilder {
             basic: self.basic,
             setting: self.setting,
-            adaptive: self.adaptive,
+            task: self.task,
             record: self.record,
+            adaptive: self.adaptive,
             callback: Box::new(callback),
         }
     }
@@ -261,59 +282,27 @@ where
         assert!(rpt > 0, "report interval should not be zero");
         let mut method = self.setting.algorithm();
         let mut ctx = Context::new(func, self.basic);
-        let adaptive = self.adaptive;
+        let task = self.task;
         let record = self.record;
+        let mut adaptive = self.adaptive;
         let mut callback = self.callback;
         let mut report = Vec::new();
-        #[cfg(feature = "std")]
-        let time_start = Instant::now();
-        ctx.adaptive = adaptive(&ctx);
-        ctx.init_pop();
-        method.init(&mut ctx);
-        #[cfg(feature = "std")]
-        let _ = { ctx.time = (Instant::now() - time_start).as_secs_f64() };
-        if !callback(&ctx) {
-            return Solver { ctx, report };
-        }
-        report.push(record(&ctx));
         loop {
-            ctx.gen += 1;
             ctx.adaptive = adaptive(&ctx);
-            let best_f = ctx.best_f.clone();
-            let diff = ctx.diff;
-            method.generation(&mut ctx);
-            ctx.diff = best_f.value() - ctx.best_f.value();
-            #[cfg(feature = "std")]
-            let _ = { ctx.time = (Instant::now() - time_start).as_secs_f64() };
+            if ctx.gen == 0 {
+                ctx.init_pop();
+                method.init(&mut ctx);
+            } else {
+                method.generation(&mut ctx);
+            }
             if ctx.gen % rpt == 0 {
-                if !callback(&ctx) {
-                    break;
-                }
                 report.push(record(&ctx));
             }
-            match ctx.task {
-                Task::MaxGen(v) => {
-                    if ctx.gen >= v {
-                        break;
-                    }
-                }
-                Task::MinFit(v) => {
-                    if ctx.best_f.value() <= v {
-                        break;
-                    }
-                }
-                #[cfg(feature = "std")]
-                Task::MaxTime(d) => {
-                    if Instant::now() - time_start >= d {
-                        break;
-                    }
-                }
-                Task::SlowDown(v) => {
-                    if ctx.diff / diff >= v {
-                        break;
-                    }
-                }
+            callback(&ctx);
+            if task(&ctx) {
+                break;
             }
+            ctx.gen += 1;
         }
         Solver { ctx, report }
     }
@@ -339,9 +328,10 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
         SolverBuilder {
             basic: S::default_basic(),
             setting,
-            adaptive: Box::new(|_| 0.),
+            task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|ctx| (ctx.gen, ctx.best_f.value())),
-            callback: Box::new(|_| true),
+            adaptive: Box::new(|_| 0.),
+            callback: Box::new(|_| ()),
         }
     }
 }

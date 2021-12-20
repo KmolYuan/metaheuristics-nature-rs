@@ -9,8 +9,6 @@ use alloc::{sync::Arc, vec, vec::Vec};
 pub struct Context<F: ObjFunc> {
     /// Random number generator.
     pub rng: Rng,
-    /// Termination condition.
-    pub task: Task,
     /// The best variables.
     pub best: Array1<f64>,
     /// Current fitness of all individuals.
@@ -19,16 +17,10 @@ pub struct Context<F: ObjFunc> {
     pub pool: Array2<f64>,
     /// Adaptive factor.
     pub adaptive: f64,
-    /// Time duration.
-    #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-    pub time: f64,
     /// Generation.
     pub gen: u64,
     /// Best fitness.
     pub best_f: F::Respond,
-    /// Gradient of the best fitness, between the current and the previous.
-    pub diff: f64,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -43,16 +35,12 @@ impl<F: ObjFunc> Context<F> {
         );
         Self {
             rng: Rng::new(s.seed),
-            task: s.task,
             best: Array1::zeros(dim),
             fitness: vec![F::Respond::INFINITY; s.pop_num],
             pool: Array2::zeros((s.pop_num, dim)),
             adaptive: 0.,
-            #[cfg(feature = "std")]
-            time: 0.,
             gen: 0,
             best_f: F::Respond::INFINITY,
-            diff: 0.0,
             func: Arc::new(func),
         }
     }

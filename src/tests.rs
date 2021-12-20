@@ -44,7 +44,7 @@ where
     S::Algorithm: utility::Algorithm<TestObj>,
 {
     let s = Solver::build(S::default())
-        .task(Task::MinFit(OFFSET))
+        .task(|ctx| ctx.best_f - OFFSET < 1e-20)
         .solve(TestObj::default());
     let ans = s.result();
     let x = s.best_parameters();

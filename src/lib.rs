@@ -48,7 +48,7 @@ extern crate core as std;
 pub use crate::{
     methods::*,
     obj_func::ObjFunc,
-    solver::{Setting, Solver, Task},
+    solver::{Setting, Solver},
 };
 
 /// A tool macro used to generate multiple builder functions (methods).
