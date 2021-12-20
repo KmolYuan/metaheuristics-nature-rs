@@ -6,7 +6,7 @@
 //!
 //! This method require floating point power function.
 use crate::utility::prelude::*;
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 use core::marker::PhantomData;
 
 /// Real-coded Genetic Algorithm settings.
@@ -188,7 +188,7 @@ where
     #[inline(always)]
     fn init(&mut self, ctx: &mut Context<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());
-        self.fitness_new = vec![R::INFINITY; ctx.fitness.len()];
+        self.fitness_new = ctx.fitness.clone();
     }
 
     #[inline(always)]

@@ -36,11 +36,11 @@ impl<F: ObjFunc> Context<F> {
         Self {
             rng: Rng::new(seed),
             best: Array1::zeros(dim),
-            fitness: vec![F::Fitness::INFINITY; pop_num],
+            fitness: vec![F::Fitness::default(); pop_num],
             pool: Array2::zeros((pop_num, dim)),
             adaptive: 0.,
             gen: 0,
-            best_f: F::Fitness::INFINITY,
+            best_f: F::Fitness::default(),
             func: Arc::new(func),
         }
     }
@@ -88,12 +88,9 @@ impl<F: ObjFunc> Context<F> {
         let mut fitness = self.fitness.clone();
         let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));
         #[cfg(not(feature = "parallel"))]
-        {
-            zip.for_each(|f, v| {
-                *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
-            });
-            self.find_best();
-        }
+        let _ = zip.for_each(|f, v| {
+            *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
+        });
         #[cfg(feature = "parallel")]
         {
             let (f, v) = zip
@@ -108,6 +105,16 @@ impl<F: ObjFunc> Context<F> {
         }
         self.pool = pool;
         self.fitness = fitness;
+        #[cfg(not(feature = "parallel"))]
+        {
+            let mut best = 0;
+            for i in 1..self.pop_num() {
+                if self.fitness[i] < self.fitness[best] {
+                    best = i;
+                }
+            }
+            self.set_best(best);
+        }
     }
 
     /// Set the index to best.
