@@ -64,7 +64,7 @@ pub struct Method {
 impl Method {
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for (i, j) in product(0..ctx.pop_num(), 0..ctx.pop_num()) {
-            if ctx.fitness[i].value() <= ctx.fitness[j].value() {
+            if ctx.fitness[i] <= ctx.fitness[j] {
                 continue;
             }
             let mut tmp = Array1::zeros(ctx.dim());
@@ -93,7 +93,7 @@ impl Method {
                 tmp[s] = ctx.check(s, v);
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
-            if tmp_f.value() < ctx.fitness[i].value() {
+            if tmp_f < ctx.fitness[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }

@@ -60,7 +60,7 @@ impl Method {
             }
         };
         for s in 0..ctx.dim() {
-            let diff = if ctx.fitness[j].value() < ctx.fitness[i].value() {
+            let diff = if ctx.fitness[j] < ctx.fitness[i] {
                 ctx.pool[[i, s]] - ctx.pool[[j, s]]
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]

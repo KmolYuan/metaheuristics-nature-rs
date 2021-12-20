@@ -5,12 +5,12 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{algorithm::*, context::*, random::*, respond::*};
+pub use self::{algorithm::*, context::*, fitness::*, random::*};
 
 mod algorithm;
 mod context;
+mod fitness;
 mod random;
-mod respond;
 
 /// Product two iterators together.
 ///

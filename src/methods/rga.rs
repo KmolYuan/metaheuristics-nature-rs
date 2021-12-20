@@ -10,7 +10,7 @@ use alloc::{vec, vec::Vec};
 use core::marker::PhantomData;
 
 /// Real-coded Genetic Algorithm settings.
-pub struct Rga<R: Respond> {
+pub struct Rga<R: Fitness> {
     cross: f64,
     mutate: f64,
     win: f64,
@@ -18,7 +18,7 @@ pub struct Rga<R: Respond> {
     _marker: PhantomData<R>,
 }
 
-impl<R: Respond> Rga<R> {
+impl<R: Fitness> Rga<R> {
     impl_builders! {
         /// Crossing probability.
         fn cross(f64)
@@ -31,7 +31,7 @@ impl<R: Respond> Rga<R> {
     }
 }
 
-impl<R: Respond> Default for Rga<R> {
+impl<R: Fitness> Default for Rga<R> {
     fn default() -> Self {
         Self {
             cross: 0.95,
@@ -43,7 +43,7 @@ impl<R: Respond> Default for Rga<R> {
     }
 }
 
-impl<R: Respond> Setting for Rga<R> {
+impl<R: Fitness> Setting for Rga<R> {
     type Algorithm = Method<R>;
 
     fn algorithm(self) -> Self::Algorithm {
@@ -66,7 +66,7 @@ impl<R: Respond> Setting for Rga<R> {
 }
 
 /// Real-coded Genetic Algorithm type.
-pub struct Method<R: Respond> {
+pub struct Method<R: Fitness> {
     cross: f64,
     mutate: f64,
     win: f64,
@@ -75,10 +75,10 @@ pub struct Method<R: Respond> {
     pool_new: Array2<f64>,
 }
 
-impl<R: Respond> Method<R> {
+impl<R: Fitness> Method<R> {
     fn crossover<F>(&mut self, ctx: &mut Context<F>)
     where
-        F: ObjFunc<Respond = R>,
+        F: ObjFunc<Fitness = R>,
     {
         for i in (0..(ctx.pop_num() - 1)).step_by(2) {
             if !ctx.rng.maybe(self.cross) {
@@ -113,7 +113,7 @@ impl<R: Respond> Method<R> {
                     (f, v)
                 })
                 .collect::<Vec<_>>();
-            v.sort_unstable_by(|(a, _), (b, _)| a.value().partial_cmp(&b.value()).unwrap());
+            v.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
             ctx.assign_from(i, v[0].0.clone(), &v[0].1);
             ctx.assign_from(i + 1, v[1].0.clone(), &v[1].1);
         }
@@ -121,7 +121,7 @@ impl<R: Respond> Method<R> {
 
     fn get_delta<F>(&self, ctx: &Context<F>, y: f64) -> f64
     where
-        F: ObjFunc<Respond = R>,
+        F: ObjFunc<Fitness = R>,
     {
         let r = if ctx.gen < 100 {
             ctx.gen as f64 / 100.
@@ -137,7 +137,7 @@ impl<R: Respond> Method<R> {
 
     fn mutate<F>(&mut self, ctx: &mut Context<F>)
     where
-        F: ObjFunc<Respond = R>,
+        F: ObjFunc<Fitness = R>,
     {
         for i in 0..ctx.pop_num() {
             if !ctx.rng.maybe(self.mutate) {
@@ -156,7 +156,7 @@ impl<R: Respond> Method<R> {
 
     fn select<F>(&mut self, ctx: &mut Context<F>)
     where
-        F: ObjFunc<Respond = R>,
+        F: ObjFunc<Fitness = R>,
     {
         for i in 0..ctx.pop_num() {
             let (j, k) = {
@@ -164,7 +164,7 @@ impl<R: Respond> Method<R> {
                 ctx.rng.vector(&mut v, 1, 0..ctx.pop_num());
                 (v[1], v[2])
             };
-            if ctx.fitness[j].value() > ctx.fitness[k].value() && ctx.rng.maybe(self.win) {
+            if ctx.fitness[j] > ctx.fitness[k] && ctx.rng.maybe(self.win) {
                 self.fitness_new[i] = ctx.fitness[k].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
@@ -185,8 +185,8 @@ impl<R: Respond> Method<R> {
 
 impl<F, R> Algorithm<F> for Method<R>
 where
-    F: ObjFunc<Respond = R>,
-    R: Respond,
+    F: ObjFunc<Fitness = R>,
+    R: Fitness,
 {
     #[inline(always)]
     fn init(&mut self, ctx: &mut Context<F>) {

@@ -1,4 +1,4 @@
-use crate::utility::Respond;
+use crate::utility::Fitness;
 
 /// The base of the objective function.
 ///
@@ -15,9 +15,9 @@ use crate::utility::Respond;
 ///
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
-///     type Respond = f64;
+///     type Fitness = f64;
 ///
-///     fn fitness(&self, v: &[f64], _: f64) -> Self::Respond {
+///     fn fitness(&self, v: &[f64], _: f64) -> Self::Fitness {
 ///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 ///     }
 ///
@@ -43,7 +43,7 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// The result type.
     type Result;
     /// Representation of the fitness value.
-    type Respond: Respond;
+    type Fitness: Fitness;
 
     /// Return fitness, the smaller value represents a good result.
     ///
@@ -72,7 +72,7 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
-    fn fitness(&self, v: &[f64], f: f64) -> Self::Respond;
+    fn fitness(&self, v: &[f64], f: f64) -> Self::Fitness;
 
     /// Return the final result of the problem.
     ///

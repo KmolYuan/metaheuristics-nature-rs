@@ -2,15 +2,18 @@
 //!
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::utility::prelude::*;
+use alloc::vec::Vec;
+use core::marker::PhantomData;
 
 /// Particle Swarm Optimization settings.
-pub struct Pso {
+pub struct Pso<R: Fitness> {
     cognition: f64,
     social: f64,
     velocity: f64,
+    _marker: PhantomData<R>,
 }
 
-impl Pso {
+impl<R: Fitness> Pso<R> {
     impl_builders! {
         /// Cognition factor.
         fn cognition(f64)
@@ -21,18 +24,19 @@ impl Pso {
     }
 }
 
-impl Default for Pso {
+impl<R: Fitness> Default for Pso<R> {
     fn default() -> Self {
         Self {
             cognition: 2.05,
             social: 2.05,
             velocity: 1.3,
+            _marker: PhantomData,
         }
     }
 }
 
-impl Setting for Pso {
-    type Algorithm = Method;
+impl<R: Fitness> Setting for Pso<R> {
+    type Algorithm = Method<R>;
 
     fn algorithm(self) -> Self::Algorithm {
         Method {
@@ -40,7 +44,7 @@ impl Setting for Pso {
             social: self.social,
             velocity: self.velocity,
             best_past: Array2::zeros((1, 1)),
-            best_past_f: Array1::ones(1) * f64::INFINITY,
+            best_past_f: Vec::new(),
         }
     }
 
@@ -53,19 +57,19 @@ impl Setting for Pso {
 }
 
 /// Particle Swarm Optimization type.
-pub struct Method {
+pub struct Method<R: Fitness> {
     cognition: f64,
     social: f64,
     velocity: f64,
     best_past: Array2<f64>,
-    best_past_f: Array1<f64>,
+    best_past_f: Vec<R>,
 }
 
-impl<F: ObjFunc> Algorithm<F> for Method {
+impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     #[inline(always)]
     fn init(&mut self, ctx: &mut Context<F>) {
         self.best_past = ctx.pool.clone();
-        self.best_past_f = Array1::from_iter(ctx.fitness.iter().map(|r| r.value()));
+        self.best_past_f = ctx.fitness.clone();
     }
 
     fn generation(&mut self, ctx: &mut Context<F>) {
@@ -89,8 +93,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                     v[s] = ctx.check(s, variable);
                 }
                 *f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
-                if f.value() < *f_past {
-                    *f_past = f.value();
+                if *f < *f_past {
+                    *f_past = f.clone();
                     past.assign(&v);
                 }
             });
@@ -110,8 +114,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                         v[s] = ctx.check(s, variable);
                     }
                     *f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
-                    if f.value() < *past_f {
-                        *past_f = f.value();
+                    if *f < *past_f {
+                        *past_f = f.clone();
                         past.assign(&v);
                     }
                     (f, v)

@@ -314,7 +314,7 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
     /// + `adaptive` function returns zero.
     /// + `record` function returns generation (`u64`) and best fitness (`f64`).
     /// + `callback` function will not break the iteration and does nothing.
-    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, (u64, f64)>
+    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, (u64, F::Fitness)>
     where
         S: Setting,
     {
@@ -322,7 +322,7 @@ impl<F: ObjFunc> Solver<F, (u64, f64)> {
             basic: S::default_basic(),
             setting,
             task: Box::new(|ctx| ctx.gen >= 200),
-            record: Box::new(|ctx| (ctx.gen, ctx.best_f.value())),
+            record: Box::new(|ctx| (ctx.gen, ctx.best_f.clone())),
             adaptive: Box::new(|_| 0.),
             callback: Box::new(|_| ()),
         }
@@ -353,8 +353,8 @@ impl<F: ObjFunc, R> Solver<F, R> {
 
     /// Get the best fitness.
     #[inline(always)]
-    pub fn best_fitness(&self) -> f64 {
-        self.ctx.best_f.value()
+    pub fn best_fitness(&self) -> F::Fitness {
+        self.ctx.best_f.clone()
     }
 
     /// Get the result of the objective function.

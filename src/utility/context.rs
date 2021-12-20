@@ -12,7 +12,7 @@ pub struct Context<F: ObjFunc> {
     /// The best variables.
     pub best: Array1<f64>,
     /// Current fitness of all individuals.
-    pub fitness: Vec<F::Respond>,
+    pub fitness: Vec<F::Fitness>,
     /// Current variables of all individuals.
     pub pool: Array2<f64>,
     /// Adaptive factor.
@@ -20,7 +20,7 @@ pub struct Context<F: ObjFunc> {
     /// Generation.
     pub gen: u64,
     /// Best fitness.
-    pub best_f: F::Respond,
+    pub best_f: F::Fitness,
     /// The objective function.
     pub func: Arc<F>,
 }
@@ -36,11 +36,11 @@ impl<F: ObjFunc> Context<F> {
         Self {
             rng: Rng::new(s.seed),
             best: Array1::zeros(dim),
-            fitness: vec![F::Respond::INFINITY; s.pop_num],
+            fitness: vec![F::Fitness::INFINITY; s.pop_num],
             pool: Array2::zeros((s.pop_num, dim)),
             adaptive: 0.,
             gen: 0,
-            best_f: F::Respond::INFINITY,
+            best_f: F::Fitness::INFINITY,
             func: Arc::new(func),
         }
     }
@@ -119,7 +119,7 @@ impl<F: ObjFunc> Context<F> {
 
     /// Set the fitness and variables to best.
     #[inline(always)]
-    pub fn set_best_from<'a, A>(&mut self, f: F::Respond, v: A)
+    pub fn set_best_from<'a, A>(&mut self, f: F::Fitness, v: A)
     where
         A: AsArray<'a, f64>,
     {
@@ -136,7 +136,7 @@ impl<F: ObjFunc> Context<F> {
 
     /// Assign the index from source.
     #[inline(always)]
-    pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Respond, v: A)
+    pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Fitness, v: A)
     where
         A: AsArray<'a, f64>,
     {
@@ -148,7 +148,7 @@ impl<F: ObjFunc> Context<F> {
     pub fn find_best(&mut self) {
         let mut best = 0;
         for i in 1..self.pop_num() {
-            if self.fitness[i].value() < self.fitness[best].value() {
+            if self.fitness[i] < self.fitness[best] {
                 best = i;
             }
         }
