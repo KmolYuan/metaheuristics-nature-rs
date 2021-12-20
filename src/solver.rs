@@ -219,12 +219,8 @@ where
         C: FnMut(&Context<F>) -> f64 + 'b,
     {
         SolverBuilder {
-            basic: self.basic,
-            setting: self.setting,
-            task: self.task,
-            record: self.record,
             adaptive: Box::new(adaptive),
-            callback: self.callback,
+            ..self
         }
     }
 
@@ -267,12 +263,8 @@ where
         C: FnMut(&Context<F>) + 'b,
     {
         SolverBuilder {
-            basic: self.basic,
-            setting: self.setting,
-            task: self.task,
-            record: self.record,
-            adaptive: self.adaptive,
             callback: Box::new(callback),
+            ..self
         }
     }
 
