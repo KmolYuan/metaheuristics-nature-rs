@@ -7,7 +7,7 @@
 /// In the following example, an "important" marker has higher priority in the comparison.
 ///
 /// ```
-/// use metaheuristics_nature::{ObjFunc, utility::Fitness};
+/// use metaheuristics_nature::{utility::Fitness, ObjFunc};
 /// use std::cmp::Ordering;
 /// # struct MyFunc([f64; 2], [f64; 2]);
 ///
@@ -32,7 +32,10 @@
 ///     type Fitness = MarkerFitness;
 ///
 ///     fn fitness(&self, v: &[f64], _: f64) -> Self::Fitness {
-///        MarkerFitness { f: v[0], important: v[0] + v[1] < 1. }
+///         MarkerFitness {
+///             f: v[0],
+///             important: v[0] + v[1] < 1.,
+///         }
 ///     }
 ///
 ///     fn result(&self, v: &[f64]) -> Self::Result {

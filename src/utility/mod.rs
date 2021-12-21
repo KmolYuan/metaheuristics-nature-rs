@@ -5,19 +5,22 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{algorithm::*, context::*, fitness::*, random::*};
+pub use self::{algorithm::*, context::*, fitness::*, random::*, setting::*, solver_builder::*};
 
 mod algorithm;
 mod context;
 mod fitness;
 mod random;
+mod setting;
+mod solver_builder;
 
 /// Product two iterators together.
 ///
 /// ```
 /// use metaheuristics_nature::utility::product;
 ///
-/// let ans = product(['a', 'b', 'c'].into_iter().cloned(), 0..3).collect::<Vec<_>>();
+/// let arr_iter = IntoIterator::into_iter(['a', 'b', 'c']);
+/// let ans = product(arr_iter, 0..3);
 /// assert_eq!(
 ///     vec![
 ///         ('a', 0),
@@ -30,7 +33,7 @@ mod random;
 ///         ('c', 1),
 ///         ('c', 2),
 ///     ],
-///     ans
+///     ans.collect::<Vec<_>>()
 /// );
 /// ```
 pub fn product<A, B, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, B)>
@@ -56,7 +59,8 @@ where
 /// To implement an algorithm, please see [`Algorithm`].
 pub mod prelude {
     pub use super::*;
-    pub use crate::{solver::*, *};
+    pub use crate::*;
+
     #[doc(no_inline)]
     pub use ndarray::{s, Array1, Array2, AsArray, Axis, Zip};
     #[cfg(feature = "parallel")]

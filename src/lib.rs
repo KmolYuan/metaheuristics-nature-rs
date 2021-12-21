@@ -10,7 +10,7 @@
 //!
 //! # Algorithm
 //!
-//! There are two traits [`Algorithm`](crate::utility::Algorithm) and [`Setting`].
+//! There are two traits [`utility::Algorithm`] and [`utility::Setting`].
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -53,11 +53,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use crate::{
-    methods::*,
-    obj_func::ObjFunc,
-    solver::{Setting, Solver},
-};
+pub use crate::{methods::*, obj_func::*, solver::*};
 
 /// A tool macro used to generate multiple builder functions (methods).
 ///

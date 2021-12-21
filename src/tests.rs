@@ -1,5 +1,5 @@
 #![doc(hidden)]
-use crate::*;
+use crate::utility::prelude::*;
 
 const OFFSET: f64 = 7.;
 

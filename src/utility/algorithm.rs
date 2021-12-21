@@ -2,7 +2,7 @@ use crate::utility::prelude::*;
 
 /// The methods of the meta-heuristic algorithms.
 ///
-/// 1. Implement [`Setting`](crate::Setting) trait then indicate to a "method" type.
+/// 1. Implement [`Setting`] trait then indicate to a "method" type.
 /// 1. Implement `Algorithm` trait on the "method" type.
 ///
 /// Usually, the "method" type that implements this trait will not leak from the API.
@@ -10,7 +10,7 @@ use crate::utility::prelude::*;
 /// So the "method" type is used to store the additional data if any.
 ///
 /// ```
-/// use metaheuristics_nature::{utility::*, ObjFunc, Setting};
+/// use metaheuristics_nature::utility::prelude::*;
 ///
 /// /// A setting with additional fields.
 /// #[derive(Default)]

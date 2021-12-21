@@ -44,6 +44,8 @@ impl AtomicU128 {
 /// This generator doesn't require mutability,
 /// because the state is saved as atomic values.
 pub struct Rng {
+    /// Seed of this generator.
+    pub seed: u128,
     s1: AtomicU128,
     s2: AtomicU128,
 }
@@ -52,16 +54,17 @@ impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
     pub fn new(seed: Option<u128>) -> Self {
-        let (s1, s2) = Rand64::new(match seed {
+        let seed = match seed {
             Some(seed) => seed,
             None => {
                 let mut buf = [0; size_of::<u128>()];
                 getrandom(&mut buf).unwrap();
                 u128::from_le_bytes(buf)
             }
-        })
-        .state();
+        };
+        let (s1, s2) = Rand64::new(seed).state();
         Self {
+            seed,
             s1: AtomicU128::new(s1),
             s2: AtomicU128::new(s2),
         }
