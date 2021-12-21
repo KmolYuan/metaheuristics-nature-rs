@@ -1,5 +1,5 @@
 use crate::utility::prelude::*;
-use alloc::{sync::Arc, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 
 /// The base class of algorithms.
 ///
@@ -22,7 +22,7 @@ pub struct Context<F: ObjFunc> {
     /// Best fitness.
     pub best_f: F::Fitness,
     /// The objective function.
-    pub func: Arc<F>,
+    pub func: F,
 }
 
 impl<F: ObjFunc> Context<F> {
@@ -41,7 +41,7 @@ impl<F: ObjFunc> Context<F> {
             adaptive: 0.,
             gen: 0,
             best_f: F::Fitness::default(),
-            func: Arc::new(func),
+            func,
         }
     }
 
