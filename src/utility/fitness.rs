@@ -1,4 +1,4 @@
-/// The return value of the objective function.
+/// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
 /// More advanced, any type that implements the requirement trait can be used,
@@ -20,9 +20,9 @@
 /// impl PartialOrd for MarkerFitness {
 ///     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 ///         match (self.important, other.important) {
-///             (false, false) | (true, true) => self.f.partial_cmp(&other.f),
 ///             (true, false) => Some(Ordering::Greater),
 ///             (false, true) => Some(Ordering::Less),
+///             (false, false) | (true, true) => self.f.partial_cmp(&other.f),
 ///         }
 ///     }
 /// }
