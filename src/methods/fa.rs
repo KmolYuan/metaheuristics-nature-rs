@@ -87,6 +87,7 @@ impl Method {
         (tmp, f)
     }
 
+    #[cfg(not(feature = "parallel"))]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num() - 1 {
             for j in i + 1..ctx.pop_num() {
@@ -101,7 +102,31 @@ impl Method {
                 }
             }
         }
-        self.alpha *= 0.95;
+    }
+
+    #[cfg(feature = "parallel")]
+    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        use std::sync::Mutex;
+        let fitness = Mutex::new(ctx.fitness.clone());
+        let pool = Mutex::new(ctx.pool.clone());
+        (0..ctx.pop_num() - 1).into_par_iter().for_each(|i| {
+            (i + 1..ctx.pop_num()).into_par_iter().for_each(|j| {
+                let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
+                    (i, j)
+                } else {
+                    (j, i)
+                };
+                let (v, f) = self.move_firefly(ctx, i, j);
+                if f < ctx.fitness[i] {
+                    let mut fitness = fitness.lock().unwrap();
+                    let mut pool = pool.lock().unwrap();
+                    fitness[i] = f;
+                    pool.slice_mut(s![i, ..]).assign(&v);
+                }
+            });
+        });
+        ctx.fitness = fitness.into_inner().unwrap();
+        ctx.pool = pool.into_inner().unwrap();
     }
 }
 
@@ -109,6 +134,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
     fn generation(&mut self, ctx: &mut Context<F>) {
         self.move_fireflies(ctx);
+        self.alpha *= 0.95;
         ctx.find_best();
     }
 }
