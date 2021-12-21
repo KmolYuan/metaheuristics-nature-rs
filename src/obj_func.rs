@@ -1,6 +1,6 @@
-use crate::utility::Fitness;
+use crate::utility::prelude::*;
 
-/// The base of the objective function.
+/// A trait for the objective function.
 ///
 /// ```
 /// use metaheuristics_nature::ObjFunc;
@@ -34,11 +34,11 @@ use crate::utility::Fitness;
 ///     }
 /// }
 /// ```
-/// The objective function returns fitness value that used to evaluate the objective.
 ///
+/// The objective function returns fitness value that used to evaluate the objective.
 /// The lower bound and upper bound represents the number of variables at the same time.
 ///
-/// This trait is designed as immutable.
+/// This trait is designed as immutable and there should only has shared data.
 pub trait ObjFunc: Sync + Send + 'static {
     /// The result type.
     type Result;
@@ -50,8 +50,13 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// # How to design the fitness value?
     ///
     /// Regularly, the evaluation value **should not** lower than zero,
-    /// because a negative infinity can directly break the result.
-    /// Instead, a positive enhanced floating point value is the better choice.
+    /// because it is not easy to control with multiplication,
+    /// and a negative infinity can directly break the result.
+    /// Instead, a positive enhanced floating point value is the better choice,
+    /// and the zero is the best result.
+    ///
+    /// In another hand, some marker can help you to compare with other design,
+    /// please see [`Fitness`] for more information.
     ///
     /// # Penalty
     ///
@@ -72,6 +77,11 @@ pub trait ObjFunc: Sync + Send + 'static {
     /// So that, we use secondary evaluation function to measure the result from other requirements,
     /// we call it "constraint" or "penalty function".
     /// The penalty value usually multiply a weight factor for increasing its influence.
+    ///
+    /// # Adaptive Value
+    ///
+    /// Sometimes a value that adjust with converge states can help to restrict the searching.
+    /// The "adaptive function" can be set in [`SolverBuilder::adaptive`] method.
     fn fitness(&self, v: &[f64], f: f64) -> Self::Fitness;
 
     /// Return the final result of the problem.

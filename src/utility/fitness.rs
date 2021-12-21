@@ -1,7 +1,7 @@
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
-/// More advanced, any type that implements the requirement trait can be used,
+/// But more advanced is that any type that implements the requirement trait can be used,
 /// so the fitness can add special mark during comparison.
 ///
 /// In the following example, an "important" marker has higher priority in the comparison.
@@ -31,10 +31,10 @@
 ///     type Result = f64;
 ///     type Fitness = MarkerFitness;
 ///
-///     fn fitness(&self, v: &[f64], _: f64) -> Self::Fitness {
+///     fn fitness(&self, v: &[f64], f: f64) -> Self::Fitness {
 ///         MarkerFitness {
 ///             f: v[0],
-///             important: v[0] + v[1] < 1.,
+///             important: v[0] + v[1] * f < 1.,
 ///         }
 ///     }
 ///
