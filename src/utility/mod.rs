@@ -14,37 +14,6 @@ mod random;
 mod setting;
 mod solver_builder;
 
-/// Product two iterators together.
-///
-/// ```
-/// use metaheuristics_nature::utility::product;
-///
-/// let arr_iter = IntoIterator::into_iter(['a', 'b', 'c']);
-/// let ans = product(arr_iter, 0..3);
-/// assert_eq!(
-///     vec![
-///         ('a', 0),
-///         ('a', 1),
-///         ('a', 2),
-///         ('b', 0),
-///         ('b', 1),
-///         ('b', 2),
-///         ('c', 0),
-///         ('c', 1),
-///         ('c', 2),
-///     ],
-///     ans.collect::<Vec<_>>()
-/// );
-/// ```
-pub fn product<A, B, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = (A, B)>
-where
-    A: Clone,
-    I1: Iterator<Item = A>,
-    I2: Iterator<Item = B> + Clone,
-{
-    iter1.flat_map(move |e| core::iter::repeat(e).zip(iter2.clone()))
-}
-
 /// A prelude module for algorithm implementation.
 ///
 /// This module includes all items of this crate, some hidden types,

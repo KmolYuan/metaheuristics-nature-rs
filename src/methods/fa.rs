@@ -26,9 +26,9 @@ impl Fa {
 impl Default for Fa {
     fn default() -> Self {
         Self {
-            alpha: 0.05,
+            alpha: 1.,
             beta_min: 1.,
-            gamma: 1.,
+            gamma: 0.01,
         }
     }
 }
@@ -57,34 +57,48 @@ pub struct Method {
 }
 
 impl Method {
-    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for (i, j) in product(0..ctx.pop_num(), 0..ctx.pop_num()) {
-            if ctx.fitness[i] <= ctx.fitness[j] {
-                continue;
-            }
-            let mut tmp = Array1::zeros(ctx.dim());
-            let pool_j = ctx.pool.slice(s![j, ..]);
-            let r = {
-                let mut dist = 0.;
-                for s in 0..ctx.dim() {
-                    let diff = ctx.pool[[i, s]] - pool_j[s];
-                    dist += diff * diff;
-                }
-                dist
-            };
-            #[cfg(all(feature = "std", not(feature = "libm")))]
-            let gamma_r = (-self.gamma * r).exp();
-            #[cfg(feature = "libm")]
-            let gamma_r = libm::exp(-self.gamma * r);
-            let beta = self.beta_min * gamma_r;
+    fn move_firefly<F: ObjFunc>(
+        &self,
+        ctx: &Context<F>,
+        i: usize,
+        j: usize,
+    ) -> (Array1<f64>, F::Fitness) {
+        let mut tmp = Array1::zeros(ctx.dim());
+        let pool_j = ctx.pool.slice(s![j, ..]);
+        let r = {
+            let mut dist = 0.;
             for s in 0..ctx.dim() {
-                let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
-                let v = ctx.pool[[i, s]] + beta * (pool_j[s] - ctx.pool[[i, s]]) + step;
-                tmp[s] = ctx.check(s, v);
+                let diff = ctx.pool[[i, s]] - pool_j[s];
+                dist += diff * diff;
             }
-            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
-            if tmp_f < ctx.fitness[i] {
-                ctx.assign_from(i, tmp_f, &tmp);
+            dist
+        };
+        #[cfg(all(feature = "std", not(feature = "libm")))]
+        let gamma_r = (-self.gamma * r).exp();
+        #[cfg(feature = "libm")]
+        let gamma_r = libm::exp(-self.gamma * r);
+        let beta = self.beta_min * gamma_r;
+        for s in 0..ctx.dim() {
+            let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
+            let v = ctx.pool[[i, s]] + beta * (pool_j[s] - ctx.pool[[i, s]]) + step;
+            tmp[s] = ctx.check(s, v);
+        }
+        let f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
+        (tmp, f)
+    }
+
+    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        for i in 0..ctx.pop_num() - 1 {
+            for j in i + 1..ctx.pop_num() {
+                let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
+                    (i, j)
+                } else {
+                    (j, i)
+                };
+                let (tmp, f) = self.move_firefly(ctx, i, j);
+                if f < ctx.fitness[i] {
+                    ctx.assign_from(i, f, &tmp);
+                }
             }
         }
         self.alpha *= 0.95;
