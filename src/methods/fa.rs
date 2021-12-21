@@ -27,7 +27,7 @@ impl Default for Fa {
     fn default() -> Self {
         Self {
             alpha: 0.05,
-            beta_min: 0.2,
+            beta_min: 1.,
             gamma: 1.,
         }
     }
@@ -41,7 +41,6 @@ impl Setting for Fa {
             alpha: self.alpha,
             beta_min: self.beta_min,
             gamma: self.gamma,
-            beta0: 1.,
         }
     }
 
@@ -55,7 +54,6 @@ pub struct Method {
     alpha: f64,
     beta_min: f64,
     gamma: f64,
-    beta0: f64,
 }
 
 impl Method {
@@ -65,11 +63,7 @@ impl Method {
                 continue;
             }
             let mut tmp = Array1::zeros(ctx.dim());
-            let pool_j = if i == j {
-                ctx.best.view()
-            } else {
-                ctx.pool.slice(s![j, ..])
-            };
+            let pool_j = ctx.pool.slice(s![j, ..]);
             let r = {
                 let mut dist = 0.;
                 for s in 0..ctx.dim() {
@@ -82,11 +76,10 @@ impl Method {
             let gamma_r = (-self.gamma * r).exp();
             #[cfg(feature = "libm")]
             let gamma_r = libm::exp(-self.gamma * r);
-            let beta = (self.beta0 - self.beta_min) * gamma_r + self.beta_min;
+            let beta = self.beta_min * gamma_r;
             for s in 0..ctx.dim() {
-                let v = ctx.pool[[i, s]]
-                    + beta * (pool_j[s] - ctx.pool[[i, s]])
-                    + self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
+                let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
+                let v = ctx.pool[[i, s]] + beta * (pool_j[s] - ctx.pool[[i, s]]) + step;
                 tmp[s] = ctx.check(s, v);
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
@@ -94,6 +87,7 @@ impl Method {
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }
+        self.alpha *= 0.95;
     }
 }
 

@@ -7,7 +7,7 @@ pub struct TestObj([f64; 4], [f64; 4]);
 
 impl Default for TestObj {
     fn default() -> Self {
-        Self([0.; 4], [50.; 4])
+        Self([-50.; 4], [50.; 4])
     }
 }
 
