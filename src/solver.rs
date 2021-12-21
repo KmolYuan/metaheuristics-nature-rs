@@ -37,32 +37,32 @@ impl<F: ObjFunc, R> Solver<F, R> {
     ///
     /// It's useful when you need to get the preprocessed data from the initialization process,
     /// which is stored in the objective function.
-    #[inline(always)]
     pub fn func(&self) -> &F {
         &self.ctx.func
     }
 
     /// Get the history for plotting.
-    #[inline(always)]
     pub fn report(&self) -> &[R] {
         &self.report
     }
 
     /// Get the best parameters.
-    #[inline(always)]
     pub fn best_parameters(&self) -> &[f64] {
         self.ctx.best.as_slice().unwrap()
     }
 
     /// Get the best fitness.
-    #[inline(always)]
     pub fn best_fitness(&self) -> F::Fitness {
         self.ctx.best_f.clone()
     }
 
     /// Get the result of the objective function.
-    #[inline(always)]
     pub fn result(&self) -> F::Result {
         self.func().result(self.best_parameters())
+    }
+
+    /// Seed of the random number generator.
+    pub fn seed(&self) -> u128 {
+        self.ctx.rng.seed()
     }
 }

@@ -44,8 +44,7 @@ impl AtomicU128 {
 /// This generator doesn't require mutability,
 /// because the state is saved as atomic values.
 pub struct Rng {
-    /// Seed of this generator.
-    pub seed: u128,
+    seed: u128,
     s1: AtomicU128,
     s2: AtomicU128,
 }
@@ -68,6 +67,11 @@ impl Rng {
             s1: AtomicU128::new(s1),
             s2: AtomicU128::new(s2),
         }
+    }
+
+    /// Seed of this generator.
+    pub fn seed(&self) -> u128 {
+        self.seed
     }
 
     /// Generate a random values between `0..1` (exclusive).
