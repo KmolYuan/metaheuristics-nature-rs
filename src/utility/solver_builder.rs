@@ -213,7 +213,7 @@ where
     }
 }
 
-impl<F: ObjFunc> Solver<F, (u64, f64)> {
+impl<F: ObjFunc> Solver<F, (u64, F::Fitness)> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
     /// Please check [`SolverBuilder`] type, it will help you choose your configuration.

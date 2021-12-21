@@ -6,6 +6,7 @@ use alloc::{vec, vec::Vec};
 /// This type provides a shared dataset if you want to implement a new method.
 ///
 /// Please see [`Algorithm`] for the implementation.
+#[non_exhaustive]
 pub struct Context<F: ObjFunc> {
     /// Random number generator.
     pub rng: Rng,
