@@ -106,11 +106,15 @@ impl Method {
 
     #[cfg(feature = "parallel")]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+        use rayon::iter::repeat;
         use std::sync::Mutex;
+
         let fitness = Mutex::new(ctx.fitness.clone());
         let pool = Mutex::new(ctx.pool.clone());
-        (0..ctx.pop_num() - 1).into_par_iter().for_each(|i| {
-            (i + 1..ctx.pop_num()).into_par_iter().for_each(|j| {
+        (0..ctx.pop_num() - 1)
+            .into_par_iter()
+            .flat_map(|i| repeat(i).zip(i + 1..ctx.pop_num()))
+            .for_each(|(i, j)| {
                 let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
                     (i, j)
                 } else {
@@ -124,7 +128,6 @@ impl Method {
                     pool.slice_mut(s![i, ..]).assign(&v);
                 }
             });
-        });
         ctx.fitness = fitness.into_inner().unwrap();
         ctx.pool = pool.into_inner().unwrap();
     }
