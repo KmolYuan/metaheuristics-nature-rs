@@ -6,14 +6,14 @@ use alloc::vec::Vec;
 use core::marker::PhantomData;
 
 /// Particle Swarm Optimization settings.
-pub struct Pso<R: Fitness> {
+pub struct Pso<F: Fitness> {
     cognition: f64,
     social: f64,
     velocity: f64,
-    _marker: PhantomData<R>,
+    _marker: PhantomData<F>,
 }
 
-impl<R: Fitness> Pso<R> {
+impl<F: Fitness> Pso<F> {
     impl_builders! {
         /// Cognition factor.
         fn cognition(f64)
@@ -24,7 +24,7 @@ impl<R: Fitness> Pso<R> {
     }
 }
 
-impl<R: Fitness> Default for Pso<R> {
+impl<F: Fitness> Default for Pso<F> {
     fn default() -> Self {
         Self {
             cognition: 2.05,
@@ -35,8 +35,8 @@ impl<R: Fitness> Default for Pso<R> {
     }
 }
 
-impl<R: Fitness> Setting for Pso<R> {
-    type Algorithm = Method<R>;
+impl<F: Fitness> Setting for Pso<F> {
+    type Algorithm = Method<F>;
 
     fn algorithm(self) -> Self::Algorithm {
         Method {
@@ -54,12 +54,12 @@ impl<R: Fitness> Setting for Pso<R> {
 }
 
 /// Particle Swarm Optimization type.
-pub struct Method<R: Fitness> {
+pub struct Method<F: Fitness> {
     cognition: f64,
     social: f64,
     velocity: f64,
     best_past: Array2<f64>,
-    best_past_f: Vec<R>,
+    best_past_f: Vec<F>,
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
