@@ -63,16 +63,15 @@ impl Method {
         i: usize,
         j: usize,
     ) -> (Array1<f64>, F::Fitness) {
-        let mut tmp = Array1::zeros(ctx.dim());
-        let pool_j = ctx.pool.slice(s![j, ..]);
-        let r = {
-            let mut dist = 0.;
-            for s in 0..ctx.dim() {
-                let diff = ctx.pool[[i, s]] - pool_j[s];
-                dist += diff * diff;
-            }
-            dist
+        let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
+            (i, j)
+        } else {
+            (j, i)
         };
+        let mut v = Array1::zeros(ctx.dim());
+        let r = (&ctx.pool.slice(s![i, ..]) - &ctx.pool.slice(s![j, ..]))
+            .mapv(|v| v * v)
+            .sum();
         #[cfg(all(feature = "std", not(feature = "libm")))]
         let gamma_r = (-self.gamma * r).exp();
         #[cfg(feature = "libm")]
@@ -80,25 +79,20 @@ impl Method {
         let beta = self.beta_min * gamma_r;
         for s in 0..ctx.dim() {
             let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
-            let v = ctx.pool[[i, s]] + beta * (pool_j[s] - ctx.pool[[i, s]]) + step;
-            tmp[s] = ctx.check(s, v);
+            let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);
+            v[s] = ctx.check(s, surround + step);
         }
-        let f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
-        (tmp, f)
+        let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
+        (v, f)
     }
 
     #[cfg(not(feature = "parallel"))]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num() - 1 {
             for j in i + 1..ctx.pop_num() {
-                let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
-                    (i, j)
-                } else {
-                    (j, i)
-                };
-                let (tmp, f) = self.move_firefly(ctx, i, j);
+                let (v, f) = self.move_firefly(ctx, i, j);
                 if f < ctx.fitness[i] {
-                    ctx.assign_from(i, f, &tmp);
+                    ctx.assign_from(i, f, &v);
                 }
             }
         }
@@ -115,11 +109,6 @@ impl Method {
             .into_par_iter()
             .flat_map(|i| repeat(i).zip(i + 1..ctx.pop_num()))
             .for_each(|(i, j)| {
-                let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
-                    (i, j)
-                } else {
-                    (j, i)
-                };
                 let (v, f) = self.move_firefly(ctx, i, j);
                 if f < ctx.fitness[i] {
                     let mut fitness = fitness.lock().unwrap();
