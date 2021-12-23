@@ -23,7 +23,9 @@
 //!
 //! # Objective Function
 //!
-//! You can define your question as a objective function through implementing [`ObjFunc`],
+//! For a quick demo with callable object, please see [`Fx`] or [`FxAdaptive`].
+//!
+//! You can define your question as an objective function through implementing [`ObjFunc`],
 //! and then the upper bound, lower bound, and objective function [`ObjFunc::fitness`] should be defined.
 //!
 //! The final answer is [`ObjFunc::result`], which is calculated from the design parameters.
@@ -53,7 +55,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use crate::{methods::*, obj_func::*, solver::*};
+pub use crate::{fx_func::*, methods::*, obj_func::*, solver::*};
 
 /// A tool macro used to generate multiple builder functions (methods).
 ///
@@ -108,6 +110,7 @@ macro_rules! impl_builders {
     )+};
 }
 
+mod fx_func;
 pub mod methods;
 mod obj_func;
 mod solver;
