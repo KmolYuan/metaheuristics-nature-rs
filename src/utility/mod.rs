@@ -1,6 +1,6 @@
-//! The utility API used to create a new algorithm.
+//! The utility API for advanced usage.
 //!
-//! When building a new method, just import [`prelude`] of this module.
+//! There is a [`prelude`] module that will import all the items of this crate.
 //!
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;

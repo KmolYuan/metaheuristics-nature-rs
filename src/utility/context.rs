@@ -12,16 +12,16 @@ pub struct Context<F: ObjFunc> {
     pub rng: Rng,
     /// The best variables.
     pub best: Array1<f64>,
-    /// Current fitness of all individuals.
-    pub fitness: Vec<F::Fitness>,
+    /// Best fitness.
+    pub best_f: F::Fitness,
     /// Current variables of all individuals.
     pub pool: Array2<f64>,
+    /// Current fitness of all individuals.
+    pub fitness: Vec<F::Fitness>,
     /// Adaptive factor.
     pub adaptive: f64,
     /// Generation.
     pub gen: u64,
-    /// Best fitness.
-    pub best_f: F::Fitness,
     /// The objective function.
     pub func: F,
 }
@@ -37,11 +37,11 @@ impl<F: ObjFunc> Context<F> {
         Self {
             rng: Rng::new(seed),
             best: Array1::zeros(dim),
-            fitness: vec![F::Fitness::default(); pop_num],
+            best_f: F::Fitness::default(),
             pool: Array2::zeros((pop_num, dim)),
+            fitness: vec![F::Fitness::default(); pop_num],
             adaptive: 0.,
             gen: 0,
-            best_f: F::Fitness::default(),
             func,
         }
     }
