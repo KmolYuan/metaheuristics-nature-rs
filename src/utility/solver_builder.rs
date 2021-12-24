@@ -9,7 +9,7 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     pop_num: usize,
     seed: Option<u128>,
     setting: S,
-    task: Box<dyn Fn(&Context<F>) -> bool + 'static>,
+    task: Box<dyn Fn(&Context<F>) -> bool + 'a>,
     record: Box<dyn Fn(&Context<F>) -> R + 'static>,
     adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
     callback: Box<dyn FnMut(&Context<F>) + 'a>,
@@ -44,12 +44,15 @@ where
     /// # Default
     ///
     /// By default, the algorithm will iterate 200 generation.
-    pub fn task<C>(mut self, task: C) -> Self
+    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F, R>
     where
-        C: Fn(&Context<F>) -> bool + 'static,
+        'a: 'b,
+        C: Fn(&Context<F>) -> bool + 'b,
     {
-        self.task = Box::new(task);
-        self
+        SolverBuilder {
+            task: Box::new(task),
+            ..self
+        }
     }
 
     /// Set record function.
@@ -74,7 +77,7 @@ where
     ///
     /// # Default
     ///
-    /// By default, this function returns a tuple includes the generation (`u64`) and the best fitness (`f64`).
+    /// By default, this function returns unit type `()`, which allocates nothing.
     pub fn record<C, NR>(self, record: C) -> SolverBuilder<'a, S, F, NR>
     where
         C: Fn(&Context<F>) -> NR + 'static,
@@ -142,30 +145,29 @@ where
 
     /// Set callback function.
     ///
-    /// In the example below, `app` is a mutable variable that changes every time.
+    /// In the example below, the fields of the `app` are mutable variables that changes every time.
     /// But we still need to use its method in [`task`](Self::task) condition,
-    /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock within a reference counter is required.
+    /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
-    /// use std::{rc::Rc, sync::RwLock};
+    /// use std::sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Mutex};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    /// # struct App;
-    /// # impl App {
-    /// #     fn show_generation(&mut self, _gen: u64) {}
-    /// #     fn show_fitness(&mut self, _f: f64) {}
-    /// #     fn is_stop(&self) -> bool { false }
-    /// # }
     ///
-    /// let app = Rc::new(RwLock::new(App));
-    /// let app1 = app.clone();
-    /// let app2 = app.clone();
+    /// #[derive(Default)]
+    /// struct App {
+    ///     is_start: AtomicBool,
+    ///     gen: AtomicU64,
+    ///     fitness: Mutex<f64>,
+    /// }
+    ///
+    /// let app = App::default();
+    /// // Spawn the solver here!
     /// let s = Solver::build(Rga::default())
-    ///     .task(move |ctx| ctx.gen == 20 || app1.read().unwrap().is_stop())
-    ///     .callback(move |ctx| {
-    ///         let mut app = app2.write().unwrap();
-    ///         app.show_generation(ctx.gen);
-    ///         app.show_fitness(ctx.best_f);
+    ///     .task(|ctx| ctx.gen == 20 || !app.is_start.load(Ordering::Relaxed))
+    ///     .callback(|ctx| {
+    ///         app.gen.store(ctx.gen, Ordering::Relaxed);
+    ///         *app.fitness.lock().unwrap() = ctx.best_f;
     ///     })
     ///     .solve(MyFunc::new());
     /// ```
@@ -213,7 +215,7 @@ where
     }
 }
 
-impl<F: ObjFunc> Solver<F, (u64, F::Fitness)> {
+impl<F: ObjFunc> Solver<F, ()> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
     /// Please check [`SolverBuilder`] type, it will help you choose your configuration.
@@ -221,7 +223,7 @@ impl<F: ObjFunc> Solver<F, (u64, F::Fitness)> {
     /// If all things are well-setup, call [`SolverBuilder::solve`].
     ///
     /// The default value of each option can be found in their document.
-    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, (u64, F::Fitness)>
+    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, ()>
     where
         S: Setting,
     {
@@ -230,7 +232,7 @@ impl<F: ObjFunc> Solver<F, (u64, F::Fitness)> {
             seed: None,
             setting,
             task: Box::new(|ctx| ctx.gen >= 200),
-            record: Box::new(|ctx| (ctx.gen, ctx.best_f.clone())),
+            record: Box::new(|_| ()),
             adaptive: Box::new(|_| 0.),
             callback: Box::new(|_| ()),
         }
