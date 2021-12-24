@@ -175,7 +175,10 @@ where
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
-    /// use std::sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Mutex};
+    /// use std::sync::{
+    ///     atomic::{AtomicBool, AtomicU64, Ordering},
+    ///     Mutex,
+    /// };
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// #[derive(Default)]
