@@ -10,7 +10,7 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     seed: Option<u128>,
     setting: S,
     task: Box<dyn Fn(&Context<F>) -> bool + 'a>,
-    record: Box<dyn Fn(&Context<F>) -> R + 'static>,
+    record: Box<dyn Fn(&Context<F>) -> R + 'a>,
     adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
     callback: Box<dyn FnMut(&Context<F>) + 'a>,
 }
@@ -87,9 +87,10 @@ where
     /// # Default
     ///
     /// By default, this function returns unit type `()`, which allocates nothing.
-    pub fn record<C, NR>(self, record: C) -> SolverBuilder<'a, S, F, NR>
+    pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
     where
-        C: Fn(&Context<F>) -> NR + 'static,
+        'a: 'b,
+        C: Fn(&Context<F>) -> NR + 'b,
     {
         SolverBuilder {
             pop_num: self.pop_num,
