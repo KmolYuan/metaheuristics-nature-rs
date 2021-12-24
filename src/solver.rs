@@ -28,11 +28,15 @@ use alloc::vec::Vec;
 /// let report = s.report();
 /// ```
 pub struct Solver<F: ObjFunc, R> {
-    pub(crate) ctx: Context<F>,
-    pub(crate) report: Vec<R>,
+    ctx: Context<F>,
+    report: Vec<R>,
 }
 
 impl<F: ObjFunc, R> Solver<F, R> {
+    pub(crate) fn new(ctx: Context<F>, report: Vec<R>) -> Self {
+        Self { ctx, report }
+    }
+
     /// Get the reference of the objective function.
     ///
     /// It's useful when you need to get the preprocessed data from the initialization process,
@@ -41,7 +45,7 @@ impl<F: ObjFunc, R> Solver<F, R> {
         &self.ctx.func
     }
 
-    /// Get the history for plotting.
+    /// Get the history report returned by record function.
     pub fn report(&self) -> &[R] {
         &self.report
     }

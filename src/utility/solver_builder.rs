@@ -239,7 +239,7 @@ where
             }
             ctx.gen += 1;
         }
-        Solver { ctx, report }
+        Solver::new(ctx, report)
     }
 }
 
