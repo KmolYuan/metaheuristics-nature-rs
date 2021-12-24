@@ -39,7 +39,16 @@ where
 
     /// Termination condition.
     ///
-    /// The task function will be check every generation, break if it returns true.
+    /// The task function will be check each iteration, breaks if the return is true.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    ///
+    /// let s = Solver::build(Rga::default())
+    ///     .task(|ctx| ctx.gen == 20)
+    ///     .solve(MyFunc::new());
+    /// ```
     ///
     /// # Default
     ///
@@ -145,9 +154,24 @@ where
 
     /// Set callback function.
     ///
+    /// Callback function allows to change an outer mutable variable in each iteration.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    ///
+    /// let mut gen = 0;
+    /// let s = Solver::build(Rga::default())
+    /// #   .task(|ctx| ctx.gen == 20)
+    ///     .callback(|ctx| gen = ctx.gen)
+    ///     .solve(MyFunc::new());
+    /// ```
+    ///
     /// In the example below, the fields of the `app` are mutable variables that changes every time.
     /// But we still need to use its method in [`task`](Self::task) condition,
     /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
+    ///
+    /// If you spawn the optimization process into another thread, adding a reference counter is also required.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
