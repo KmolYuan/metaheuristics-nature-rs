@@ -100,7 +100,7 @@ impl Method {
 
     #[cfg(feature = "parallel")]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        use rayon::iter::repeat;
+        use crate::rayon::iter::repeat;
         use std::sync::Mutex;
 
         let fitness = Mutex::new(ctx.fitness.clone());
