@@ -105,7 +105,8 @@ where
 
     /// Set adaptive function.
     ///
-    /// The adaptive value can be access from [`ObjFunc::fitness`].
+    /// The adaptive value can be access from [`ObjFunc::fitness`],
+    /// and can be used to enhance the fitness value.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
@@ -141,7 +142,7 @@ where
     ///
     /// # Default
     ///
-    /// By default, this function returns zero.
+    /// By default, this function returns one.
     pub fn adaptive<'b, C>(self, adaptive: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
@@ -217,12 +218,17 @@ where
     /// Create the task and run the algorithm, which may takes a lot of time.
     #[must_use = "the result cannot access unless to store the solver"]
     pub fn solve(self, func: F) -> Solver<F, R> {
-        let mut method = self.setting.algorithm();
-        let mut ctx = Context::new(func, self.seed, self.pop_num);
-        let task = self.task;
-        let record = self.record;
-        let mut adaptive = self.adaptive;
-        let mut callback = self.callback;
+        let Self {
+            pop_num,
+            seed,
+            setting,
+            task,
+            record,
+            mut adaptive,
+            mut callback,
+        } = self;
+        let mut method = setting.algorithm();
+        let mut ctx = Context::new(func, seed, pop_num);
         let mut report = Vec::new();
         loop {
             ctx.adaptive = adaptive(&ctx);
@@ -261,7 +267,7 @@ impl<F: ObjFunc> Solver<F, ()> {
             setting,
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
-            adaptive: Box::new(|_| 0.),
+            adaptive: Box::new(|_| 1.),
             callback: Box::new(|_| ()),
         }
     }
