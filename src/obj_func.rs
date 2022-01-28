@@ -39,7 +39,7 @@ use crate::utility::prelude::*;
 /// The lower bound and upper bound represents the number of variables at the same time.
 ///
 /// This trait is designed as immutable and there should only has shared data.
-pub trait ObjFunc: Sync + Send + 'static {
+pub trait ObjFunc: Sync + Send {
     /// The result type.
     type Result;
     /// Representation of the fitness value.

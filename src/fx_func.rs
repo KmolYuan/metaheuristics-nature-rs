@@ -7,17 +7,17 @@ macro_rules! impl_fx {
         fn($v:ident, $f:ident)($($expr:expr),+),
     })+) => {$(
         $(#[$meta])*
-        pub struct $ty<R: Fitness, const N: usize> {
-            func: Box<dyn $($func)+ + 'static + Sync + Send>,
+        pub struct $ty<'a, R: Fitness, const N: usize> {
+            func: Box<dyn $($func)+ + Sync + Send + 'a>,
             ub: [f64; N],
             lb: [f64; N],
         }
 
-        impl<R: Fitness, const N: usize> $ty<R, N> {
+        impl<'a, R: Fitness, const N: usize> $ty<'a, R, N> {
             /// Create objective function from a callable object.
             pub fn new<F>(f: F) -> Self
             where
-                F: $($func)+ + 'static + Sync + Send,
+                F: $($func)+ + Sync + Send + 'a,
             {
                 Self {
                     func: Box::new(f),
@@ -34,7 +34,7 @@ macro_rules! impl_fx {
             }
         }
 
-        impl<R: Fitness + 'static, const N: usize> ObjFunc for $ty<R, N> {
+        impl<'a, R: Fitness, const N: usize> ObjFunc for $ty<'a, R, N> {
             type Result = R;
             type Fitness = R;
 
