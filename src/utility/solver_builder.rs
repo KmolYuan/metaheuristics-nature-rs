@@ -19,7 +19,6 @@ impl<'a, S, F, R> SolverBuilder<'a, S, F, R>
 where
     S: Setting,
     F: ObjFunc,
-    S::Algorithm: Algorithm<F>,
 {
     impl_builders! {
         /// Population number.
@@ -217,7 +216,10 @@ where
 
     /// Create the task and run the algorithm, which may takes a lot of time.
     #[must_use = "the result cannot access unless to store the solver"]
-    pub fn solve(self, func: F) -> Solver<F, R> {
+    pub fn solve(self, func: F) -> Solver<F, R>
+    where
+        S::Algorithm: Algorithm<F>,
+    {
         let Self {
             pop_num,
             seed,
