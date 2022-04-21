@@ -112,9 +112,8 @@ pub use self::{algorithm::*, fx_func::*, methods::*, obj_func::*, setting::*, so
 macro_rules! impl_builders {
     ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
         $(#[$meta])*
-        pub fn $name(mut self, $name: $ty) -> Self {
-            self.$name = $name;
-            self
+        pub fn $name(self, $name: $ty) -> Self {
+            Self { $name, ..self }
         }
     )+};
 }
