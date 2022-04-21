@@ -47,6 +47,14 @@
 //!   This will disable some pre-implemented algorithms.
 //!   However, there is a math library implemented in pure Rust, the name is same as `libm`.
 //!   This feature can re-enable (or replace) the math functions by using the `libm` crate.
+//!
+//! # Compatibility
+//!
+//! If you are using this crate for providing objective function,
+//! other downstream crates of yours may have some problems with compatibility.
+//!
+//! The most important thing is using a stable version, specifying the major version number.
+//! Then re-export (`pub use`) this crate for the downstream crates.
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
