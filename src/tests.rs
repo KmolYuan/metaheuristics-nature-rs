@@ -41,19 +41,19 @@ impl ObjFunc for TestObj {
 fn test<S>()
 where
     S: Setting + Default,
-    S::Algorithm: utility::Algorithm<TestObj>,
+    S::Algorithm: Algorithm<TestObj>,
 {
     let s = Solver::build(S::default())
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
         .solve(TestObj::default());
     let ans = s.result();
-    let x = s.best_parameters();
+    let xs = s.best_parameters();
     let y = s.best_fitness();
     let report = s.report();
-    assert!(report.len() > 0, "{}", report.len());
+    assert!(!report.is_empty(), "{}", report.len());
     assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
-    for i in 0..4 {
-        assert!(x[i].abs() < 1e-6, "x{} = {}", i, x[i]);
+    for (i, x) in xs.iter().enumerate() {
+        assert!(x.abs() < 1e-6, "x{} = {}", i, x);
     }
     assert_eq!(y.abs(), ans);
 }

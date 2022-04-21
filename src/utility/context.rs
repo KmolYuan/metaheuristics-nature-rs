@@ -94,6 +94,7 @@ impl<F: ObjFunc> Context<F> {
         });
         #[cfg(feature = "parallel")]
         {
+            use crate::rayon::prelude::*;
             let (f, v) = zip
                 .into_par_iter()
                 .map(|(f, v)| {

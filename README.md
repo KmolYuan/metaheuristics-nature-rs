@@ -26,7 +26,7 @@ let s = Solver::build(Rga::default())
 // Get the result from objective function
 let ans = s.result();
 // Get the optimized XY value of your function
-let x = s.best_parameters();
+let xs = s.best_parameters();
 let y = s.best_fitness();
 // Get the history reports
 let report = s.report();

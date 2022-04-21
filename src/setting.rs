@@ -4,7 +4,7 @@
 pub trait Setting {
     /// Associated algorithm.
     ///
-    /// This type should implement [`Algorithm`](crate::utility::Algorithm) trait.
+    /// This type should implement [`Algorithm`](super::Algorithm) trait.
     type Algorithm;
 
     /// Create the algorithm.

@@ -10,7 +10,7 @@
 //!
 //! # Algorithm
 //!
-//! There are two traits [`utility::Algorithm`] and [`utility::Setting`].
+//! There are two traits [`Algorithm`] and [`Setting`].
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -55,6 +55,8 @@
 //!
 //! The most important thing is using a stable version, specifying the major version number.
 //! Then re-export (`pub use`) this crate for the downstream crates.
+//!
+//! This crate does the same things on `ndarray` and `rayon`.
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
@@ -62,7 +64,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use crate::{fx_func::*, methods::*, obj_func::*, solver::*};
+pub use self::{algorithm::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*};
 
 /// A tool macro used to generate multiple builder functions (methods).
 ///
@@ -117,14 +119,22 @@ macro_rules! impl_builders {
     )+};
 }
 
+mod algorithm;
 mod fx_func;
 pub mod methods;
 mod obj_func;
+mod setting;
 mod solver;
 pub mod tests;
 pub mod utility;
 
-/// The re-export of rayon items. Rayon's prelude is in [`utility::prelude`].
+/// The re-export of the crate `ndarray`.
+pub mod ndarray {
+    #[doc(no_inline)]
+    pub use ndarray::*;
+}
+
+/// The re-export of the crate `rayon`.
 ///
 /// + `spawn` is a function sends a sub-task to the background and does not care about its return,
 ///   so this function will not block the current thread,
