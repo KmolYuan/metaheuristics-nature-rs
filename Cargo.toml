@@ -13,8 +13,8 @@ categories = ["algorithms", "no-std"]
 [features]
 default = ["std"]
 std = ["ndarray/std"]
+rayon = ["std", "dep:rayon", "ndarray/rayon"]
 libm = ["dep:libm"]
-parallel = ["std", "rayon", "ndarray/rayon"]
 
 [dependencies]
 ndarray = { version = "0.15", default-features = false }

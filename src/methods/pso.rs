@@ -78,7 +78,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             .and(pool.axis_iter_mut(Axis(0)))
             .and(best_past.axis_iter_mut(Axis(0)))
             .and(&mut best_past_f);
-        #[cfg(not(feature = "parallel"))]
+        #[cfg(not(feature = "rayon"))]
         {
             zip.for_each(|f, mut v, mut past, f_past| {
                 let alpha = ctx.rng.float(0.0..self.cognition);
@@ -97,7 +97,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             });
             ctx.find_best();
         }
-        #[cfg(feature = "parallel")]
+        #[cfg(feature = "rayon")]
         {
             let (f, v) = zip
                 .into_par_iter()

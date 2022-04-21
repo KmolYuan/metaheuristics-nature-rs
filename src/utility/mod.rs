@@ -15,15 +15,15 @@ mod solver_builder;
 /// A prelude module for algorithm implementation.
 ///
 /// This module includes all items of this crate, some hidden types,
-/// and external items from "ndarray" and "rayon" (if `parallel` feature enabled).
+/// and external items from "ndarray" and "rayon" (if `rayon` feature enabled).
 pub mod prelude {
     pub use super::*;
     pub use crate::*;
 
     #[doc(no_inline)]
     pub use crate::ndarray::*;
-    #[cfg(feature = "parallel")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     #[doc(no_inline)]
     pub use crate::rayon::prelude::*;
 }

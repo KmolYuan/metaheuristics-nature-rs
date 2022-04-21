@@ -86,7 +86,7 @@ impl Method {
         (v, f)
     }
 
-    #[cfg(not(feature = "parallel"))]
+    #[cfg(not(feature = "rayon"))]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         for i in 0..ctx.pop_num() - 1 {
             for j in i + 1..ctx.pop_num() {
@@ -98,7 +98,7 @@ impl Method {
         }
     }
 
-    #[cfg(feature = "parallel")]
+    #[cfg(feature = "rayon")]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
         use crate::rayon::iter::repeat;
         use std::sync::Mutex;

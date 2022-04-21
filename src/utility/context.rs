@@ -88,11 +88,11 @@ impl<F: ObjFunc> Context<F> {
         });
         let mut fitness = self.fitness.clone();
         let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));
-        #[cfg(not(feature = "parallel"))]
+        #[cfg(not(feature = "rayon"))]
         let _ = zip.for_each(|f, v| {
             *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
         });
-        #[cfg(feature = "parallel")]
+        #[cfg(feature = "rayon")]
         {
             use crate::rayon::prelude::*;
             let (f, v) = zip
@@ -107,7 +107,7 @@ impl<F: ObjFunc> Context<F> {
         }
         self.pool = pool;
         self.fitness = fitness;
-        #[cfg(not(feature = "parallel"))]
+        #[cfg(not(feature = "rayon"))]
         {
             let mut best = 0;
             for i in 1..self.pop_num() {

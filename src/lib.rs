@@ -39,7 +39,7 @@
 //! # Features
 //!
 //! + `std`: Default feature. Enable standard library function, such as timing and threading.
-//! + `parallel`: Enable parallel function, let objective function running without ordered, uses `rayon`.
+//! + `rayon`: Enable parallel computation, let objective function running without ordered.
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
 //!   This feature require `std` feature.
@@ -172,8 +172,8 @@ pub mod ndarray {
 /// when the number of tasks becomes greater in a short time,
 /// it means that the subtask order is upside-down.
 /// If you want to keep the sending order, please use the FIFO version.
-#[cfg(feature = "parallel")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parallel")))]
+#[cfg(feature = "rayon")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod rayon {
     #[doc(no_inline)]
     pub use rayon::*;

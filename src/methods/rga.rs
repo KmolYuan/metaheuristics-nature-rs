@@ -127,24 +127,23 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             if !ctx.rng.maybe(self.cross) {
                 continue;
             }
-            use TmpId::*;
-            enum TmpId {
+            enum Id {
                 I1,
                 I2,
                 I3,
             }
-            #[cfg(feature = "parallel")]
-            let iter = [I1, I2, I3].into_par_iter();
-            #[cfg(not(feature = "parallel"))]
-            let iter = IntoIterator::into_iter([I1, I2, I3]);
+            #[cfg(feature = "rayon")]
+            let iter = [Id::I1, Id::I2, Id::I3].into_par_iter();
+            #[cfg(not(feature = "rayon"))]
+            let iter = IntoIterator::into_iter([Id::I1, Id::I2, Id::I3]);
             let mut v = iter
                 .map(|id| {
                     let mut v = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
                         let var = match id {
-                            I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
-                            I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
-                            I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
+                            Id::I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
+                            Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
+                            Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
                         v[s] = if ctx.ub(s) < var || var < ctx.lb(s) {
                             ctx.rng.float(ctx.lb(s)..ctx.ub(s))
