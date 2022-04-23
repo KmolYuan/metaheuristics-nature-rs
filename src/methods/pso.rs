@@ -47,10 +47,6 @@ impl<F: Fitness> Setting for Pso<F> {
             best_past_f: Vec::new(),
         }
     }
-
-    fn default_pop() -> usize {
-        200
-    }
 }
 
 /// Particle Swarm Optimization type.
