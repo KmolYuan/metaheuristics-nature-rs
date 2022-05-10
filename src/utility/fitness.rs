@@ -31,15 +31,15 @@
 ///     type Result = f64;
 ///     type Fitness = MarkerFitness;
 ///
-///     fn fitness(&self, v: &[f64], f: f64) -> Self::Fitness {
+///     fn fitness(&self, x: &[f64], f: f64) -> Self::Fitness {
 ///         MarkerFitness {
-///             f: v[0],
-///             important: v[0] + v[1] * f < 1.,
+///             f: x[0],
+///             important: x[0] + x[1] * f < 1.,
 ///         }
 ///     }
 ///
-///     fn result(&self, v: &[f64]) -> Self::Result {
-///         self.fitness(v, 0.).f
+///     fn result(&self, xs: &[f64]) -> Self::Result {
+///         self.fitness(xs, 0.).f
 ///     }
 ///
 ///     fn ub(&self) -> &[f64] {

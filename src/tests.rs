@@ -21,8 +21,8 @@ impl ObjFunc for TestObj {
     type Result = f64;
     type Fitness = f64;
 
-    fn fitness(&self, v: &[f64], _: f64) -> Self::Fitness {
-        OFFSET + v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3]
+    fn fitness(&self, x: &[f64], _: f64) -> Self::Fitness {
+        OFFSET + x[0] * x[0] + 8. * x[1] * x[1] + x[2] * x[2] + x[3] * x[3]
     }
 
     fn result(&self, v: &[f64]) -> Self::Result {

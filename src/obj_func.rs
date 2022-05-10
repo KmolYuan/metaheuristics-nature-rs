@@ -17,12 +17,12 @@ use crate::utility::prelude::*;
 ///     type Result = f64;
 ///     type Fitness = f64;
 ///
-///     fn fitness(&self, v: &[f64], _: f64) -> Self::Fitness {
-///         v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+///     fn fitness(&self, x: &[f64], _: f64) -> Self::Fitness {
+///         x[0] * x[0] + x[1] * x[1] + x[2] * x[2]
 ///     }
 ///
-///     fn result(&self, v: &[f64]) -> Self::Result {
-///         self.fitness(v, 0.)
+///     fn result(&self, xs: &[f64]) -> Self::Result {
+///         self.fitness(xs, 0.)
 ///     }
 ///
 ///     fn ub(&self) -> &[f64] {
@@ -82,12 +82,12 @@ pub trait ObjFunc: Sync + Send {
     ///
     /// Sometimes a value that adjust with converge states can help to restrict the searching.
     /// The "adaptive function" can be set in [`SolverBuilder::adaptive`] method.
-    fn fitness(&self, v: &[f64], f: f64) -> Self::Fitness;
+    fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness;
 
     /// Return the final result of the problem.
     ///
-    /// The parameters `v` is the best parameter we found.
-    fn result(&self, v: &[f64]) -> Self::Result;
+    /// The parameters `xs` is the best parameter we found.
+    fn result(&self, xs: &[f64]) -> Self::Result;
 
     /// Get upper bound.
     fn ub(&self) -> &[f64];
