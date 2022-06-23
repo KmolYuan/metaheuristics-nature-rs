@@ -69,11 +69,7 @@ impl De {
 
 impl Default for De {
     fn default() -> Self {
-        Self {
-            strategy: S1,
-            f: 0.6,
-            cross: 0.9,
-        }
+        Self { strategy: S1, f: 0.6, cross: 0.9 }
     }
 }
 

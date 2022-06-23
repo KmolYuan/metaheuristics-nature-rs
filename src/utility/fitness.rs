@@ -32,10 +32,7 @@
 ///     type Fitness = MarkerFitness;
 ///
 ///     fn fitness(&self, x: &[f64], f: f64) -> Self::Fitness {
-///         MarkerFitness {
-///             f: x[0],
-///             important: x[0] + x[1] * f < 1.,
-///         }
+///         MarkerFitness { f: x[0], important: x[0] + x[1] * f < 1. }
 ///     }
 ///
 ///     fn result(&self, xs: &[f64]) -> Self::Result {

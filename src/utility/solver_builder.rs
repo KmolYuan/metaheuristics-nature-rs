@@ -57,10 +57,7 @@ where
         'a: 'b,
         C: Fn(&Context<F>) -> bool + 'b,
     {
-        SolverBuilder {
-            task: Box::new(task),
-            ..self
-        }
+        SolverBuilder { task: Box::new(task), ..self }
     }
 
     /// Set record function.
@@ -147,10 +144,7 @@ where
         'a: 'b,
         C: FnMut(&Context<F>) -> f64 + 'b,
     {
-        SolverBuilder {
-            adaptive: Box::new(adaptive),
-            ..self
-        }
+        SolverBuilder { adaptive: Box::new(adaptive), ..self }
     }
 
     /// Set callback function.
@@ -208,10 +202,7 @@ where
         'a: 'b,
         C: FnMut(&Context<F>) + 'b,
     {
-        SolverBuilder {
-            callback: Box::new(callback),
-            ..self
-        }
+        SolverBuilder { callback: Box::new(callback), ..self }
     }
 
     /// Create the task and run the algorithm, which may takes a lot of time.

@@ -25,11 +25,7 @@ impl Fa {
 
 impl Default for Fa {
     fn default() -> Self {
-        Self {
-            alpha: 1.,
-            beta_min: 1.,
-            gamma: 0.01,
-        }
+        Self { alpha: 1., beta_min: 1., gamma: 0.01 }
     }
 }
 

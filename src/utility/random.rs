@@ -26,9 +26,7 @@ impl AtomicU128 {
     }
 
     fn load(&self, order: Ordering) -> u128 {
-        let c = Converter128 {
-            s: [self.s1.load(order), self.s2.load(order)],
-        };
+        let c = Converter128 { s: [self.s1.load(order), self.s2.load(order)] };
         unsafe { c.n }
     }
 
