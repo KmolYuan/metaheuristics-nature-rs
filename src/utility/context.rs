@@ -37,9 +37,9 @@ impl<F: ObjFunc> Context<F> {
         Self {
             rng: Rng::new(seed),
             best: Array1::zeros(dim),
-            best_f: F::Fitness::default(),
+            best_f: Default::default(),
             pool: Array2::zeros((pop_num, dim)),
-            fitness: vec![F::Fitness::default(); pop_num],
+            fitness: vec![Default::default(); pop_num],
             adaptive: 0.,
             gen: 0,
             func,
@@ -82,16 +82,11 @@ impl<F: ObjFunc> Context<F> {
         );
     }
 
-    pub(crate) fn init_pop(&mut self) {
-        let pool = Array2::from_shape_fn([self.pop_num(), self.dim()], |(_, s)| {
-            self.rng.float(self.lb(s)..self.ub(s))
-        });
+    pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
         let mut fitness = self.fitness.clone();
         let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));
         #[cfg(not(feature = "rayon"))]
-        let _ = zip.for_each(|f, v| {
-            *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
-        });
+        let _ = zip.for_each(|f, v| *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive));
         #[cfg(feature = "rayon")]
         {
             use crate::rayon::prelude::*;

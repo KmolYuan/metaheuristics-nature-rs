@@ -9,6 +9,7 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     pop_num: usize,
     seed: Option<u128>,
     setting: S,
+    pool: Box<dyn Fn(&Context<F>) -> Array2<f64> + 'a>,
     task: Box<dyn Fn(&Context<F>) -> bool + 'a>,
     record: Box<dyn Fn(&Context<F>) -> R + 'a>,
     adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
@@ -34,6 +35,34 @@ where
         ///
         /// By default, the random seed is `None`, which is decided by [`getrandom::getrandom`].
         fn seed(Option<u128>)
+    }
+
+    /// Pool generating function.
+    ///
+    /// You can insert a existing pool from last states,
+    /// or random values with another distribution.
+    ///
+    /// The array must be the shape of `[ctx.pop_num(), ctx.dim()]`
+    /// and in the bounds of `[ctx.lb(), ctx.ub())`.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{utility::uniform_pool, Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
+    ///
+    /// let s = Solver::build(Rga::default())
+    ///     .pool(uniform_pool)
+    ///     .solve(MyFunc::new());
+    /// ```
+    ///
+    /// # Default
+    ///
+    /// By default, the pool will generate with uniform distribution in the bounds.
+    pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
+    where
+        'a: 'b,
+        C: Fn(&Context<F>) -> Array2<f64> + 'b,
+    {
+        SolverBuilder { pool: Box::new(pool), ..self }
     }
 
     /// Termination condition.
@@ -88,15 +117,12 @@ where
         'a: 'b,
         C: Fn(&Context<F>) -> NR + 'b,
     {
-        SolverBuilder {
-            pop_num: self.pop_num,
-            seed: self.seed,
-            setting: self.setting,
-            task: self.task,
-            record: Box::new(record),
-            adaptive: self.adaptive,
-            callback: self.callback,
+        macro_rules! builder {
+            ($field_new:ident, $($field:ident),+) => {
+                SolverBuilder { $field_new: Box::new($field_new), $($field: self.$field),+ }
+            };
         }
+        builder!(record, pop_num, seed, setting, pool, task, adaptive, callback)
     }
 
     /// Set adaptive function.
@@ -215,6 +241,7 @@ where
             pop_num,
             seed,
             setting,
+            pool,
             task,
             record,
             mut adaptive,
@@ -226,7 +253,7 @@ where
         loop {
             ctx.adaptive = adaptive(&ctx);
             if ctx.gen == 0 {
-                ctx.init_pop();
+                ctx.init_pop(pool(&ctx));
                 method.init(&mut ctx);
             } else {
                 method.generation(&mut ctx);
@@ -242,7 +269,7 @@ where
     }
 }
 
-impl<F: ObjFunc> Solver<F, ()> {
+impl<F: ObjFunc + 'static> Solver<F, ()> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
     /// Please check [`SolverBuilder`] type, it will help you choose your configuration.
@@ -258,10 +285,20 @@ impl<F: ObjFunc> Solver<F, ()> {
             pop_num: S::default_pop(),
             seed: None,
             setting,
+            pool: Box::new(uniform_pool::<F>),
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
             adaptive: Box::new(|_| 1.),
             callback: Box::new(|_| ()),
         }
     }
+}
+
+/// A function generates uniform pool.
+///
+/// Please see [`SolverBuilder::pool`] for more information.
+pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
+    Array2::from_shape_fn([ctx.pop_num(), ctx.dim()], |(_, s)| {
+        ctx.rng.float(ctx.lb(s)..ctx.ub(s))
+    })
 }
