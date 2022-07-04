@@ -18,10 +18,10 @@ libm = ["dep:libm"]
 
 [dependencies]
 ndarray = { version = "0.15", default-features = false }
-getrandom = "0.2"
-oorandom = "11"
 libm = { version = "0.2", optional = true }
 rayon = { version = "1", optional = true }
+getrandom = "0.2"
+oorandom = "11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
