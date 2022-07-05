@@ -46,17 +46,22 @@ where
     /// and in the bounds of `[ctx.lb(), ctx.ub())`.
     ///
     /// ```
-    /// use metaheuristics_nature::{utility::uniform_pool, Rga, Solver};
+    /// use metaheuristics_nature::{utility::gaussian_pool, Rga, Solver};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    ///     .pool(uniform_pool)
+    ///     .pool(gaussian_pool(&[0.; 4], &[5.; 4]))
     ///     .solve(MyFunc::new());
     /// ```
     ///
     /// # Default
     ///
     /// By default, the pool will generate with uniform distribution in the bounds.
+    /// ([`uniform_pool`])
+    ///
+    /// # See Also
+    ///
+    /// [`uniform_pool`], [`gaussian_pool`].
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
@@ -285,7 +290,7 @@ impl<F: ObjFunc + 'static> Solver<F, ()> {
             pop_num: S::default_pop(),
             seed: None,
             setting,
-            pool: Box::new(uniform_pool::<F>),
+            pool: Box::new(uniform_pool),
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
             adaptive: Box::new(|_| 1.),
@@ -301,4 +306,28 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
     Array2::from_shape_fn([ctx.pop_num(), ctx.dim()], |(_, s)| {
         ctx.rng.float(ctx.lb(s)..ctx.ub(s))
     })
+}
+
+/// A function generates Gaussian pool.
+///
+/// Where `mu` is the mean value, `sigma` is the standard deviation.
+///
+/// Please see [`SolverBuilder::pool`] for more information.
+#[cfg(any(feature = "std", feature = "libm"))]
+pub fn gaussian_pool<'a, F: ObjFunc>(
+    mu: &'a [f64],
+    sigma: &'a [f64],
+) -> impl Fn(&Context<F>) -> Array2<f64> + 'a {
+    assert_eq!(mu.len(), sigma.len());
+    move |ctx| {
+        let mu = arr1(mu);
+        #[cfg(all(feature = "std", not(feature = "libm")))]
+        let std = arr1(sigma).mapv(|x| (x * x * 0.5).exp());
+        #[cfg(feature = "libm")]
+        let std = arr1(sigma).mapv(|x| libm::exp(x * x * 0.5));
+        let pool = Array2::from_shape_simple_fn([ctx.pop_num(), ctx.dim()], || ctx.rng.rand());
+        Array2::from_shape_fn([ctx.pop_num(), ctx.dim()], |(i, s)| {
+            (pool[[i, s]] * std[s] + mu[s]).clamp(ctx.lb(s), ctx.ub(s))
+        })
+    }
 }
