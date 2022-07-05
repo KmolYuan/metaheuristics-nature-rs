@@ -57,7 +57,7 @@
 //! Then re-export (`pub use`) this crate for the downstream crates.
 //!
 //! This crate does the same things on `ndarray` and `rayon`.
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(doc_cfg, feature(doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
 extern crate alloc;
@@ -172,7 +172,6 @@ pub mod ndarray {
 /// it means that the subtask order is upside-down.
 /// If you want to keep the sending order, please use the FIFO version.
 #[cfg(feature = "rayon")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
 pub mod rayon {
     #[doc(no_inline)]
     pub use rayon::*;

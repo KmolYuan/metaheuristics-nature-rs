@@ -23,7 +23,6 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use crate::ndarray::*;
     #[cfg(feature = "rayon")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "rayon")))]
     #[doc(no_inline)]
     pub use crate::rayon::prelude::*;
 }
