@@ -50,6 +50,7 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
+    /// #   .task(|ctx| ctx.gen == 1)
     ///     .pool(gaussian_pool(&[0.; 4], &[5.; 4]))
     ///     .solve(MyFunc::new());
     /// ```
@@ -108,7 +109,7 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 1)
     ///     .record(|ctx| (ctx.gen, ctx.adaptive))
     ///     .solve(MyFunc::new());
     /// let report: &[(u64, f64)] = s.report();
@@ -140,7 +141,7 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 1)
     ///     .adaptive(|ctx| ctx.gen as f64 / 20.)
     ///     .solve(MyFunc::new());
     /// ```
@@ -153,7 +154,7 @@ where
     ///
     /// let mut diff = None;
     /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 1)
     ///     .adaptive(|ctx| {
     ///         if let Some(f) = diff {
     ///             let d = f - ctx.best_f;
@@ -188,7 +189,7 @@ where
     ///
     /// let mut gen = 0;
     /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 20)
+    /// #   .task(|ctx| ctx.gen == 1)
     ///     .callback(|ctx| gen = ctx.gen)
     ///     .solve(MyFunc::new());
     /// ```
@@ -237,7 +238,9 @@ where
     }
 
     /// Create the task and run the algorithm, which may takes a lot of time.
-    #[must_use = "the result cannot access unless to store the solver"]
+    ///
+    /// Generation `ctx.gen` is start from 1, initialized at 0.
+    #[must_use = "the result cannot access unless to operate with the solver"]
     pub fn solve(self, func: F) -> Solver<F, R>
     where
         S::Algorithm: Algorithm<F>,

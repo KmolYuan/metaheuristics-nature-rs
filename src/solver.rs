@@ -69,4 +69,9 @@ impl<F: ObjFunc, R> Solver<F, R> {
     pub fn seed(&self) -> u128 {
         self.ctx.rng.seed()
     }
+
+    /// Get the pool from the last status.
+    pub fn pool(&self) -> ArrayView2<f64> {
+        self.ctx.pool.view()
+    }
 }
