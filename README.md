@@ -3,7 +3,7 @@
 [![dependency status](https://deps.rs/repo/github/KmolYuan/metaheuristics-nature-rs/status.svg)](https://deps.rs/crate/metaheuristics-nature/)
 [![documentation](https://docs.rs/metaheuristics-nature/badge.svg)](https://docs.rs/metaheuristics-nature)
 
-A collection of nature-inspired meta-heuristic algorithms. This crate provides objective function trait, well-known methods, and
+A collection of nature-inspired metaheuristic algorithms. This crate provides objective function trait, well-known methods, and
 tool functions let you implement your own searching method.
 
 This crate implemented following algorithms:
