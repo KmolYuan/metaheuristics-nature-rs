@@ -42,8 +42,7 @@ where
     /// You can insert a existing pool from last states,
     /// or random values with another distribution.
     ///
-    /// The array must be the shape of `[ctx.pop_num(), ctx.dim()]`
-    /// and in the bounds of `[ctx.lb(), ctx.ub())`.
+    /// The array must be the shape of `ctx.pool_size()` and in the bounds of `[ctx.lb(), ctx.ub())`.
     ///
     /// ```
     /// use metaheuristics_nature::{utility::gaussian_pool, Rga, Solver};
@@ -306,7 +305,7 @@ impl<F: ObjFunc + 'static> Solver<F, ()> {
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
-    Array2::from_shape_fn([ctx.pop_num(), ctx.dim()], |(_, s)| {
+    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
         ctx.rng.float(ctx.lb(s)..ctx.ub(s))
     })
 }
@@ -328,8 +327,8 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
         let std = arr1(sigma).mapv(|x| (x * x * 0.5).exp());
         #[cfg(feature = "libm")]
         let std = arr1(sigma).mapv(|x| libm::exp(x * x * 0.5));
-        let pool = Array2::from_shape_simple_fn([ctx.pop_num(), ctx.dim()], || ctx.rng.rand());
-        Array2::from_shape_fn([ctx.pop_num(), ctx.dim()], |(i, s)| {
+        let pool = Array2::from_shape_simple_fn(ctx.pool_size(), || ctx.rng.rand());
+        Array2::from_shape_fn(ctx.pool_size(), |(i, s)| {
             (pool[[i, s]] * std[s] + mu[s]).clamp(ctx.lb(s), ctx.ub(s))
         })
     }

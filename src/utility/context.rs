@@ -60,6 +60,13 @@ impl<F: ObjFunc> Context<F> {
         self.func.ub()[i]
     }
 
+    /// Get population number.
+    #[inline(always)]
+    #[must_use = "the population number should be used"]
+    pub fn pop_num(&self) -> usize {
+        self.fitness.len()
+    }
+
     /// Get dimension (number of variables).
     #[inline(always)]
     #[must_use = "the dimension value should be used"]
@@ -67,11 +74,11 @@ impl<F: ObjFunc> Context<F> {
         self.best.len()
     }
 
-    /// Get population number.
+    /// Get pool shape.
     #[inline(always)]
-    #[must_use = "the population number should be used"]
-    pub fn pop_num(&self) -> usize {
-        self.fitness.len()
+    #[must_use = "the pool size should be used"]
+    pub fn pool_size(&self) -> [usize; 2] {
+        [self.pop_num(), self.dim()]
     }
 
     /// Get fitness from individual `i`.
