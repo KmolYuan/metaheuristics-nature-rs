@@ -3,6 +3,7 @@ use crate::utility::prelude::*;
 
 const OFFSET: f64 = 7.;
 
+/// An example case for doctest.
 pub struct TestObj([f64; 4], [f64; 4]);
 
 impl Default for TestObj {

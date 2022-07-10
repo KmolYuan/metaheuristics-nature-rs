@@ -312,24 +312,20 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
 
 /// A function generates Gaussian pool.
 ///
-/// Where `mu` is the mean value, `sigma` is the standard deviation.
+/// Where `mean` is the mean value, `std` is the standard deviation.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
 #[cfg(any(feature = "std", feature = "libm"))]
 pub fn gaussian_pool<'a, F: ObjFunc>(
-    mu: &'a [f64],
-    sigma: &'a [f64],
+    mean: &'a [f64],
+    std: &'a [f64],
 ) -> impl Fn(&Context<F>) -> Array2<f64> + 'a {
-    assert_eq!(mu.len(), sigma.len());
+    assert_eq!(mean.len(), std.len());
     move |ctx| {
-        let mu = arr1(mu);
-        #[cfg(all(feature = "std", not(feature = "libm")))]
-        let std = arr1(sigma).mapv(|x| (x * x * 0.5).exp());
-        #[cfg(feature = "libm")]
-        let std = arr1(sigma).mapv(|x| libm::exp(x * x * 0.5));
-        let pool = Array2::from_shape_simple_fn(ctx.pool_size(), || ctx.rng.rand());
-        Array2::from_shape_fn(ctx.pool_size(), |(i, s)| {
-            (pool[[i, s]] * std[s] + mu[s]).clamp(ctx.lb(s), ctx.ub(s))
+        Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
+            ctx.rng
+                .rand_norm(mean[s], std[s])
+                .clamp(ctx.lb(s), ctx.ub(s))
         })
     }
 }
