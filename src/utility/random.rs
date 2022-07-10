@@ -1,6 +1,6 @@
 use self::ziggurat::{ZIG_NORM_F, ZIG_NORM_R, ZIG_NORM_X};
 use core::{
-    mem::size_of,
+    mem::{size_of, transmute},
     ops::Range,
     sync::atomic::{AtomicU64, Ordering},
 };
@@ -9,11 +9,6 @@ use oorandom::Rand64;
 
 mod ziggurat;
 
-union Converter128 {
-    n: u128,
-    s: [u64; 2],
-}
-
 struct AtomicU128 {
     s1: AtomicU64,
     s2: AtomicU64,
@@ -21,22 +16,18 @@ struct AtomicU128 {
 
 impl AtomicU128 {
     fn new(v: u128) -> Self {
-        let c = Converter128 { n: v };
-        Self {
-            s1: AtomicU64::new(unsafe { c.s[0] }),
-            s2: AtomicU64::new(unsafe { c.s[1] }),
-        }
+        let [a, b] = unsafe { transmute::<_, [u64; 2]>(v) };
+        Self { s1: AtomicU64::new(a), s2: AtomicU64::new(b) }
     }
 
     fn load(&self, order: Ordering) -> u128 {
-        let c = Converter128 { s: [self.s1.load(order), self.s2.load(order)] };
-        unsafe { c.n }
+        unsafe { transmute([self.s1.load(order), self.s2.load(order)]) }
     }
 
-    fn store(&self, val: u128, order: Ordering) {
-        let c = Converter128 { n: val };
-        self.s1.store(unsafe { c.s[0] }, order);
-        self.s2.store(unsafe { c.s[1] }, order);
+    fn store(&self, v: u128, order: Ordering) {
+        let [a, b] = unsafe { transmute::<_, [u64; 2]>(v) };
+        self.s1.store(a, order);
+        self.s2.store(b, order);
     }
 }
 
