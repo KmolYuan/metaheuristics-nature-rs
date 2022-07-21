@@ -104,6 +104,7 @@ impl Rng {
     }
 
     /// Sample with Gaussian distribution.
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[inline]
     pub fn rand_norm(&self, mean: f64, std: f64) -> f64 {
         self.gen(|rng| mean + std * ziggurat(rng))
@@ -123,6 +124,7 @@ impl Rng {
 }
 
 // Ziggurat algorithm, copy from `rand`
+#[cfg(any(feature = "std", feature = "libm"))]
 fn ziggurat(rng: &mut Rand64) -> f64 {
     loop {
         let bits = rng.rand_u64();

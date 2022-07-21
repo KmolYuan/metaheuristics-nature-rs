@@ -301,7 +301,7 @@ impl<F: ObjFunc + 'static> Solver<F, ()> {
     }
 }
 
-/// A function generates uniform pool.
+/// A function generates a uniform pool.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
@@ -310,9 +310,10 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
     })
 }
 
-/// A function generates Gaussian pool.
+/// A function generates a Gaussian pool.
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
+/// The length of `mean` and `std` must same.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
 #[cfg(any(feature = "std", feature = "libm"))]
@@ -326,6 +327,31 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
             ctx.rng
                 .rand_norm(mean[s], std[s])
                 .clamp(ctx.lb(s), ctx.ub(s))
+        })
+    }
+}
+
+/// A function generates a Gaussian pool, including the mean (center).
+///
+/// Where `mean` is the mean value, `std` is the standard deviation.
+/// The length of `mean` and `std` must same.
+///
+/// Please see [`SolverBuilder::pool`] for more information.
+#[cfg(any(feature = "std", feature = "libm"))]
+pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
+    mean: &'a [f64],
+    std: &'a [f64],
+) -> impl Fn(&Context<F>) -> Array2<f64> + 'a {
+    assert_eq!(mean.len(), std.len());
+    move |ctx| {
+        Array2::from_shape_fn(ctx.pool_size(), |(i, s)| {
+            if i == 0 {
+                mean[s]
+            } else {
+                ctx.rng
+                    .rand_norm(mean[s], std[s])
+                    .clamp(ctx.lb(s), ctx.ub(s))
+            }
         })
     }
 }
