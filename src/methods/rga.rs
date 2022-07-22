@@ -135,7 +135,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             #[cfg(feature = "rayon")]
             let iter = [Id::I1, Id::I2, Id::I3].into_par_iter();
             #[cfg(not(feature = "rayon"))]
-            let iter = IntoIterator::into_iter([Id::I1, Id::I2, Id::I3]);
+            let iter = [Id::I1, Id::I2, Id::I3].into_iter();
             let mut v = iter
                 .map(|id| {
                     let mut v = Array1::zeros(ctx.dim());

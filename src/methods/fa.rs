@@ -82,39 +82,26 @@ impl Method {
         (v, f)
     }
 
-    #[cfg(not(feature = "rayon"))]
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        for i in 0..ctx.pop_num() - 1 {
-            for j in i + 1..ctx.pop_num() {
-                let (v, f) = self.move_firefly(ctx, i, j);
-                if f < ctx.fitness[i] {
-                    ctx.assign_from(i, f, &v);
-                }
-            }
-        }
-    }
-
-    #[cfg(feature = "rayon")]
-    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
-        use crate::rayon::iter::repeat;
-        use std::sync::Mutex;
-
-        let fitness = Mutex::new(ctx.fitness.clone());
-        let pool = Mutex::new(ctx.pool.clone());
-        (0..ctx.pop_num() - 1)
-            .into_par_iter()
-            .flat_map(|i| repeat(i).zip(i + 1..ctx.pop_num()))
-            .for_each(|(i, j)| {
-                let (v, f) = self.move_firefly(ctx, i, j);
-                if f < ctx.fitness[i] {
-                    let mut fitness = fitness.lock().unwrap();
-                    let mut pool = pool.lock().unwrap();
-                    fitness[i] = f;
-                    pool.slice_mut(s![i, ..]).assign(&v);
+        let mut fitness = ctx.fitness.clone();
+        let mut pool = ctx.pool.clone();
+        #[cfg(feature = "rayon")]
+        let zip = fitness.par_iter_mut();
+        #[cfg(not(feature = "rayon"))]
+        let zip = fitness.iter_mut();
+        zip.zip(pool.axis_iter_mut(Axis(0)))
+            .enumerate()
+            .for_each(|(i, (fitness, mut pool))| {
+                for j in i + 1..ctx.pop_num() {
+                    let (v, f) = self.move_firefly(ctx, i, j);
+                    if f < *fitness {
+                        *fitness = f;
+                        pool.assign(&v);
+                    }
                 }
             });
-        ctx.fitness = fitness.into_inner().unwrap();
-        ctx.pool = pool.into_inner().unwrap();
+        ctx.fitness = fitness;
+        ctx.pool = pool;
     }
 }
 

@@ -91,34 +91,21 @@ impl<F: ObjFunc> Context<F> {
 
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
         let mut fitness = self.fitness.clone();
-        let zip = Zip::from(&mut fitness).and(pool.axis_iter(Axis(0)));
-        #[cfg(not(feature = "rayon"))]
-        let _ = zip.for_each(|f, v| *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive));
         #[cfg(feature = "rayon")]
-        {
-            use crate::rayon::prelude::*;
-            let (f, v) = zip
-                .into_par_iter()
-                .map(|(f, v)| {
-                    *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
-                    (f, v)
-                })
-                .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-                .unwrap();
-            self.set_best_from(f.clone(), v);
-        }
+        let zip = fitness.par_iter_mut();
+        #[cfg(not(feature = "rayon"))]
+        let zip = fitness.iter_mut();
+        let (f, v) = zip
+            .zip(pool.axis_iter(Axis(0)))
+            .map(|(f, v)| {
+                *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
+                (f.clone(), v)
+            })
+            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+            .unwrap();
+        self.set_best_from(f, v);
         self.pool = pool;
         self.fitness = fitness;
-        #[cfg(not(feature = "rayon"))]
-        {
-            let mut best = 0;
-            for i in 1..self.pop_num() {
-                if self.fitness[i] < self.fitness[best] {
-                    best = i;
-                }
-            }
-            self.set_best(best);
-        }
     }
 
     /// Set the index to best.
