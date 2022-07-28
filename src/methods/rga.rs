@@ -82,11 +82,7 @@ impl<Ft: Fitness> Method<Ft> {
         } else {
             1.
         };
-        #[cfg(all(feature = "std", not(feature = "libm")))]
-        let pow_f = (1. - r).powf(self.delta);
-        #[cfg(feature = "libm")]
-        let pow_f = libm::pow(1. - r, self.delta);
-        y * ctx.rng.rand() * pow_f
+        y * ctx.rng.rand() * (1. - r).powf(self.delta)
     }
 }
 

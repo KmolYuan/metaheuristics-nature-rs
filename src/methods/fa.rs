@@ -68,11 +68,7 @@ impl Method {
         let r = (&ctx.pool.slice(s![i, ..]) - &ctx.pool.slice(s![j, ..]))
             .mapv(|v| v * v)
             .sum();
-        #[cfg(all(feature = "std", not(feature = "libm")))]
-        let gamma_r = (-self.gamma * r).exp();
-        #[cfg(feature = "libm")]
-        let gamma_r = libm::exp(-self.gamma * r);
-        let beta = self.beta_min * gamma_r;
+        let beta = self.beta_min * (-self.gamma * r).exp();
         for s in 0..ctx.dim() {
             let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
             let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);

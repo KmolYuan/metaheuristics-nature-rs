@@ -316,7 +316,6 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
 /// The length of `mean` and `std` must same.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
-#[cfg(any(feature = "std", feature = "libm"))]
 pub fn gaussian_pool<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
@@ -337,7 +336,6 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
 /// The length of `mean` and `std` must same.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
-#[cfg(any(feature = "std", feature = "libm"))]
 pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],

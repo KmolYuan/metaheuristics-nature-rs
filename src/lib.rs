@@ -39,14 +39,11 @@
 //! # Features
 //!
 //! + `std`: Default feature. Enable standard library function, such as timing and threading.
+//!   If `std` is disabled, crate "libm" will be enabled for the math functions.
 //! + `rayon`: Enable parallel computation via `rayon`, let objective function running without ordered.
 //!   Disable it for the platform that doesn't supported threading,
 //!   or if your objective function is not complicate enough.
 //!   This feature require `std` feature.
-//! + `libm`: If the standard library is not provided, some math functions might missing.
-//!   This will disable some pre-implemented algorithms.
-//!   However, there is a math library implemented in pure Rust, the name is same as `libm`.
-//!   This feature can re-enable the math functions by using the `libm` crate.
 //!
 //! # Compatibility
 //!

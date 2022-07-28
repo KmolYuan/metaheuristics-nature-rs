@@ -69,19 +69,16 @@ fn pso() {
     test::<Pso<_>>();
 }
 
-#[cfg(any(feature = "std", feature = "libm"))]
 #[test]
 fn fa() {
     test::<Fa>();
 }
 
-#[cfg(any(feature = "std", feature = "libm"))]
 #[test]
 fn rga() {
     test::<Rga<_>>();
 }
 
-#[cfg(any(feature = "std", feature = "libm"))]
 #[test]
 fn tlbo() {
     test::<Tlbo>();

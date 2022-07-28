@@ -33,10 +33,7 @@ impl Method {
     }
 
     fn teaching<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
-        #[cfg(all(feature = "std", not(feature = "libm")))]
         let tf = (ctx.rng.rand() + 1.).round();
-        #[cfg(feature = "libm")]
-        let tf = libm::round(ctx.rng.rand() + 1.);
         for s in 0..ctx.dim() {
             let mut mean = 0.;
             for j in 0..ctx.pop_num() {

@@ -11,4 +11,4 @@ jobs:
       - run: |
           cargo clippy --all-features -- -D warnings
           cargo test --all-features
-          cargo test --no-default-features --features=libm
+          cargo test --no-default-features

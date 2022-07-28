@@ -5,6 +5,8 @@ use core::{
     sync::atomic::{AtomicU64, Ordering},
 };
 use getrandom::getrandom;
+#[cfg(not(feature = "std"))]
+use num_traits::Float as _;
 use oorandom::Rand64;
 
 mod ziggurat;
@@ -104,7 +106,6 @@ impl Rng {
     }
 
     /// Sample with Gaussian distribution.
-    #[cfg(any(feature = "std", feature = "libm"))]
     #[inline]
     pub fn rand_norm(&self, mean: f64, std: f64) -> f64 {
         self.gen(|rng| mean + std * ziggurat(rng))
@@ -124,7 +125,6 @@ impl Rng {
 }
 
 // Ziggurat algorithm, copy from `rand`
-#[cfg(any(feature = "std", feature = "libm"))]
 fn ziggurat(rng: &mut Rand64) -> f64 {
     loop {
         let bits = rng.rand_u64();
@@ -132,10 +132,7 @@ fn ziggurat(rng: &mut Rand64) -> f64 {
 
         let u = into_float_with_exponent(bits >> 12, 1) - 3.;
         let x = u * ZIG_NORM_X[i];
-        #[cfg(all(feature = "std", not(feature = "libm")))]
         let test_x = x.abs();
-        #[cfg(feature = "libm")]
-        let test_x = libm::fabs(x);
 
         // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
         if test_x < ZIG_NORM_X[i + 1] {
@@ -144,10 +141,7 @@ fn ziggurat(rng: &mut Rand64) -> f64 {
         if i == 0 {
             return zero_case(rng, u);
         }
-        #[cfg(all(feature = "std", not(feature = "libm")))]
         let pdf = (-x * x * 0.5).exp();
-        #[cfg(feature = "libm")]
-        let pdf = libm::exp(-x * x * 0.5);
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
         if ZIG_NORM_F[i + 1] + (ZIG_NORM_F[i] - ZIG_NORM_F[i + 1]) * rand_f64(rng) < pdf {
             return x;
@@ -177,16 +171,8 @@ fn zero_case(rng: &mut Rand64, u: f64) -> f64 {
     let mut x = 1.;
     let mut y = 0.;
     while -2. * y < x * x {
-        #[cfg(all(feature = "std", not(feature = "libm")))]
-        let x_ = rand_open01(rng).ln();
-        #[cfg(feature = "libm")]
-        let x_ = libm::log(rand_open01(rng));
-        #[cfg(all(feature = "std", not(feature = "libm")))]
-        let y_ = rand_open01(rng).ln();
-        #[cfg(feature = "libm")]
-        let y_ = libm::log(rand_open01(rng));
-        x = x_ / ZIG_NORM_R;
-        y = y_;
+        x = rand_open01(rng).ln() / ZIG_NORM_R;
+        y = rand_open01(rng).ln();
     }
     if u < 0. {
         x - ZIG_NORM_R

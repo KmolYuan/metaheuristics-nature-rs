@@ -25,4 +25,6 @@ pub mod prelude {
     #[cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use crate::rayon::prelude::*;
+    #[cfg(not(feature = "std"))]
+    pub use num_traits::Float as _;
 }
