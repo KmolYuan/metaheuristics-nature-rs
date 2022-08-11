@@ -1,6 +1,14 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
+enum Pool<'a, F: ObjFunc> {
+    ReadyMade {
+        pool: Array2<f64>,
+        fitness: Vec<F::Fitness>,
+    },
+    Func(Box<dyn FnOnce(&Context<F>) -> Array2<f64> + 'a>),
+}
+
 /// Collect configuration and build the solver.
 ///
 /// This type is created by [`Solver::build`] method.
@@ -9,7 +17,7 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     pop_num: usize,
     seed: Option<u128>,
     setting: S,
-    pool: Box<dyn Fn(&Context<F>) -> Array2<f64> + 'a>,
+    pool: Pool<'a, F>,
     task: Box<dyn Fn(&Context<F>) -> bool + 'a>,
     record: Box<dyn Fn(&Context<F>) -> R + 'a>,
     adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
@@ -37,9 +45,9 @@ where
         fn seed(Option<u128>)
     }
 
-    /// Pool generating function.
+    /// Give a pool generating function.
     ///
-    /// You can insert a existing pool from last states,
+    /// You can insert a ready-made pool from last states,
     /// or random values with another distribution.
     ///
     /// The array must be the shape of `ctx.pool_size()` and in the bounds of `[ctx.lb(), ctx.ub())`.
@@ -61,13 +69,29 @@ where
     ///
     /// # See Also
     ///
-    /// [`uniform_pool`], [`gaussian_pool`].
+    /// [`Self::pool_and_fitness`], [`uniform_pool`], [`gaussian_pool`].
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: Fn(&Context<F>) -> Array2<f64> + 'b,
+        C: FnOnce(&Context<F>) -> Array2<f64> + 'b,
     {
-        SolverBuilder { pool: Box::new(pool), ..self }
+        SolverBuilder { pool: Pool::Func(Box::new(pool)), ..self }
+    }
+
+    /// Give a ready-made pool and its fitness values directly.
+    ///
+    /// The `pool` must be the shape of `ctx.pool_size()` and in the bounds of `[ctx.lb(), ctx.ub())`,
+    /// and the `fitness` must have the same length as `ctx.pop_num()`.
+    ///
+    /// # Default
+    ///
+    /// The default pool will generate with uniform distribution in the bounds.
+    ///
+    /// # See Also
+    ///
+    /// [`Self::pool`].
+    pub fn pool_and_fitness(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
+        Self { pool: Pool::ReadyMade { pool, fitness }, ..self }
     }
 
     /// Termination condition.
@@ -257,10 +281,17 @@ where
         let mut method = setting.algorithm();
         let mut ctx = Context::new(func, seed, pop_num);
         let mut report = Vec::new();
+        match pool {
+            Pool::ReadyMade { pool, fitness } => {
+                ctx.pool = pool;
+                ctx.fitness = fitness;
+                assert_eq!(ctx.pool.shape(), ctx.pool_size());
+            }
+            Pool::Func(f) => ctx.init_pop(f(&ctx)),
+        }
         loop {
             ctx.adaptive = adaptive(&ctx);
             if ctx.gen == 0 {
-                ctx.init_pop(pool(&ctx));
                 method.init(&mut ctx);
             } else {
                 method.generation(&mut ctx);
@@ -292,7 +323,7 @@ impl<F: ObjFunc + 'static> Solver<F, ()> {
             pop_num: S::default_pop(),
             seed: None,
             setting,
-            pool: Box::new(uniform_pool),
+            pool: Pool::Func(Box::new(uniform_pool)),
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
             adaptive: Box::new(|_| 1.),
@@ -313,9 +344,12 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
 /// A function generates a Gaussian pool.
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
-/// The length of `mean` and `std` must same.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
+///
+/// # Panics
+///
+/// Panic when the lengths of `mean` and `std` are not the same.
 pub fn gaussian_pool<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
@@ -333,9 +367,12 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
 /// A function generates a Gaussian pool, including the mean (center).
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
-/// The length of `mean` and `std` must same.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
+///
+/// # Panics
+///
+/// Panic when the lengths of `mean` and `std` are not the same.
 pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
