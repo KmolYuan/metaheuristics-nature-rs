@@ -18,7 +18,8 @@ use alloc::vec::Vec;
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default())
 ///     .task(|ctx| ctx.gen == 20)
-///     .solve(MyFunc::new());
+///     .solve(MyFunc::new())
+///     .unwrap();
 /// // Get the result from objective function
 /// let ans = s.result();
 /// // Get the optimized XY value of your function
@@ -27,6 +28,7 @@ use alloc::vec::Vec;
 /// // Get the history reports
 /// let report = s.report();
 /// ```
+#[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
 pub struct Solver<F: ObjFunc, R> {
     ctx: Context<F>,
     report: Vec<R>,

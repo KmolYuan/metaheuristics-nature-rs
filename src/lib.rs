@@ -153,7 +153,8 @@ pub mod ndarray {
 ///     s.spawn(|_| {
 ///         let s = Solver::build(Rga::default())
 ///             .task(|ctx| ctx.gen == 20)
-///             .solve(MyFunc::new());
+///             .solve(MyFunc::new())
+///             .unwrap();
 ///         /* ... */
 ///     });
 ///     // Task 2

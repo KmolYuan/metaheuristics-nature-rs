@@ -68,7 +68,8 @@ impl_fx! {
     ///     .ub([50.; 4]);
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
-    ///     .solve(f);
+    ///     .solve(f)
+    /// .unwrap();
     /// ```
     ///
     /// Adaptive version is [`FxAdaptive`].
@@ -88,7 +89,8 @@ impl_fx! {
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
     ///     .adaptive(|ctx| ctx.gen as f64)
-    ///     .solve(f);
+    ///     .solve(f)
+    /// .unwrap();
     /// ```
     ///
     /// Non-adaptive version is [`Fx`].

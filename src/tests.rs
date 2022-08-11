@@ -46,7 +46,8 @@ where
 {
     let s = Solver::build(S::default())
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
-        .solve(TestObj::default());
+        .solve(TestObj::default())
+        .unwrap();
     let ans = s.result();
     let xs = s.best_parameters();
     let y = s.best_fitness();

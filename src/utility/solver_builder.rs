@@ -59,7 +59,8 @@ where
     /// let s = Solver::build(Rga::default())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .pool(gaussian_pool(&[0.; 4], &[5.; 4]))
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// ```
     ///
     /// # Default
@@ -104,7 +105,8 @@ where
     ///
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// ```
     ///
     /// # Default
@@ -134,7 +136,8 @@ where
     /// let s = Solver::build(Rga::default())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .record(|ctx| (ctx.gen, ctx.adaptive))
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// let report: &[(u64, f64)] = s.report();
     /// ```
     ///
@@ -166,7 +169,8 @@ where
     /// let s = Solver::build(Rga::default())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .adaptive(|ctx| ctx.gen as f64 / 20.)
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// ```
     ///
     /// The adaptive function is also allow to change the external variable.
@@ -188,7 +192,8 @@ where
     ///             ctx.best_f
     ///         }
     ///     })
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// ```
     ///
     /// # Default
@@ -214,39 +219,51 @@ where
     /// let s = Solver::build(Rga::default())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .callback(|ctx| gen = ctx.gen)
-    ///     .solve(MyFunc::new());
+    ///     .solve(MyFunc::new())
+    ///     .unwrap();
     /// ```
     ///
     /// In the example below, the fields of the `app` are mutable variables that changes every time.
     /// But we still need to use its method in [`task`](Self::task) condition,
     /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
     ///
-    /// If you spawn the optimization process into another thread, adding a reference counter is also required.
+    /// If you spawn the optimization process into another thread,
+    /// adding a reference counter ([`Arc`](std::sync::Arc)) is also required.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
     /// use std::sync::{
     ///     atomic::{AtomicBool, AtomicU64, Ordering},
-    ///     Mutex,
+    ///     Arc, Mutex,
     /// };
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// #[derive(Default)]
     /// struct App {
-    ///     is_start: AtomicBool,
-    ///     gen: AtomicU64,
-    ///     fitness: Mutex<f64>,
+    ///     is_start: Arc<AtomicBool>,
+    ///     gen: Arc<AtomicU64>,
+    ///     fitness: Arc<Mutex<f64>>,
     /// }
     ///
     /// let app = App::default();
+    /// // Create references of Arc,
+    /// // they will be moved into a static closure
+    /// let is_start = app.is_start.clone();
+    /// let gen = app.gen.clone();
+    /// let fitness = app.fitness.clone();
     /// // Spawn the solver here!
-    /// let s = Solver::build(Rga::default())
-    ///     .task(|ctx| ctx.gen == 20 || !app.is_start.load(Ordering::Relaxed))
-    ///     .callback(|ctx| {
-    ///         app.gen.store(ctx.gen, Ordering::Relaxed);
-    ///         *app.fitness.lock().unwrap() = ctx.best_f;
-    ///     })
-    ///     .solve(MyFunc::new());
+    /// let handle = std::thread::spawn(move || {
+    ///     Solver::build(Rga::default())
+    ///         .task(|ctx| ctx.gen == 20 || !is_start.load(Ordering::Relaxed))
+    ///         .callback(|ctx| {
+    ///             gen.store(ctx.gen, Ordering::Relaxed);
+    ///             *fitness.lock().unwrap() = ctx.best_f;
+    ///         })
+    ///         .solve(MyFunc::new())
+    ///         .unwrap()
+    /// });
+    /// /* do other things such as GUI */
+    /// let s = handle.join();
     /// ```
     ///
     /// # Default
@@ -263,8 +280,11 @@ where
     /// Create the task and run the algorithm, which may takes a lot of time.
     ///
     /// Generation `ctx.gen` is start from 1, initialized at 0.
-    #[must_use = "the result cannot access unless to operate with the solver"]
-    pub fn solve(self, func: F) -> Solver<F, R>
+    ///
+    /// This method returns a `Result` object.
+    /// It will be `Ok` and returns result when the process initialized successfully;
+    /// `Err` when the boundary check fails.
+    pub fn solve(self, func: F) -> Result<Solver<F, R>, ShapeError>
     where
         S::Algorithm: Algorithm<F>,
     {
@@ -279,13 +299,15 @@ where
             mut callback,
         } = self;
         let mut method = setting.algorithm();
-        let mut ctx = Context::new(func, seed, pop_num);
+        let mut ctx = Context::new(func, seed, pop_num)?;
         let mut report = Vec::new();
         match pool {
             Pool::ReadyMade { pool, fitness } => {
                 ctx.pool = pool;
                 ctx.fitness = fitness;
-                assert_eq!(ctx.pool.shape(), ctx.pool_size());
+                if ctx.pool.shape() != ctx.pool_size() {
+                    return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+                }
             }
             Pool::Func(f) => ctx.init_pop(f(&ctx)),
         }
@@ -303,7 +325,7 @@ where
             }
             ctx.gen += 1;
         }
-        Solver::new(ctx, report)
+        Ok(Solver::new(ctx, report))
     }
 }
 

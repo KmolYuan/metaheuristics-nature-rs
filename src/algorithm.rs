@@ -44,7 +44,7 @@ use crate::utility::prelude::*;
 ///
 /// impl<F: ObjFunc> Algorithm<F> for Method {
 ///     fn generation(&mut self, ctx: &mut Context<F>) {
-///         unimplemented!()
+///         /* implement method here! */
 ///     }
 /// }
 /// ```

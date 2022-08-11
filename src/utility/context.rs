@@ -27,22 +27,21 @@ pub struct Context<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Self {
+    pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Result<Self, ShapeError> {
         let dim = func.lb().len();
-        assert_eq!(
-            dim,
-            func.ub().len(),
-            "different dimension of the variables!"
-        );
-        Self {
-            rng: Rng::new(seed),
-            best: Array1::zeros(dim),
-            best_f: Default::default(),
-            pool: Array2::zeros((pop_num, dim)),
-            fitness: vec![Default::default(); pop_num],
-            adaptive: 0.,
-            gen: 0,
-            func,
+        if dim != func.ub().len() {
+            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        } else {
+            Ok(Self {
+                rng: Rng::new(seed),
+                best: Array1::zeros(dim),
+                best_f: Default::default(),
+                pool: Array2::zeros((pop_num, dim)),
+                fitness: vec![Default::default(); pop_num],
+                adaptive: 0.,
+                gen: 0,
+                func,
+            })
         }
     }
 
