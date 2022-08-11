@@ -281,8 +281,11 @@ where
     ///
     /// Generation `ctx.gen` is start from 1, initialized at 0.
     ///
+    /// # Error
+    ///
     /// This method returns a `Result` object.
-    /// It will be `Ok` and returns result when the process initialized successfully;
+    /// It will be `Ok` and returns result when the `ctx.pool` and `ctx.fitness`
+    /// initialized successfully;
     /// `Err` when the boundary check fails.
     pub fn solve(self, func: F) -> Result<Solver<F, R>, ShapeError>
     where
@@ -299,7 +302,7 @@ where
             mut callback,
         } = self;
         let mut method = setting.algorithm();
-        let mut ctx = Context::new(func, seed, pop_num)?;
+        let mut ctx = Context::new(func, seed, pop_num);
         let mut report = Vec::new();
         match pool {
             Pool::ReadyMade { pool, fitness } => {
@@ -309,7 +312,13 @@ where
                     return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
                 }
             }
-            Pool::Func(f) => ctx.init_pop(f(&ctx)),
+            Pool::Func(f) => {
+                let pool = f(&ctx);
+                if pool.shape() != ctx.pool_size() {
+                    return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
+                }
+                ctx.init_pop(pool);
+            }
         }
         loop {
             ctx.adaptive = adaptive(&ctx);

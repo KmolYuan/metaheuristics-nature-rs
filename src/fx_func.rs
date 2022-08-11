@@ -9,8 +9,7 @@ macro_rules! impl_fx {
         $(#[$meta])*
         pub struct $ty<'a, R: Fitness, const N: usize> {
             func: Box<dyn $($func)+ + Sync + Send + 'a>,
-            ub: [f64; N],
-            lb: [f64; N],
+            bound: [[f64; 2]; N],
         }
 
         impl<'a, R: Fitness, const N: usize> $ty<'a, R, N> {
@@ -21,16 +20,13 @@ macro_rules! impl_fx {
             {
                 Self {
                     func: Box::new(f),
-                    ub: [0.; N],
-                    lb: [0.; N],
+                    bound: [[0.; 2]; N],
                 }
             }
 
             impl_builders! {
-                /// Upper bound.
-                fn ub([f64; N])
-                /// Lower bound.
-                fn lb([f64; N])
+                /// Set the bound.
+                fn bound([[f64; 2]; N])
             }
         }
 
@@ -46,12 +42,8 @@ macro_rules! impl_fx {
                 self.fitness($v, 0.)
             }
 
-            fn ub(&self) -> &[f64] {
-                &self.ub
-            }
-
-            fn lb(&self) -> &[f64] {
-                &self.lb
+            fn bound(&self) -> &[[f64; 2]] {
+                &self.bound
             }
         }
     )+};
@@ -64,8 +56,7 @@ impl_fx! {
     /// use metaheuristics_nature::{Fx, Rga, Solver};
     ///
     /// let f = Fx::new(|v| v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3])
-    ///     .lb([-50.; 4])
-    ///     .ub([50.; 4]);
+    ///     .bound([[-50., 50.]; 4]);
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
     ///     .solve(f)
@@ -84,8 +75,7 @@ impl_fx! {
     /// use metaheuristics_nature::{FxAdaptive, Rga, Solver};
     ///
     /// let f = FxAdaptive::new(|v, f| v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3] * f)
-    ///     .lb([-50.; 4])
-    ///     .ub([50.; 4]);
+    ///     .bound([[-50., 50.]; 4]);
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
     ///     .adaptive(|ctx| ctx.gen as f64)

@@ -27,21 +27,17 @@ pub struct Context<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Context<F> {
-    pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Result<Self, ShapeError> {
-        let dim = func.lb().len();
-        if dim != func.ub().len() {
-            Err(ShapeError::from_kind(ErrorKind::IncompatibleShape))
-        } else {
-            Ok(Self {
-                rng: Rng::new(seed),
-                best: Array1::zeros(dim),
-                best_f: Default::default(),
-                pool: Array2::zeros((pop_num, dim)),
-                fitness: vec![Default::default(); pop_num],
-                adaptive: 0.,
-                gen: 0,
-                func,
-            })
+    pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Self {
+        let dim = func.bound().len();
+        Self {
+            rng: Rng::new(seed),
+            best: Array1::zeros(dim),
+            best_f: Default::default(),
+            pool: Array2::zeros((pop_num, dim)),
+            fitness: vec![Default::default(); pop_num],
+            adaptive: 0.,
+            gen: 0,
+            func,
         }
     }
 
@@ -49,14 +45,14 @@ impl<F: ObjFunc> Context<F> {
     #[inline(always)]
     #[must_use = "the bound value should be used"]
     pub fn lb(&self, i: usize) -> f64 {
-        self.func.lb()[i]
+        self.func.bound()[i][0]
     }
 
     /// Get upper bound.
     #[inline(always)]
     #[must_use = "the bound value should be used"]
     pub fn ub(&self, i: usize) -> f64 {
-        self.func.ub()[i]
+        self.func.bound()[i][1]
     }
 
     /// Get population number.

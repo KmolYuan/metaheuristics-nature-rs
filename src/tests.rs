@@ -4,11 +4,11 @@ use crate::utility::prelude::*;
 const OFFSET: f64 = 7.;
 
 /// An example case for doctest.
-pub struct TestObj([f64; 4], [f64; 4]);
+pub struct TestObj([[f64; 2]; 4]);
 
 impl Default for TestObj {
     fn default() -> Self {
-        Self([-50.; 4], [50.; 4])
+        Self([[-50., 50.]; 4])
     }
 }
 
@@ -30,10 +30,7 @@ impl ObjFunc for TestObj {
         self.fitness(v, 0.)
     }
 
-    fn ub(&self) -> &[f64] {
-        &self.1
-    }
-    fn lb(&self) -> &[f64] {
+    fn bound(&self) -> &[[f64; 2]] {
         &self.0
     }
 }

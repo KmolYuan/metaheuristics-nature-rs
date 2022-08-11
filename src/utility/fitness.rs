@@ -9,7 +9,7 @@
 /// ```
 /// use metaheuristics_nature::{utility::Fitness, ObjFunc};
 /// use std::cmp::Ordering;
-/// # struct MyFunc([f64; 2], [f64; 2]);
+/// # struct MyFunc([[f64; 2]; 4]);
 ///
 /// #[derive(Clone, PartialEq, Default)]
 /// struct MarkerFitness {
@@ -39,11 +39,7 @@
 ///         self.fitness(xs, 0.).f
 ///     }
 ///
-///     fn ub(&self) -> &[f64] {
-///         &self.1
-///     }
-///
-///     fn lb(&self) -> &[f64] {
+///     fn bound(&self) -> &[[f64; 2]] {
 ///         &self.0
 ///     }
 /// }

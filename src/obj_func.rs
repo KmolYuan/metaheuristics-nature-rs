@@ -5,11 +5,11 @@ use crate::utility::prelude::*;
 /// ```
 /// use metaheuristics_nature::ObjFunc;
 ///
-/// struct MyFunc([f64; 3], [f64; 3]);
+/// struct MyFunc([[f64; 2]; 3]);
 ///
 /// impl MyFunc {
 ///     fn new() -> Self {
-///         Self([0.; 3], [50.; 3])
+///         Self([[0., 50.]; 3])
 ///     }
 /// }
 ///
@@ -25,11 +25,7 @@ use crate::utility::prelude::*;
 ///         self.fitness(xs, 0.)
 ///     }
 ///
-///     fn ub(&self) -> &[f64] {
-///         &self.1
-///     }
-///
-///     fn lb(&self) -> &[f64] {
+///     fn bound(&self) -> &[[f64; 2]] {
 ///         &self.0
 ///     }
 /// }
@@ -89,9 +85,6 @@ pub trait ObjFunc: Sync + Send {
     /// The parameters `xs` is the best parameter we found.
     fn result(&self, xs: &[f64]) -> Self::Result;
 
-    /// Get upper bound.
-    fn ub(&self) -> &[f64];
-
-    /// Get lower bound.
-    fn lb(&self) -> &[f64];
+    /// The upper bound and lower bound.
+    fn bound(&self) -> &[[f64; 2]];
 }
