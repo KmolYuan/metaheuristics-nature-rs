@@ -1,6 +1,11 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
+fn assert_shape(b: bool) -> Result<(), ShapeError> {
+    b.then_some(())
+        .ok_or_else(|| ShapeError::from_kind(ErrorKind::IncompatibleShape))
+}
+
 enum Pool<'a, F: ObjFunc> {
     ReadyMade {
         pool: Array2<f64>,
@@ -301,6 +306,7 @@ where
             mut adaptive,
             mut callback,
         } = self;
+        assert_shape(func.bound().iter().all(|[lb, ub]| lb < ub))?;
         let mut method = setting.algorithm();
         let mut ctx = Context::new(func, seed, pop_num);
         let mut report = Vec::new();
@@ -308,15 +314,11 @@ where
             Pool::ReadyMade { pool, fitness } => {
                 ctx.pool = pool;
                 ctx.fitness = fitness;
-                if ctx.pool.shape() != ctx.pool_size() {
-                    return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
-                }
+                assert_shape(ctx.pool.shape() == ctx.pool_size())?;
             }
             Pool::Func(f) => {
                 let pool = f(&ctx);
-                if pool.shape() != ctx.pool_size() {
-                    return Err(ShapeError::from_kind(ErrorKind::IncompatibleShape));
-                }
+                assert_shape(pool.shape() == ctx.pool_size())?;
                 ctx.init_pop(pool);
             }
         }
