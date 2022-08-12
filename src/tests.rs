@@ -3,18 +3,12 @@ use crate::utility::prelude::*;
 
 const OFFSET: f64 = 7.;
 
-/// An example case for doctest.
-pub struct TestObj([[f64; 2]; 4]);
-
-impl Default for TestObj {
-    fn default() -> Self {
-        Self([[-50., 50.]; 4])
-    }
-}
+// An example case for doctest
+pub struct TestObj;
 
 impl TestObj {
-    pub fn new() -> Self {
-        Self::default()
+    pub const fn new() -> Self {
+        Self
     }
 }
 
@@ -31,7 +25,7 @@ impl ObjFunc for TestObj {
     }
 
     fn bound(&self) -> &[[f64; 2]] {
-        &self.0
+        &[[-50., 50.]; 4]
     }
 }
 
@@ -43,7 +37,7 @@ where
 {
     let s = Solver::build(S::default())
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
-        .solve(TestObj::default())
+        .solve(TestObj)
         .unwrap();
     let ans = s.result();
     let xs = s.best_parameters();
