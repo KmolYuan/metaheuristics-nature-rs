@@ -123,54 +123,14 @@ mod setting;
 mod solver;
 pub mod tests;
 pub mod utility;
-
-/// The re-export of the crate `ndarray`.
 pub mod ndarray {
+    //! The re-export of the crate `ndarray`.
     #[doc(no_inline)]
     pub use ndarray::*;
 }
-
-/// The re-export of the crate `rayon`.
-///
-/// + `spawn` is a function sends a sub-task to the background and does not care about its return,
-///   so this function will not block the current thread,
-///   same as the [`std::thread::spawn`] but it still managed by rayon thread-pool.
-///   This function requires a **static lifetime**.
-/// + `scope` is the function runs a local callable with return value,
-///   and there is a `Scope` object lets multiple callables **join** at this function.
-///   So this function will wait all subtasks to return, which will block the current thread.
-///   This function can be **passed by reference**.
-///
-/// The following example shows a block-on model that creates a simple fork-join structure.
-///
-/// ```
-/// use metaheuristics_nature::{rayon::scope, Rga, Solver};
-/// # use metaheuristics_nature::tests::TestObj as MyFunc;
-///
-/// scope(|s| {
-///     // Fork here
-///     // Task 1
-///     s.spawn(|_| {
-///         let s = Solver::build(Rga::default())
-///             .task(|ctx| ctx.gen == 20)
-///             .solve(MyFunc::new())
-///             .unwrap();
-///         /* ... */
-///     });
-///     // Task 2
-///     s.spawn(|_| ());
-///     // Join here (then return)
-/// });
-/// ```
-///
-/// # First-in-First-out (FIFO)
-///
-/// Rayon's thread-pool is last-in-first-out (LIFO),
-/// when the number of tasks becomes greater in a short time,
-/// it means that the subtask order is upside-down.
-/// If you want to keep the sending order, please use the FIFO version.
-#[cfg(feature = "rayon")]
 pub mod rayon {
+    //! The re-export of the crate `rayon`.
+    #![cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use rayon::*;
 }
