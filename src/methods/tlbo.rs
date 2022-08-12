@@ -21,7 +21,7 @@ impl Setting for Tlbo {
 pub struct Method;
 
 impl Method {
-    fn register<F: ObjFunc>(ctx: &mut Context<F>, i: usize, student: &Array1<f64>) {
+    fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {
         let f_new = ctx.func.fitness(student.as_slice().unwrap(), ctx.adaptive);
         if f_new < ctx.fitness[i] {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
@@ -32,7 +32,7 @@ impl Method {
         }
     }
 
-    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
+    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
         let tf = (ctx.rng.rand() + 1.).round();
         for s in 0..ctx.dim() {
             let mut mean = 0.;
@@ -47,7 +47,7 @@ impl Method {
         Self::register(ctx, i, student);
     }
 
-    fn learning<F: ObjFunc>(&mut self, ctx: &mut Context<F>, i: usize, student: &mut Array1<f64>) {
+    fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
         let j = {
             let j = ctx.rng.int(0..ctx.pop_num() - 1);
             if j >= i {
@@ -71,7 +71,7 @@ impl Method {
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
-    fn generation(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>) {
         for i in 0..ctx.pop_num() {
             let mut student = Array1::zeros(ctx.dim());
             self.teaching(ctx, i, &mut student);

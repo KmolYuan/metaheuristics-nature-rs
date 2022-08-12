@@ -1,13 +1,13 @@
 use crate::utility::prelude::*;
 use alloc::{vec, vec::Vec};
 
-/// The base class of algorithms.
+/// A basic context type of the algorithms.
 ///
 /// This type provides a shared dataset if you want to implement a new method.
 ///
 /// Please see [`Algorithm`] for the implementation.
 #[non_exhaustive]
-pub struct Context<F: ObjFunc> {
+pub struct Ctx<F: ObjFunc> {
     /// Random number generator.
     pub rng: Rng,
     /// The best variables.
@@ -26,7 +26,7 @@ pub struct Context<F: ObjFunc> {
     pub func: F,
 }
 
-impl<F: ObjFunc> Context<F> {
+impl<F: ObjFunc> Ctx<F> {
     pub(crate) fn new(func: F, seed: Option<u128>, pop_num: usize) -> Self {
         let dim = func.bound().len();
         Self {

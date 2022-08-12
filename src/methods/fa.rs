@@ -55,7 +55,7 @@ pub struct Method {
 impl Method {
     fn move_firefly<F: ObjFunc>(
         &self,
-        ctx: &Context<F>,
+        ctx: &Ctx<F>,
         i: usize,
         j: usize,
     ) -> (Array1<f64>, F::Fitness) {
@@ -78,7 +78,7 @@ impl Method {
         (v, f)
     }
 
-    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Context<F>) {
+    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>) {
         let mut fitness = ctx.fitness.clone();
         let mut pool = ctx.pool.clone();
         #[cfg(feature = "rayon")]
@@ -103,7 +103,7 @@ impl Method {
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     #[inline(always)]
-    fn generation(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>) {
         self.move_fireflies(ctx);
         self.alpha *= 0.95;
         ctx.find_best();

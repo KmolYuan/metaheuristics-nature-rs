@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 ///
 /// + The method is a type that implemented [`Algorithm`].
 /// + The objective function is a type that implement [`ObjFunc`].
-/// + A basic algorithm data is hold by [`Context`].
+/// + A basic algorithm data is hold by [`Ctx`].
 ///
 /// The builder of this type can infer the algorithm by [`Setting::Algorithm`].
 ///
@@ -30,12 +30,12 @@ use alloc::vec::Vec;
 /// ```
 #[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
 pub struct Solver<F: ObjFunc, R> {
-    ctx: Context<F>,
+    ctx: Ctx<F>,
     report: Vec<R>,
 }
 
 impl<F: ObjFunc, R> Solver<F, R> {
-    pub(crate) fn new(ctx: Context<F>, report: Vec<R>) -> Self {
+    pub(crate) fn new(ctx: Ctx<F>, report: Vec<R>) -> Self {
         Self { ctx, report }
     }
 

@@ -105,18 +105,12 @@ pub struct Method {
 }
 
 impl Method {
-    fn f45<F: ObjFunc>(&self, ctx: &Context<F>, v: &[usize], n: usize) -> f64 {
+    fn f45<F: ObjFunc>(&self, ctx: &Ctx<F>, v: &[usize], n: usize) -> f64 {
         (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]] - ctx.pool[[v[3], n]])
             * self.f
     }
 
-    fn formula<F: ObjFunc>(
-        &self,
-        ctx: &Context<F>,
-        tmp: &Array1<f64>,
-        v: &[usize],
-        n: usize,
-    ) -> f64 {
+    fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, tmp: &Array1<f64>, v: &[usize], n: usize) -> f64 {
         match self.strategy {
             S1 | S6 => ctx.best[n] + self.f * (ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]]),
             S2 | S7 => ctx.pool[[v[0], n]] + self.f * (ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]]),
@@ -128,13 +122,7 @@ impl Method {
         }
     }
 
-    fn c1<F: ObjFunc>(
-        &mut self,
-        ctx: &Context<F>,
-        tmp: &mut Array1<f64>,
-        v: Vec<usize>,
-        mut n: usize,
-    ) {
+    fn c1<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, v: Vec<usize>, mut n: usize) {
         for _ in 0..ctx.dim() {
             tmp[n] = self.formula(ctx, tmp, &v, n);
             n = (n + 1) % ctx.dim();
@@ -144,13 +132,7 @@ impl Method {
         }
     }
 
-    fn c2<F: ObjFunc>(
-        &mut self,
-        ctx: &Context<F>,
-        tmp: &mut Array1<f64>,
-        v: Vec<usize>,
-        mut n: usize,
-    ) {
+    fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, v: Vec<usize>, mut n: usize) {
         for lv in 0..ctx.dim() {
             if !ctx.rng.maybe(self.cross) || lv == ctx.dim() - 1 {
                 tmp[n] = self.formula(ctx, tmp, &v, n);
@@ -161,7 +143,7 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>) {
         'a: for i in 0..ctx.pop_num() {
             // Generate Vector
             let mut v = vec![0; self.num];

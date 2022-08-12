@@ -60,12 +60,12 @@ pub struct Method<F: Fitness> {
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     #[inline(always)]
-    fn init(&mut self, ctx: &mut Context<F>) {
+    fn init(&mut self, ctx: &mut Ctx<F>) {
         self.best_past = ctx.pool.clone();
         self.best_past_f = ctx.fitness.clone();
     }
 
-    fn generation(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>) {
         let mut fitness = ctx.fitness.clone();
         let mut pool = ctx.pool.clone();
         let mut best_past = self.best_past.clone();

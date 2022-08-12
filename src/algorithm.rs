@@ -6,7 +6,7 @@ use crate::utility::prelude::*;
 /// 1. Implement `Algorithm` trait on the "method" type.
 ///
 /// Usually, the "method" type that implements this trait will not leak from the API.
-/// All most common dataset is store in the [`Context`] type.
+/// All most common dataset is store in the [`Ctx`] type.
 /// So the "method" type is used to store the additional data if any.
 ///
 /// ```
@@ -43,7 +43,7 @@ use crate::utility::prelude::*;
 /// pub struct Method;
 ///
 /// impl<F: ObjFunc> Algorithm<F> for Method {
-///     fn generation(&mut self, ctx: &mut Context<F>) {
+///     fn generation(&mut self, ctx: &mut Ctx<F>) {
 ///         /* implement method here! */
 ///     }
 /// }
@@ -56,13 +56,13 @@ use crate::utility::prelude::*;
 pub trait Algorithm<F: ObjFunc> {
     /// Initialization implementation.
     ///
-    /// The information of the [`Context`] can be obtained or modified at this phase preliminarily.
+    /// The information of the [`Ctx`] can be obtained or modified at this phase preliminarily.
     ///
     /// The default behavior is do nothing.
     #[inline(always)]
     #[allow(unused_variables)]
-    fn init(&mut self, ctx: &mut Context<F>) {}
+    fn init(&mut self, ctx: &mut Ctx<F>) {}
 
     /// Processing implementation of each generation.
-    fn generation(&mut self, ctx: &mut Context<F>);
+    fn generation(&mut self, ctx: &mut Ctx<F>);
 }

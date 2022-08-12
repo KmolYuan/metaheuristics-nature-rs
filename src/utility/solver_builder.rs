@@ -1,11 +1,11 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-type PoolFunc<'a, F> = Box<dyn FnOnce(&Context<F>) -> Array2<f64> + 'a>;
-type TaskFunc<'a, F> = Box<dyn Fn(&Context<F>) -> bool + 'a>;
-type RecordFunc<'a, F, R> = Box<dyn Fn(&Context<F>) -> R + 'a>;
-type AdaptiveFunc<'a, F> = Box<dyn FnMut(&Context<F>) -> f64 + 'a>;
-type CallbackFunc<'a, F> = Box<dyn FnMut(&Context<F>) + 'a>;
+type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + 'a>;
+type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + 'a>;
+type RecordFunc<'a, F, R> = Box<dyn Fn(&Ctx<F>) -> R + 'a>;
+type AdaptiveFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) -> f64 + 'a>;
+type CallbackFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) + 'a>;
 
 fn assert_shape(b: bool) -> Result<(), ShapeError> {
     b.then_some(())
@@ -85,7 +85,7 @@ where
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: FnOnce(&Context<F>) -> Array2<f64> + 'b,
+        C: FnOnce(&Ctx<F>) -> Array2<f64> + 'b,
     {
         SolverBuilder { pool: Pool::Func(Box::new(pool)), ..self }
     }
@@ -126,7 +126,7 @@ where
     pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: Fn(&Context<F>) -> bool + 'b,
+        C: Fn(&Ctx<F>) -> bool + 'b,
     {
         SolverBuilder { task: Box::new(task), ..self }
     }
@@ -158,7 +158,7 @@ where
     pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
     where
         'a: 'b,
-        C: Fn(&Context<F>) -> NR + 'b,
+        C: Fn(&Ctx<F>) -> NR + 'b,
     {
         macro_rules! builder {
             ($field_new:ident, $($field:ident),+) => {
@@ -213,7 +213,7 @@ where
     pub fn adaptive<'b, C>(self, adaptive: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: FnMut(&Context<F>) -> f64 + 'b,
+        C: FnMut(&Ctx<F>) -> f64 + 'b,
     {
         SolverBuilder { adaptive: Box::new(adaptive), ..self }
     }
@@ -283,7 +283,7 @@ where
     pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: FnMut(&Context<F>) + 'b,
+        C: FnMut(&Ctx<F>) + 'b,
     {
         SolverBuilder { callback: Box::new(callback), ..self }
     }
@@ -314,7 +314,7 @@ where
         } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb < ub))?;
         let mut method = setting.algorithm();
-        let mut ctx = Context::new(func, seed, pop_num);
+        let mut ctx = Ctx::new(func, seed, pop_num);
         let mut report = Vec::new();
         match pool {
             Pool::ReadyMade { pool, fitness } => {
@@ -374,7 +374,7 @@ impl<F: ObjFunc> Solver<F, ()> {
 /// A function generates a uniform pool.
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
-pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
+pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
     Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
         ctx.rng.float(ctx.lb(s)..ctx.ub(s))
     })
@@ -392,7 +392,7 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Context<F>) -> Array2<f64> {
 pub fn gaussian_pool<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
-) -> impl Fn(&Context<F>) -> Array2<f64> + 'a {
+) -> impl Fn(&Ctx<F>) -> Array2<f64> + 'a {
     assert_eq!(mean.len(), std.len());
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
@@ -415,7 +415,7 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
 pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
-) -> impl Fn(&Context<F>) -> Array2<f64> + 'a {
+) -> impl Fn(&Ctx<F>) -> Array2<f64> + 'a {
     assert_eq!(mean.len(), std.len());
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(i, s)| {

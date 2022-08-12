@@ -73,7 +73,7 @@ pub struct Method<F: Fitness> {
 }
 
 impl<Ft: Fitness> Method<Ft> {
-    fn get_delta<F>(&self, ctx: &Context<F>, y: f64) -> f64
+    fn get_delta<F>(&self, ctx: &Ctx<F>, y: f64) -> f64
     where
         F: ObjFunc<Fitness = Ft>,
     {
@@ -88,13 +88,13 @@ impl<Ft: Fitness> Method<Ft> {
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     #[inline(always)]
-    fn init(&mut self, ctx: &mut Context<F>) {
+    fn init(&mut self, ctx: &mut Ctx<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());
         self.fitness_new = ctx.fitness.clone();
     }
 
     #[inline(always)]
-    fn generation(&mut self, ctx: &mut Context<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>) {
         // Select
         for i in 0..ctx.pop_num() {
             let (j, k) = {

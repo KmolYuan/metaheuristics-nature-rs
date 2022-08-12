@@ -5,9 +5,9 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{context::*, fitness::*, random::*, solver_builder::*};
+pub use self::{ctx::*, fitness::*, random::*, solver_builder::*};
 
-mod context;
+mod ctx;
 mod fitness;
 mod random;
 mod solver_builder;
