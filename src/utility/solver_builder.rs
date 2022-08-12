@@ -1,6 +1,12 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
+type PoolFunc<'a, F> = Box<dyn FnOnce(&Context<F>) -> Array2<f64> + 'a>;
+type TaskFunc<'a, F> = Box<dyn Fn(&Context<F>) -> bool + 'a>;
+type RecordFunc<'a, F, R> = Box<dyn Fn(&Context<F>) -> R + 'a>;
+type AdaptiveFunc<'a, F> = Box<dyn FnMut(&Context<F>) -> f64 + 'a>;
+type CallbackFunc<'a, F> = Box<dyn FnMut(&Context<F>) + 'a>;
+
 fn assert_shape(b: bool) -> Result<(), ShapeError> {
     b.then_some(())
         .ok_or_else(|| ShapeError::from_kind(ErrorKind::IncompatibleShape))
@@ -11,7 +17,7 @@ enum Pool<'a, F: ObjFunc> {
         pool: Array2<f64>,
         fitness: Vec<F::Fitness>,
     },
-    Func(Box<dyn FnOnce(&Context<F>) -> Array2<f64> + 'a>),
+    Func(PoolFunc<'a, F>),
 }
 
 /// Collect configuration and build the solver.
@@ -23,10 +29,10 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     seed: Option<u128>,
     setting: S,
     pool: Pool<'a, F>,
-    task: Box<dyn Fn(&Context<F>) -> bool + 'a>,
-    record: Box<dyn Fn(&Context<F>) -> R + 'a>,
-    adaptive: Box<dyn FnMut(&Context<F>) -> f64 + 'a>,
-    callback: Box<dyn FnMut(&Context<F>) + 'a>,
+    task: TaskFunc<'a, F>,
+    record: RecordFunc<'a, F, R>,
+    adaptive: AdaptiveFunc<'a, F>,
+    callback: CallbackFunc<'a, F>,
 }
 
 impl<'a, S, F, R> SolverBuilder<'a, S, F, R>
