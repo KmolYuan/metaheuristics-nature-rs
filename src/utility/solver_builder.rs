@@ -346,7 +346,7 @@ where
     }
 }
 
-impl<F: ObjFunc + 'static> Solver<F, ()> {
+impl<F: ObjFunc> Solver<F, ()> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
     /// Please check [`SolverBuilder`] type, it will help you choose your configuration.
@@ -362,7 +362,7 @@ impl<F: ObjFunc + 'static> Solver<F, ()> {
             pop_num: S::default_pop(),
             seed: None,
             setting,
-            pool: Pool::Func(Box::new(uniform_pool)),
+            pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
             adaptive: Box::new(|_| 1.),

@@ -7,34 +7,30 @@ macro_rules! impl_fx {
         fn($v:ident, $f:ident)($($expr:expr),+),
     })+) => {$(
         $(#[$meta])*
-        pub struct $ty<'a, R: Fitness, const N: usize> {
-            func: Box<dyn $($func)+ + Sync + Send + 'a>,
-            bound: [[f64; 2]; N],
+        pub struct $ty<'f, 'b, R: Fitness, const N: usize> {
+            func: Box<dyn $($func)+ + Sync + Send + 'f>,
+            bound: &'b [[f64; 2]; N],
         }
 
-        impl<'a, R: Fitness, const N: usize> $ty<'a, R, N> {
+        impl<'f, 'b, R: Fitness, const N: usize> $ty<'f, 'b, R, N> {
             /// Create objective function from a callable object.
-            pub fn new<F>(f: F) -> Self
+            pub fn new<F>(bound: &'b [[f64; 2]; N], f: F) -> Self
             where
-                F: $($func)+ + Sync + Send + 'a,
+                F: $($func)+ + Sync + Send + 'f,
             {
                 Self {
                     func: Box::new(f),
-                    bound: [[0.; 2]; N],
+                    bound
                 }
-            }
-
-            impl_builders! {
-                /// Set the bound.
-                fn bound([[f64; 2]; N])
             }
         }
 
-        impl<'a, R: Fitness, const N: usize> ObjFunc for $ty<'a, R, N> {
+        impl<R: Fitness, const N: usize> ObjFunc for $ty<'_, '_, R, N> {
             type Result = R;
             type Fitness = R;
 
             fn fitness(&self, $v: &[f64], $f: f64) -> Self::Fitness {
+                let $v = <[f64; N]>::try_from($v).unwrap();
                 (self.func)($($expr),+)
             }
 
@@ -43,7 +39,7 @@ macro_rules! impl_fx {
             }
 
             fn bound(&self) -> &[[f64; 2]] {
-                &self.bound
+                self.bound
             }
         }
     )+};
@@ -55,17 +51,17 @@ impl_fx! {
     /// ```
     /// use metaheuristics_nature::{Fx, Rga, Solver};
     ///
-    /// let f = Fx::new(|v| v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3])
-    ///     .bound([[-50., 50.]; 4]);
+    /// let bound = [[-50., 50.]; 4];
+    /// let f = Fx::new(&bound, |[a, b, c, d]| a * a + 8. * b * b + c * c + d * d);
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
     ///     .solve(f)
-    /// .unwrap();
+    ///     .unwrap();
     /// ```
     ///
     /// Adaptive version is [`FxAdaptive`].
     struct Fx {
-        box(Fn(&[f64]) -> R),
+        box(Fn([f64; N]) -> R),
         fn(v, _f)(v),
     }
 
@@ -74,18 +70,18 @@ impl_fx! {
     /// ```
     /// use metaheuristics_nature::{FxAdaptive, Rga, Solver};
     ///
-    /// let f = FxAdaptive::new(|v, f| v[0] * v[0] + 8. * v[1] * v[1] + v[2] * v[2] + v[3] * v[3] * f)
-    ///     .bound([[-50., 50.]; 4]);
+    /// let bound = [[-50., 50.]; 4];
+    /// let f = FxAdaptive::new(&bound, |[a, b, c, d], f| a * a + 8. * b * b + c * c + d * d * f);
     /// let s = Solver::build(Rga::default())
     ///     .task(|ctx| ctx.gen == 20)
     ///     .adaptive(|ctx| ctx.gen as f64)
     ///     .solve(f)
-    /// .unwrap();
+    ///     .unwrap();
     /// ```
     ///
     /// Non-adaptive version is [`Fx`].
     struct FxAdaptive {
-        box(Fn(&[f64], f64) -> R),
+        box(Fn([f64; N], f64) -> R),
         fn(v, f)(v, f),
     }
 }
