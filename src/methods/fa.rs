@@ -70,9 +70,9 @@ impl Method {
             .sum();
         let beta = self.beta_min * (-self.gamma * r).exp();
         for s in 0..ctx.dim() {
-            let step = self.alpha * (ctx.ub(s) - ctx.lb(s)) * ctx.rng.float(-0.5..0.5);
+            let step = self.alpha * ctx.bound_width(s) * ctx.rng.float(-0.5..0.5);
             let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);
-            v[s] = ctx.check(s, surround + step);
+            v[s] = ctx.clamp(s, surround + step);
         }
         let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
         (v, f)

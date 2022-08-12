@@ -144,7 +144,7 @@ impl Method {
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>) {
-        'a: for i in 0..ctx.pop_num() {
+        for i in 0..ctx.pop_num() {
             // Generate Vector
             let mut v = vec![0; self.num];
             ctx.rng.vector(&mut v, 0, 0..ctx.pop_num());
@@ -155,10 +155,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, v, n),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, v, n),
             }
-            for s in 0..ctx.dim() {
-                if tmp[s] > ctx.ub(s) || tmp[s] < ctx.lb(s) {
-                    continue 'a;
-                }
+            if !(0..ctx.dim()).all(|s| ctx.bound_range(s).contains(&tmp[s])) {
+                continue;
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
             if tmp_f < ctx.fitness[i] {

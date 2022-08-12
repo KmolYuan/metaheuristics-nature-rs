@@ -141,10 +141,11 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
-                        v[s] = if ctx.ub(s) < var || var < ctx.lb(s) {
-                            ctx.rng.float(ctx.lb(s)..ctx.ub(s))
-                        } else {
+                        let range = ctx.bound_range(s);
+                        v[s] = if range.contains(&var) {
                             var
+                        } else {
+                            ctx.rng.float(range)
                         };
                     }
                     let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);

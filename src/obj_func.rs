@@ -86,5 +86,7 @@ pub trait ObjFunc: Sync + Send {
     fn result(&self, xs: &[f64]) -> Self::Result;
 
     /// The upper bound and lower bound.
+    ///
+    /// This function should be cheap.
     fn bound(&self) -> &[[f64; 2]];
 }

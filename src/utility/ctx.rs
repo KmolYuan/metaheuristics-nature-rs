@@ -41,14 +41,31 @@ impl<F: ObjFunc> Ctx<F> {
         }
     }
 
-    /// Get lower bound.
+    /// Get the upper bound and the lower bound values.
+    pub fn bound(&self, s: usize) -> [f64; 2] {
+        self.func.bound()[s]
+    }
+
+    /// Get the width of the upper bound and the lower bound.
+    pub fn bound_width(&self, s: usize) -> f64 {
+        let [min, max] = self.bound(s);
+        max - min
+    }
+
+    /// Get the upper bound and the lower bound as a range.
+    pub fn bound_range(&self, s: usize) -> core::ops::Range<f64> {
+        let [min, max] = self.bound(s);
+        min..max
+    }
+
+    /// Get the lower bound.
     #[inline(always)]
     #[must_use = "the bound value should be used"]
     pub fn lb(&self, i: usize) -> f64 {
         self.func.bound()[i][0]
     }
 
-    /// Get upper bound.
+    /// Get the upper bound.
     #[inline(always)]
     #[must_use = "the bound value should be used"]
     pub fn ub(&self, i: usize) -> f64 {
@@ -152,13 +169,8 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Check the bounds of the index `s` with the value `v`.
     #[inline(always)]
-    pub fn check(&self, s: usize, v: f64) -> f64 {
-        if v > self.ub(s) {
-            self.ub(s)
-        } else if v < self.lb(s) {
-            self.lb(s)
-        } else {
-            v
-        }
+    pub fn clamp(&self, s: usize, v: f64) -> f64 {
+        let [min, max] = self.func.bound()[s];
+        v.clamp(min, max)
     }
 }

@@ -85,7 +85,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                     let variable = self.velocity * v[s]
                         + alpha * (past[s] - v[s])
                         + beta * (ctx.best[s] - v[s]);
-                    v[s] = ctx.check(s, variable);
+                    v[s] = ctx.clamp(s, variable);
                 }
                 *f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
                 if *f < *past_f {

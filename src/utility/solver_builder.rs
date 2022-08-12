@@ -312,7 +312,7 @@ where
             mut adaptive,
             mut callback,
         } = self;
-        assert_shape(func.bound().iter().all(|[lb, ub]| lb < ub))?;
+        assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
         let mut method = setting.algorithm();
         let mut ctx = Ctx::new(func, seed, pop_num);
         let mut report = Vec::new();
@@ -375,9 +375,7 @@ impl<F: ObjFunc> Solver<F, ()> {
 ///
 /// Please see [`SolverBuilder::pool`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
-    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-        ctx.rng.float(ctx.lb(s)..ctx.ub(s))
-    })
+    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| ctx.rng.float(ctx.bound_range(s)))
 }
 
 /// A function generates a Gaussian pool.
@@ -396,9 +394,8 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
     assert_eq!(mean.len(), std.len());
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-            ctx.rng
-                .rand_norm(mean[s], std[s])
-                .clamp(ctx.lb(s), ctx.ub(s))
+            let [min, max] = ctx.bound(s);
+            ctx.rng.rand_norm(mean[s], std[s]).clamp(min, max)
         })
     }
 }
@@ -422,9 +419,7 @@ pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
             if i == 0 {
                 mean[s]
             } else {
-                ctx.rng
-                    .rand_norm(mean[s], std[s])
-                    .clamp(ctx.lb(s), ctx.ub(s))
+                ctx.clamp(s, ctx.rng.rand_norm(mean[s], std[s]))
             }
         })
     }

@@ -42,7 +42,7 @@ impl Method {
             mean /= ctx.dim() as f64;
             let v =
                 ctx.pool[[i, s]] + ctx.rng.float(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
-            student[s] = ctx.check(s, v);
+            student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
     }
@@ -63,7 +63,7 @@ impl Method {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]
             };
             let v = ctx.pool[[i, s]] + ctx.rng.float(1.0..ctx.dim() as f64) * diff;
-            student[s] = ctx.check(s, v);
+            student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
     }
