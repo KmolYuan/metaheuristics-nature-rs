@@ -7,14 +7,14 @@ macro_rules! impl_fx {
         fn($v:ident, $f:ident)($($expr:expr),+),
     })+) => {$(
         $(#[$meta])*
-        pub struct $ty<'f, 'b, R: Fitness, const N: usize> {
+        pub struct $ty<'f, 'b, R: Fitness, const DIM: usize> {
             func: Box<dyn $($func)+ + Sync + Send + 'f>,
-            bound: &'b [[f64; 2]; N],
+            bound: &'b [[f64; 2]; DIM],
         }
 
-        impl<'f, 'b, R: Fitness, const N: usize> $ty<'f, 'b, R, N> {
+        impl<'f, 'b, R: Fitness, const DIM: usize> $ty<'f, 'b, R, DIM> {
             /// Create objective function from a callable object.
-            pub fn new<F>(bound: &'b [[f64; 2]; N], f: F) -> Self
+            pub fn new<F>(bound: &'b [[f64; 2]; DIM], f: F) -> Self
             where
                 F: $($func)+ + Sync + Send + 'f,
             {
@@ -25,12 +25,12 @@ macro_rules! impl_fx {
             }
         }
 
-        impl<R: Fitness, const N: usize> ObjFunc for $ty<'_, '_, R, N> {
+        impl<R: Fitness, const DIM: usize> ObjFunc for $ty<'_, '_, R, DIM> {
             type Result = R;
             type Fitness = R;
 
             fn fitness(&self, $v: &[f64], $f: f64) -> Self::Fitness {
-                let $v = <[f64; N]>::try_from($v).unwrap();
+                let $v = <[f64; DIM]>::try_from($v).unwrap();
                 (self.func)($($expr),+)
             }
 
@@ -61,7 +61,7 @@ impl_fx! {
     ///
     /// Adaptive version is [`FxAdaptive`].
     struct Fx {
-        box(Fn([f64; N]) -> R),
+        box(Fn([f64; DIM]) -> R),
         fn(v, _f)(v),
     }
 
@@ -81,7 +81,7 @@ impl_fx! {
     ///
     /// Non-adaptive version is [`Fx`].
     struct FxAdaptive {
-        box(Fn([f64; N], f64) -> R),
+        box(Fn([f64; DIM], f64) -> R),
         fn(v, f)(v, f),
     }
 }
