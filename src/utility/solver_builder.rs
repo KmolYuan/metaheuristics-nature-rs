@@ -7,9 +7,9 @@ type RecordFunc<'a, F, R> = Box<dyn Fn(&Ctx<F>) -> R + 'a>;
 type AdaptiveFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) -> f64 + 'a>;
 type CallbackFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) + 'a>;
 
-fn assert_shape(b: bool) -> Result<(), ShapeError> {
+fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
     b.then_some(())
-        .ok_or_else(|| ShapeError::from_kind(ErrorKind::IncompatibleShape))
+        .ok_or_else(|| ndarray::ShapeError::from_kind(ndarray::ErrorKind::IncompatibleShape))
 }
 
 enum Pool<'a, F: ObjFunc> {
@@ -298,7 +298,7 @@ where
     /// It will be `Ok` and returns result when the `ctx.pool` and `ctx.fitness`
     /// initialized successfully;
     /// `Err` when the boundary check fails.
-    pub fn solve(self, func: F) -> Result<Solver<F, R>, ShapeError>
+    pub fn solve(self, func: F) -> Result<Solver<F, R>, ndarray::ShapeError>
     where
         S::Algorithm: Algorithm<F>,
     {
