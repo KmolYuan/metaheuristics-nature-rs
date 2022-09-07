@@ -5,9 +5,9 @@ use crate::utility::prelude::*;
 /// 1. Implement [`Setting`] trait then indicate to a "method" type.
 /// 1. Implement `Algorithm` trait on the "method" type.
 ///
-/// Usually, the "method" type that implements this trait will not leak from the API.
-/// All most common dataset is store in the [`Ctx`] type.
-/// So the "method" type is used to store the additional data if any.
+/// Usually, the "method" type that implements this trait will not leak from the
+/// API. All most common dataset is store in the [`Ctx`] type. So the "method"
+/// type is used to store the additional data if any.
 ///
 /// ```
 /// use metaheuristics_nature::utility::prelude::*;
@@ -49,14 +49,15 @@ use crate::utility::prelude::*;
 /// }
 /// ```
 ///
-/// Your algorithm will be implemented by the [`Solver`](crate::Solver) type automatically.
-/// All you have to do is implement the "initialization" method and
-/// "generation" method, which are corresponded to the [`Algorithm::init`] and
-/// [`Algorithm::generation`] respectively.
+/// Your algorithm will be implemented by the [`Solver`](crate::Solver) type
+/// automatically. All you have to do is implement the "initialization" method
+/// and "generation" method, which are corresponded to the [`Algorithm::init`]
+/// and [`Algorithm::generation`] respectively.
 pub trait Algorithm<F: ObjFunc> {
     /// Initialization implementation.
     ///
-    /// The information of the [`Ctx`] can be obtained or modified at this phase preliminarily.
+    /// The information of the [`Ctx`] can be obtained or modified at this phase
+    /// preliminarily.
     ///
     /// The default behavior is do nothing.
     #[inline(always)]

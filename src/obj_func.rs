@@ -31,8 +31,9 @@ use crate::utility::prelude::*;
 /// }
 /// ```
 ///
-/// The objective function returns fitness value that used to evaluate the objective.
-/// The lower bound and upper bound represents the number of variables at the same time.
+/// The objective function returns fitness value that used to evaluate the
+/// objective. The lower bound and upper bound represents the number of
+/// variables at the same time.
 ///
 /// This trait is designed as immutable and there should only has shared data.
 pub trait ObjFunc: Sync + Send {
@@ -56,28 +57,30 @@ pub trait ObjFunc: Sync + Send {
     ///
     /// # Penalty
     ///
-    /// In another hand, positive infinity represents the worst, or illogical result.
-    /// In fact, the searching area (or we called feasible solution) should keeping not bad results,
-    /// instead of evaluating them as the worst one,
-    /// because of we can keep the searching inspection around the best result,
-    /// to finding our potential winner.
+    /// In another hand, positive infinity represents the worst, or illogical
+    /// result. In fact, the searching area (or we called feasible solution)
+    /// should keeping not bad results, instead of evaluating them as the
+    /// worst one, because of we can keep the searching inspection around
+    /// the best result, to finding our potential winner.
     ///
-    /// In order to distinguish how bad the result is, we can add a penalty value,
-    /// which represents the "fault" on the result.
+    /// In order to distinguish how bad the result is, we can add a penalty
+    /// value, which represents the "fault" on the result.
     ///
-    /// Under most circumstances, the result is not good enough, appearing on its fitness value.
-    /// But sometimes a result is badly than our normal results,
-    /// if we mark them as the worst one (infinity), it will become a great "wall",
-    /// which is not suitable for us to search across it.
+    /// Under most circumstances, the result is not good enough, appearing on
+    /// its fitness value. But sometimes a result is badly than our normal
+    /// results, if we mark them as the worst one (infinity), it will become
+    /// a great "wall", which is not suitable for us to search across it.
     ///
-    /// So that, we use secondary evaluation function to measure the result from other requirements,
-    /// we call it "constraint" or "penalty function".
-    /// The penalty value usually multiply a weight factor for increasing its influence.
+    /// So that, we use secondary evaluation function to measure the result from
+    /// other requirements, we call it "constraint" or "penalty function".
+    /// The penalty value usually multiply a weight factor for increasing its
+    /// influence.
     ///
     /// # Adaptive Value
     ///
-    /// Sometimes a value that adjust with converge states can help to restrict the searching.
-    /// The "adaptive function" can be set in [`SolverBuilder::adaptive`] method.
+    /// Sometimes a value that adjust with converge states can help to restrict
+    /// the searching. The "adaptive function" can be set in
+    /// [`SolverBuilder::adaptive`] method.
     fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness;
 
     /// Return the final result of the problem.

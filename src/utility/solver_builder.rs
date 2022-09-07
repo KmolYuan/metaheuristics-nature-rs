@@ -61,7 +61,8 @@ where
     /// You can insert a ready-made pool from last states,
     /// or random values with another distribution.
     ///
-    /// The array must be the shape of `ctx.pool_size()` and in the bounds of `[ctx.lb(), ctx.ub())`.
+    /// The array must be the shape of `ctx.pool_size()` and in the bounds of
+    /// `[ctx.lb(), ctx.ub())`.
     ///
     /// ```
     /// use metaheuristics_nature::{utility::gaussian_pool, Rga, Solver};
@@ -76,8 +77,8 @@ where
     ///
     /// # Default
     ///
-    /// By default, the pool will generate with uniform distribution in the bounds.
-    /// ([`uniform_pool`])
+    /// By default, the pool will generate with uniform distribution in the
+    /// bounds. ([`uniform_pool`])
     ///
     /// # See Also
     ///
@@ -92,8 +93,9 @@ where
 
     /// Give a ready-made pool and its fitness values directly.
     ///
-    /// The `pool` must be the shape of `ctx.pool_size()` and in the bounds of `[ctx.lb(), ctx.ub())`,
-    /// and the `fitness` must have the same length as `ctx.pop_num()`.
+    /// The `pool` must be the shape of `ctx.pool_size()` and in the bounds of
+    /// `[ctx.lb(), ctx.ub())`, and the `fitness` must have the same length
+    /// as `ctx.pop_num()`.
     ///
     /// # Default
     ///
@@ -108,7 +110,8 @@ where
 
     /// Termination condition.
     ///
-    /// The task function will be check each iteration, breaks if the return is true.
+    /// The task function will be check each iteration, breaks if the return is
+    /// true.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
@@ -133,12 +136,14 @@ where
 
     /// Set record function.
     ///
-    /// The record function will be called at each generation and save the return value in the report.
-    /// Due to memory allocation, this function should record as less information as possible.
-    /// For example, return unit type `()` can totally disable this function.
+    /// The record function will be called at each generation and save the
+    /// return value in the report. Due to memory allocation, this function
+    /// should record as less information as possible. For example, return
+    /// unit type `()` can totally disable this function.
     ///
-    /// After calling [`solve`](Self::solve) function, you can take the report value with [`Solver::report`] method.
-    /// The following example records generation and spent time for the report.
+    /// After calling [`solve`](Self::solve) function, you can take the report
+    /// value with [`Solver::report`] method. The following example records
+    /// generation and spent time for the report.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
@@ -154,7 +159,8 @@ where
     ///
     /// # Default
     ///
-    /// By default, this function returns unit type `()`, which allocates nothing.
+    /// By default, this function returns unit type `()`, which allocates
+    /// nothing.
     pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
     where
         'a: 'b,
@@ -220,7 +226,8 @@ where
 
     /// Set callback function.
     ///
-    /// Callback function allows to change an outer mutable variable in each iteration.
+    /// Callback function allows to change an outer mutable variable in each
+    /// iteration.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
@@ -234,12 +241,13 @@ where
     ///     .unwrap();
     /// ```
     ///
-    /// In the example below, the fields of the `app` are mutable variables that changes every time.
-    /// But we still need to use its method in [`task`](Self::task) condition,
-    /// so a [`RwLock`](std::sync::RwLock) / [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
+    /// In the example below, the fields of the `app` are mutable variables that
+    /// changes every time. But we still need to use its method in
+    /// [`task`](Self::task) condition, so a [`RwLock`](std::sync::RwLock) /
+    /// [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
     ///
-    /// If you spawn the optimization process into another thread,
-    /// adding a reference counter ([`Arc`](std::sync::Arc)) is also required.
+    /// If you spawn the optimization process into another thread, adding a
+    /// reference counter ([`Arc`](std::sync::Arc)) is also required.
     ///
     /// ```
     /// use metaheuristics_nature::{Rga, Solver};
@@ -349,7 +357,8 @@ where
 impl<F: ObjFunc> Solver<F, ()> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
-    /// Please check [`SolverBuilder`] type, it will help you choose your configuration.
+    /// Please check [`SolverBuilder`] type, it will help you choose your
+    /// configuration.
     ///
     /// If all things are well-setup, call [`SolverBuilder::solve`].
     ///

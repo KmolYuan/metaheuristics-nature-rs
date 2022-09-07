@@ -134,7 +134,8 @@ fn ziggurat(rng: &mut Rand64) -> f64 {
         let x = u * ZIG_NORM_X[i];
         let test_x = x.abs();
 
-        // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
+        // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u <
+        // x_tab[i+1]/x_tab[i])
         if test_x < ZIG_NORM_X[i + 1] {
             return x;
         }

@@ -1,10 +1,12 @@
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
-/// But more advanced is that any type that implements the requirement trait can be used,
-/// so the fitness can add special mark during comparison ([`PartialOrd`]).
+/// But more advanced is that any type that implements the requirement trait can
+/// be used, so the fitness can add special mark during comparison
+/// ([`PartialOrd`]).
 ///
-/// In the following example, an "important" marker has higher priority in the comparison.
+/// In the following example, an "important" marker has higher priority in the
+/// comparison.
 ///
 /// ```
 /// use metaheuristics_nature::{utility::Fitness, ObjFunc};

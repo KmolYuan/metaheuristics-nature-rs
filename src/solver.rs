@@ -41,8 +41,8 @@ impl<F: ObjFunc, R> Solver<F, R> {
 
     /// Get the reference of the objective function.
     ///
-    /// It's useful when you need to get the preprocessed data from the initialization process,
-    /// which is stored in the objective function.
+    /// It's useful when you need to get the preprocessed data from the
+    /// initialization process, which is stored in the objective function.
     pub fn func(&self) -> &F {
         &self.ctx.func
     }
