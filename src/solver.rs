@@ -63,8 +63,11 @@ impl<F: ObjFunc, R> Solver<F, R> {
     }
 
     /// Get the result of the objective function.
-    pub fn result(&self) -> F::Result {
-        self.func().result(self.best_parameters())
+    pub fn result(&self) -> F::Product
+    where
+        F: ObjFactory,
+    {
+        self.func().produce(self.best_parameters())
     }
 
     /// Seed of the random number generator.

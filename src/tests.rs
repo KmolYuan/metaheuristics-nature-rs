@@ -12,20 +12,22 @@ impl TestObj {
     }
 }
 
-impl ObjFunc for TestObj {
-    type Result = f64;
-    type Fitness = f64;
+impl Bounded for TestObj {
+    fn bound(&self) -> &[[f64; 2]] {
+        &[[-50., 50.]; 4]
+    }
+}
 
-    fn fitness(&self, x: &[f64], _: f64) -> Self::Fitness {
+impl ObjFactory for TestObj {
+    type Product = f64;
+    type Eval = f64;
+
+    fn produce(&self, x: &[f64]) -> Self::Product {
         OFFSET + x[0] * x[0] + 8. * x[1] * x[1] + x[2] * x[2] + x[3] * x[3]
     }
 
-    fn result(&self, v: &[f64]) -> Self::Result {
-        self.fitness(v, 0.)
-    }
-
-    fn bound(&self) -> &[[f64; 2]] {
-        &[[-50., 50.]; 4]
+    fn evaluate(&self, product: Self::Product, _: f64) -> Self::Eval {
+        product
     }
 }
 

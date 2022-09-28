@@ -1,26 +1,34 @@
 use crate::utility::prelude::*;
 
+/// A problem is well bounded.
+///
+/// Provide constant array reference or dynamic slice for the variables.
+pub trait Bounded: Sync + Send {
+    /// The upper bound and lower bound in `[[lower, upper]; number_of_vars]`
+    /// form.
+    ///
+    /// This function should be cheap.
+    fn bound(&self) -> &[[f64; 2]];
+}
+
 /// A trait for the objective function.
 ///
 /// ```
-/// use metaheuristics_nature::ObjFunc;
+/// use metaheuristics_nature::{Bounded, ObjFunc};
 ///
 /// struct MyFunc;
 ///
+/// impl Bounded for MyFunc {
+///     fn bound(&self) -> &[[f64; 2]] {
+///         &[[0., 50.]; 3]
+///     }
+/// }
+///
 /// impl ObjFunc for MyFunc {
-///     type Result = f64;
 ///     type Fitness = f64;
 ///
 ///     fn fitness(&self, x: &[f64], _: f64) -> Self::Fitness {
 ///         x[0] * x[0] + x[1] * x[1] + x[2] * x[2]
-///     }
-///
-///     fn result(&self, xs: &[f64]) -> Self::Result {
-///         self.fitness(xs, 0.)
-///     }
-///
-///     fn bound(&self) -> &[[f64; 2]] {
-///         &[[0., 50.]; 3]
 ///     }
 /// }
 /// ```
@@ -30,9 +38,7 @@ use crate::utility::prelude::*;
 /// variables at the same time.
 ///
 /// This trait is designed as immutable and there should only has shared data.
-pub trait ObjFunc: Sync + Send {
-    /// The result type.
-    type Result;
+pub trait ObjFunc: Bounded {
     /// Representation of the fitness value.
     type Fitness: Fitness;
 
@@ -76,14 +82,30 @@ pub trait ObjFunc: Sync + Send {
     /// the searching. The "adaptive function" can be set in
     /// [`SolverBuilder::adaptive`] method.
     fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness;
+}
 
-    /// Return the final result of the problem.
-    ///
-    /// The parameters `xs` is the best parameter we found.
-    fn result(&self, xs: &[f64]) -> Self::Result;
+/// A trait same as [`ObjFunc`] but returns a "product" and then evaluates it.
+///
+/// This is a higher level interface than [`ObjFunc`], it will auto-implement
+/// for this trait.
+pub trait ObjFactory: Bounded {
+    /// "Product" type.
+    type Product;
+    /// Representation of the evaluation.
+    type Eval: Fitness;
 
-    /// The upper bound and lower bound.
-    ///
-    /// This function should be cheap.
-    fn bound(&self) -> &[[f64; 2]];
+    /// Return a product of the problem.
+    fn produce(&self, xs: &[f64]) -> Self::Product;
+
+    /// This function same as [`ObjFunc::fitness()`] function but receive the
+    /// product type.
+    fn evaluate(&self, product: Self::Product, f: f64) -> Self::Eval;
+}
+
+impl<F: ObjFactory> ObjFunc for F {
+    type Fitness = <Self as ObjFactory>::Eval;
+
+    fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness {
+        self.evaluate(self.produce(xs), f)
+    }
 }

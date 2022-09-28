@@ -9,7 +9,7 @@
 /// comparison.
 ///
 /// ```
-/// use metaheuristics_nature::{utility::Fitness, ObjFunc};
+/// use metaheuristics_nature::{utility::Fitness, Bounded, ObjFunc};
 /// use std::cmp::Ordering;
 ///
 /// struct MyFunc;
@@ -30,20 +30,17 @@
 ///     }
 /// }
 ///
+/// impl Bounded for MyFunc {
+///     fn bound(&self) -> &[[f64; 2]] {
+///         &[[0., 50.]; 2]
+///     }
+/// }
+///
 /// impl ObjFunc for MyFunc {
-///     type Result = f64;
 ///     type Fitness = MarkerFitness;
 ///
 ///     fn fitness(&self, x: &[f64], f: f64) -> Self::Fitness {
 ///         MarkerFitness { f: x[0], important: x[0] + x[1] * f < 1. }
-///     }
-///
-///     fn result(&self, xs: &[f64]) -> Self::Result {
-///         self.fitness(xs, 0.).f
-///     }
-///
-///     fn bound(&self) -> &[[f64; 2]] {
-///         &[[0., 50.]; 2]
 ///     }
 /// }
 /// ```

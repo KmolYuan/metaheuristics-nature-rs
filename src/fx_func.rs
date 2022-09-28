@@ -25,21 +25,18 @@ macro_rules! impl_fx {
             }
         }
 
+        impl<R: Fitness, const DIM: usize> Bounded for $ty<'_, '_, R, DIM> {
+            fn bound(&self) -> &[[f64; 2]] {
+                self.bound
+            }
+        }
+
         impl<R: Fitness, const DIM: usize> ObjFunc for $ty<'_, '_, R, DIM> {
-            type Result = R;
             type Fitness = R;
 
             fn fitness(&self, $v: &[f64], $f: f64) -> Self::Fitness {
                 let $v = <[f64; DIM]>::try_from($v).unwrap();
                 (self.func)($($expr),+)
-            }
-
-            fn result(&self, $v: &[f64]) -> Self::Result {
-                self.fitness($v, 0.)
-            }
-
-            fn bound(&self) -> &[[f64; 2]] {
-                self.bound
             }
         }
     )+};

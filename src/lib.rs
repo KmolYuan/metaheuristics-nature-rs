@@ -30,8 +30,8 @@
 //! [`ObjFunc`], and then the upper bound, lower bound, and objective function
 //! [`ObjFunc::fitness`] should be defined.
 //!
-//! The final answer is [`ObjFunc::result`], which is calculated from the design
-//! parameters.
+//! A high level trait is [`ObjFactory`], its final answer is
+//! [`ObjFactory::Product`], which is calculated from the design parameters.
 //!
 //! # Random Function
 //!
