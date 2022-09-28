@@ -5,13 +5,7 @@ use crate::utility::prelude::*;
 /// ```
 /// use metaheuristics_nature::ObjFunc;
 ///
-/// struct MyFunc([[f64; 2]; 3]);
-///
-/// impl MyFunc {
-///     fn new() -> Self {
-///         Self([[0., 50.]; 3])
-///     }
-/// }
+/// struct MyFunc;
 ///
 /// impl ObjFunc for MyFunc {
 ///     type Result = f64;
@@ -26,7 +20,7 @@ use crate::utility::prelude::*;
 ///     }
 ///
 ///     fn bound(&self) -> &[[f64; 2]] {
-///         &self.0
+///         &[[0., 50.]; 3]
 ///     }
 /// }
 /// ```
