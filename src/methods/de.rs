@@ -159,7 +159,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 continue;
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
-            if tmp_f < ctx.fitness[i] {
+            if tmp_f < ctx.pool_f[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }

@@ -90,7 +90,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     #[inline(always)]
     fn init(&mut self, ctx: &mut Ctx<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());
-        self.fitness_new = ctx.fitness.clone();
+        self.fitness_new = ctx.pool_f.clone();
     }
 
     #[inline(always)]
@@ -102,18 +102,18 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                 ctx.rng.vector(&mut v, 1, 0..ctx.pop_num());
                 (v[1], v[2])
             };
-            if ctx.fitness[j] > ctx.fitness[k] && ctx.rng.maybe(self.win) {
-                self.fitness_new[i] = ctx.fitness[k].clone();
+            if ctx.pool_f[j] > ctx.pool_f[k] && ctx.rng.maybe(self.win) {
+                self.fitness_new[i] = ctx.pool_f[k].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![k, ..]));
             } else {
-                self.fitness_new[i] = ctx.fitness[j].clone();
+                self.fitness_new[i] = ctx.pool_f[j].clone();
                 self.pool_new
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![j, ..]));
             }
-            ctx.fitness = self.fitness_new.clone();
+            ctx.pool_f = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
             let i = ctx.rng.int(0..ctx.pop_num());
             ctx.assign_from_best(i);

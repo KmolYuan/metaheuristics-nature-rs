@@ -59,7 +59,7 @@ impl Method {
         i: usize,
         j: usize,
     ) -> (Array1<f64>, F::Fitness) {
-        let (i, j) = if ctx.fitness[i] > ctx.fitness[j] {
+        let (i, j) = if ctx.pool_f[i] > ctx.pool_f[j] {
             (i, j)
         } else {
             (j, i)
@@ -79,7 +79,7 @@ impl Method {
     }
 
     fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>) {
-        let mut fitness = ctx.fitness.clone();
+        let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
         #[cfg(feature = "rayon")]
         let zip = fitness.par_iter_mut();
@@ -96,7 +96,7 @@ impl Method {
                     }
                 }
             });
-        ctx.fitness = fitness;
+        ctx.pool_f = fitness;
         ctx.pool = pool;
     }
 }

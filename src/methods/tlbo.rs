@@ -23,9 +23,9 @@ pub struct Method;
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {
         let f_new = ctx.func.fitness(student.as_slice().unwrap(), ctx.adaptive);
-        if f_new < ctx.fitness[i] {
+        if f_new < ctx.pool_f[i] {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
-            ctx.fitness[i] = f_new.clone();
+            ctx.pool_f[i] = f_new.clone();
         }
         if f_new < ctx.best_f {
             ctx.set_best(i);
@@ -57,7 +57,7 @@ impl Method {
             }
         };
         for s in 0..ctx.dim() {
-            let diff = if ctx.fitness[j] < ctx.fitness[i] {
+            let diff = if ctx.pool_f[j] < ctx.pool_f[i] {
                 ctx.pool[[i, s]] - ctx.pool[[j, s]]
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]

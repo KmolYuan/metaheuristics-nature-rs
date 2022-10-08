@@ -327,7 +327,7 @@ where
         match pool {
             Pool::ReadyMade { pool, fitness } => {
                 ctx.pool = pool;
-                ctx.fitness = fitness;
+                ctx.pool_f = fitness;
                 assert_shape(ctx.pool.shape() == ctx.pool_size())?;
             }
             Pool::Func(f) => {

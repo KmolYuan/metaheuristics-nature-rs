@@ -62,11 +62,11 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     #[inline(always)]
     fn init(&mut self, ctx: &mut Ctx<F>) {
         self.best_past = ctx.pool.clone();
-        self.best_past_f = ctx.fitness.clone();
+        self.best_past_f = ctx.pool_f.clone();
     }
 
     fn generation(&mut self, ctx: &mut Ctx<F>) {
-        let mut fitness = ctx.fitness.clone();
+        let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
         let mut best_past = self.best_past.clone();
         let mut best_past_f = self.best_past_f.clone();
@@ -97,7 +97,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
         ctx.set_best_from(f.clone(), &v);
-        ctx.fitness = fitness;
+        ctx.pool_f = fitness;
         ctx.pool = pool;
         self.best_past = best_past;
         self.best_past_f = best_past_f;

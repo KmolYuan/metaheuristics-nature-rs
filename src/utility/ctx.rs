@@ -8,21 +8,21 @@ use alloc::{vec, vec::Vec};
 /// Please see [`Algorithm`] for the implementation.
 #[non_exhaustive]
 pub struct Ctx<F: ObjFunc> {
-    /// Random number generator.
+    /// Random number generator
     pub rng: Rng,
-    /// The best variables.
+    /// The best variables
     pub best: Array1<f64>,
-    /// Best fitness.
+    /// Best fitness
     pub best_f: F::Fitness,
-    /// Current variables of all individuals.
+    /// Current variables of all individuals
     pub pool: Array2<f64>,
-    /// Current fitness of all individuals.
-    pub fitness: Vec<F::Fitness>,
-    /// Adaptive factor.
+    /// Current fitness values of all individuals
+    pub pool_f: Vec<F::Fitness>,
+    /// Adaptive factor
     pub adaptive: f64,
-    /// Generation.
+    /// Generation
     pub gen: u64,
-    /// The objective function.
+    /// Objective function object
     pub func: F,
 }
 
@@ -34,7 +34,7 @@ impl<F: ObjFunc> Ctx<F> {
             best: Array1::zeros(dim),
             best_f: Default::default(),
             pool: Array2::zeros((pop_num, dim)),
-            fitness: vec![Default::default(); pop_num],
+            pool_f: vec![Default::default(); pop_num],
             adaptive: 0.,
             gen: 0,
             func,
@@ -76,7 +76,7 @@ impl<F: ObjFunc> Ctx<F> {
     #[inline(always)]
     #[must_use = "the population number should be used"]
     pub fn pop_num(&self) -> usize {
-        self.fitness.len()
+        self.pool_f.len()
     }
 
     /// Get dimension (number of variables).
@@ -95,14 +95,14 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.fitness[i] = self.func.fitness(
+        self.pool_f[i] = self.func.fitness(
             self.pool.slice(s![i, ..]).as_slice().unwrap(),
             self.adaptive,
         );
     }
 
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
-        let mut fitness = self.fitness.clone();
+        let mut fitness = self.pool_f.clone();
         #[cfg(feature = "rayon")]
         let zip = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
@@ -117,13 +117,13 @@ impl<F: ObjFunc> Ctx<F> {
             .unwrap();
         self.set_best_from(f, v);
         self.pool = pool;
-        self.fitness = fitness;
+        self.pool_f = fitness;
     }
 
     /// Set the index to best.
     #[inline(always)]
     pub fn set_best(&mut self, i: usize) {
-        self.best_f = self.fitness[i].clone();
+        self.best_f = self.pool_f[i].clone();
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
@@ -140,7 +140,7 @@ impl<F: ObjFunc> Ctx<F> {
     /// Assign the index from best.
     #[inline(always)]
     pub fn assign_from_best(&mut self, i: usize) {
-        self.fitness[i] = self.best_f.clone();
+        self.pool_f[i] = self.best_f.clone();
         self.pool.slice_mut(s![i, ..]).assign(&self.best);
     }
 
@@ -150,7 +150,7 @@ impl<F: ObjFunc> Ctx<F> {
     where
         A: AsArray<'a, f64>,
     {
-        self.fitness[i] = f;
+        self.pool_f[i] = f;
         self.pool.slice_mut(s![i, ..]).assign(&v.into());
     }
 
@@ -158,11 +158,11 @@ impl<F: ObjFunc> Ctx<F> {
     pub fn find_best(&mut self) {
         let mut best = 0;
         for i in 1..self.pop_num() {
-            if self.fitness[i] < self.fitness[best] {
+            if self.pool_f[i] < self.pool_f[best] {
                 best = i;
             }
         }
-        if self.fitness[best] < self.best_f {
+        if self.pool_f[best] < self.best_f {
             self.set_best(best);
         }
     }
