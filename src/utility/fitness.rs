@@ -39,8 +39,8 @@
 /// impl ObjFunc for MyFunc {
 ///     type Fitness = MarkerFitness;
 ///
-///     fn fitness(&self, x: &[f64], f: f64) -> Self::Fitness {
-///         MarkerFitness { f: x[0], important: x[0] + x[1] * f < 1. }
+///     fn fitness(&self, x: &[f64]) -> Self::Fitness {
+///         MarkerFitness { f: x[0], important: x[0] + x[1] < 1. }
 ///     }
 /// }
 /// ```

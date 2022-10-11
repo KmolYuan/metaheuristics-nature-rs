@@ -18,8 +18,6 @@ pub struct Ctx<F: ObjFunc> {
     pub pool: Array2<f64>,
     /// Current fitness values of all individuals
     pub pool_f: Vec<F::Fitness>,
-    /// Adaptive factor
-    pub adaptive: f64,
     /// Generation
     pub gen: u64,
     /// Objective function object
@@ -35,7 +33,6 @@ impl<F: ObjFunc> Ctx<F> {
             best_f: Default::default(),
             pool: Array2::zeros((pop_num, dim)),
             pool_f: vec![Default::default(); pop_num],
-            adaptive: 0.,
             gen: 0,
             func,
         }
@@ -95,22 +92,21 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Get fitness from individual `i`.
     pub fn fitness(&mut self, i: usize) {
-        self.pool_f[i] = self.func.fitness(
-            self.pool.slice(s![i, ..]).as_slice().unwrap(),
-            self.adaptive,
-        );
+        self.pool_f[i] = self
+            .func
+            .fitness(self.pool.slice(s![i, ..]).as_slice().unwrap());
     }
 
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
         let mut fitness = self.pool_f.clone();
         #[cfg(feature = "rayon")]
-        let zip = fitness.par_iter_mut();
+        let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
-        let zip = fitness.iter_mut();
-        let (f, v) = zip
+        let iter = fitness.iter_mut();
+        let (f, v) = iter
             .zip(pool.axis_iter(Axis(0)))
             .map(|(f, v)| {
-                *f = self.func.fitness(v.to_slice().unwrap(), self.adaptive);
+                *f = self.func.fitness(v.to_slice().unwrap());
                 (f.clone(), v)
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())

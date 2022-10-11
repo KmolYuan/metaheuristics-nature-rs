@@ -71,10 +71,10 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         let mut best_past = self.best_past.clone();
         let mut best_past_f = self.best_past_f.clone();
         #[cfg(feature = "rayon")]
-        let zip = fitness.par_iter_mut();
+        let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
-        let zip = fitness.iter_mut();
-        let (f, v) = zip
+        let iter = fitness.iter_mut();
+        let (f, v) = iter
             .zip(pool.axis_iter_mut(Axis(0)))
             .zip(best_past.axis_iter_mut(Axis(0)))
             .zip(&mut best_past_f)
@@ -87,7 +87,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                         + beta * (ctx.best[s] - v[s]);
                     v[s] = ctx.clamp(s, variable);
                 }
-                *f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
+                *f = ctx.func.fitness(v.as_slice().unwrap());
                 if *f < *past_f {
                     *past_f = f.clone();
                     past.assign(&v);

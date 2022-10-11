@@ -27,7 +27,7 @@ pub trait Bounded: Sync + Send {
 /// impl ObjFunc for MyFunc {
 ///     type Fitness = f64;
 ///
-///     fn fitness(&self, x: &[f64], _: f64) -> Self::Fitness {
+///     fn fitness(&self, x: &[f64]) -> Self::Fitness {
 ///         x[0] * x[0] + x[1] * x[1] + x[2] * x[2]
 ///     }
 /// }
@@ -80,8 +80,8 @@ pub trait ObjFunc: Bounded {
     ///
     /// Sometimes a value that adjust with converge states can help to restrict
     /// the searching. The "adaptive function" can be set in
-    /// [`SolverBuilder::adaptive`] method.
-    fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness;
+    /// [`SolverBuilder::callback()`] method.
+    fn fitness(&self, xs: &[f64]) -> Self::Fitness;
 }
 
 /// A trait same as [`ObjFunc`] but returns a "product" and then evaluates it.
@@ -99,13 +99,13 @@ pub trait ObjFactory: Bounded {
 
     /// This function same as [`ObjFunc::fitness()`] function but receive the
     /// product type.
-    fn evaluate(&self, product: Self::Product, f: f64) -> Self::Eval;
+    fn evaluate(&self, product: Self::Product) -> Self::Eval;
 }
 
 impl<F: ObjFactory> ObjFunc for F {
     type Fitness = <Self as ObjFactory>::Eval;
 
-    fn fitness(&self, xs: &[f64], f: f64) -> Self::Fitness {
-        self.evaluate(self.produce(xs), f)
+    fn fitness(&self, xs: &[f64]) -> Self::Fitness {
+        self.evaluate(self.produce(xs))
     }
 }

@@ -158,7 +158,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             if !(0..ctx.dim()).all(|s| ctx.bound_range(s).contains(&tmp[s])) {
                 continue;
             }
-            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap(), ctx.adaptive);
+            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
             if tmp_f < ctx.pool_f[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
             }

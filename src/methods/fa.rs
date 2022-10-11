@@ -74,7 +74,7 @@ impl Method {
             let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);
             v[s] = ctx.clamp(s, surround + step);
         }
-        let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
+        let f = ctx.func.fitness(v.as_slice().unwrap());
         (v, f)
     }
 
@@ -82,10 +82,10 @@ impl Method {
         let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
         #[cfg(feature = "rayon")]
-        let zip = fitness.par_iter_mut();
+        let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
-        let zip = fitness.iter_mut();
-        zip.zip(pool.axis_iter_mut(Axis(0)))
+        let iter = fitness.iter_mut();
+        iter.zip(pool.axis_iter_mut(Axis(0)))
             .enumerate()
             .for_each(|(i, (fitness, mut pool))| {
                 for j in i + 1..ctx.pop_num() {

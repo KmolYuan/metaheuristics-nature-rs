@@ -148,7 +148,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                             ctx.rng.float(range)
                         };
                     }
-                    let f = ctx.func.fitness(v.as_slice().unwrap(), ctx.adaptive);
+                    let f = ctx.func.fitness(v.as_slice().unwrap());
                     (f, v)
                 })
                 .collect::<Vec<_>>();

@@ -4,8 +4,7 @@ use alloc::{boxed::Box, vec::Vec};
 type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + 'a>;
 type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + 'a>;
 type RecordFunc<'a, F, R> = Box<dyn Fn(&Ctx<F>) -> R + 'a>;
-type AdaptiveFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) -> f64 + 'a>;
-type CallbackFunc<'a, F> = Box<dyn FnMut(&Ctx<F>) + 'a>;
+type CallbackFunc<'a, F> = Box<dyn FnMut(&mut Ctx<F>) + 'a>;
 
 fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
     b.then_some(())
@@ -22,7 +21,7 @@ enum Pool<'a, F: ObjFunc> {
 
 /// Collect configuration and build the solver.
 ///
-/// This type is created by [`Solver::build`] method.
+/// This type is created by [`Solver::build()`] method.
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     pop_num: usize,
@@ -31,7 +30,6 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
     record: RecordFunc<'a, F, R>,
-    adaptive: AdaptiveFunc<'a, F>,
     callback: CallbackFunc<'a, F>,
 }
 
@@ -52,7 +50,7 @@ where
         ///
         /// # Default
         ///
-        /// By default, the random seed is `None`, which is decided by [`getrandom::getrandom`].
+        /// By default, the random seed is `None`, which is decided by [`getrandom::getrandom()`].
         fn seed(Option<u128>)
     }
 
@@ -78,11 +76,11 @@ where
     /// # Default
     ///
     /// By default, the pool will generate with uniform distribution in the
-    /// bounds. ([`uniform_pool`])
+    /// bounds. ([`uniform_pool()`])
     ///
     /// # See Also
     ///
-    /// [`Self::pool_and_fitness`], [`uniform_pool`], [`gaussian_pool`].
+    /// [`Self::pool_and_fitness()`], [`uniform_pool()`], [`gaussian_pool()`].
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
@@ -103,7 +101,7 @@ where
     ///
     /// # See Also
     ///
-    /// [`Self::pool`].
+    /// [`Self::pool()`].
     pub fn pool_and_fitness(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
         Self { pool: Pool::ReadyMade { pool, fitness }, ..self }
     }
@@ -141,8 +139,8 @@ where
     /// should record as less information as possible. For example, return
     /// unit type `()` can totally disable this function.
     ///
-    /// After calling [`solve`](Self::solve) function, you can take the report
-    /// value with [`Solver::report`] method. The following example records
+    /// After calling [`Self::solve()`] function, you can take the report
+    /// value with [`Solver::report()`] method. The following example records
     /// generation and spent time for the report.
     ///
     /// ```
@@ -151,7 +149,7 @@ where
     ///
     /// let s = Solver::build(Rga::default())
     /// #   .task(|ctx| ctx.gen == 1)
-    ///     .record(|ctx| (ctx.gen, ctx.adaptive))
+    ///     .record(|ctx| (ctx.gen, ctx.best_f))
     ///     .solve(MyFunc::new())
     ///     .unwrap();
     /// let report: &[(u64, f64)] = s.report();
@@ -171,57 +169,7 @@ where
                 SolverBuilder { $field_new: Box::new($field_new), $($field: self.$field),+ }
             };
         }
-        builder!(record, pop_num, seed, setting, pool, task, adaptive, callback)
-    }
-
-    /// Set adaptive function.
-    ///
-    /// The adaptive value can be access from [`ObjFunc::fitness`],
-    /// and can be used to enhance the fitness value.
-    ///
-    /// ```
-    /// use metaheuristics_nature::{Rga, Solver};
-    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    ///
-    /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 1)
-    ///     .adaptive(|ctx| ctx.gen as f64 / 20.)
-    ///     .solve(MyFunc::new())
-    ///     .unwrap();
-    /// ```
-    ///
-    /// The adaptive function is also allow to change the external variable.
-    ///
-    /// ```
-    /// use metaheuristics_nature::{Rga, Solver};
-    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    ///
-    /// let mut diff = None;
-    /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 1)
-    ///     .adaptive(|ctx| {
-    ///         if let Some(f) = diff {
-    ///             let d = f - ctx.best_f;
-    ///             diff = Some(d);
-    ///             d
-    ///         } else {
-    ///             diff = Some(ctx.best_f);
-    ///             ctx.best_f
-    ///         }
-    ///     })
-    ///     .solve(MyFunc::new())
-    ///     .unwrap();
-    /// ```
-    ///
-    /// # Default
-    ///
-    /// By default, this function returns one.
-    pub fn adaptive<'b, C>(self, adaptive: C) -> SolverBuilder<'b, S, F, R>
-    where
-        'a: 'b,
-        C: FnMut(&Ctx<F>) -> f64 + 'b,
-    {
-        SolverBuilder { adaptive: Box::new(adaptive), ..self }
+        builder!(record, pop_num, seed, setting, pool, task, callback)
     }
 
     /// Set callback function.
@@ -243,7 +191,7 @@ where
     ///
     /// In the example below, the fields of the `app` are mutable variables that
     /// changes every time. But we still need to use its method in
-    /// [`task`](Self::task) condition, so a [`RwLock`](std::sync::RwLock) /
+    /// [`Self::task()`] condition, so a [`RwLock`](std::sync::RwLock) /
     /// [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
     ///
     /// If you spawn the optimization process into another thread, adding a
@@ -291,7 +239,7 @@ where
     pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F, R>
     where
         'a: 'b,
-        C: FnMut(&Ctx<F>) + 'b,
+        C: FnMut(&mut Ctx<F>) + 'b,
     {
         SolverBuilder { callback: Box::new(callback), ..self }
     }
@@ -317,7 +265,6 @@ where
             pool,
             task,
             record,
-            mut adaptive,
             mut callback,
         } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
@@ -337,14 +284,13 @@ where
             }
         }
         loop {
-            ctx.adaptive = adaptive(&ctx);
             if ctx.gen == 0 {
                 method.init(&mut ctx);
             } else {
                 method.generation(&mut ctx);
             }
             report.push(record(&ctx));
-            callback(&ctx);
+            callback(&mut ctx);
             if task(&ctx) {
                 break;
             }
@@ -360,7 +306,7 @@ impl<F: ObjFunc> Solver<F, ()> {
     /// Please check [`SolverBuilder`] type, it will help you choose your
     /// configuration.
     ///
-    /// If all things are well-setup, call [`SolverBuilder::solve`].
+    /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
     /// The default value of each option can be found in their document.
     pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, ()>
@@ -374,7 +320,6 @@ impl<F: ObjFunc> Solver<F, ()> {
             pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
             record: Box::new(|_| ()),
-            adaptive: Box::new(|_| 1.),
             callback: Box::new(|_| ()),
         }
     }
@@ -382,7 +327,7 @@ impl<F: ObjFunc> Solver<F, ()> {
 
 /// A function generates a uniform pool.
 ///
-/// Please see [`SolverBuilder::pool`] for more information.
+/// Please see [`SolverBuilder::pool()`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
     Array2::from_shape_fn(ctx.pool_size(), |(_, s)| ctx.rng.float(ctx.bound_range(s)))
 }
@@ -391,7 +336,7 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
 ///
-/// Please see [`SolverBuilder::pool`] for more information.
+/// Please see [`SolverBuilder::pool()`] for more information.
 ///
 /// # Panics
 ///
@@ -413,7 +358,7 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
 ///
-/// Please see [`SolverBuilder::pool`] for more information.
+/// Please see [`SolverBuilder::pool()`] for more information.
 ///
 /// # Panics
 ///

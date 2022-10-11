@@ -22,7 +22,7 @@ pub struct Method;
 
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {
-        let f_new = ctx.func.fitness(student.as_slice().unwrap(), ctx.adaptive);
+        let f_new = ctx.func.fitness(student.as_slice().unwrap());
         if f_new < ctx.pool_f[i] {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
             ctx.pool_f[i] = f_new.clone();

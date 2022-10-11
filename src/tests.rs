@@ -26,7 +26,7 @@ impl ObjFactory for TestObj {
         OFFSET + x[0] * x[0] + 8. * x[1] * x[1] + x[2] * x[2] + x[3] * x[3]
     }
 
-    fn evaluate(&self, product: Self::Product, _: f64) -> Self::Eval {
+    fn evaluate(&self, product: Self::Product) -> Self::Eval {
         product
     }
 }

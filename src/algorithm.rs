@@ -51,8 +51,8 @@ use crate::utility::prelude::*;
 ///
 /// Your algorithm will be implemented by the [`Solver`](crate::Solver) type
 /// automatically. All you have to do is implement the "initialization" method
-/// and "generation" method, which are corresponded to the [`Algorithm::init`]
-/// and [`Algorithm::generation`] respectively.
+/// and "generation" method, which are corresponded to the [`Algorithm::init()`]
+/// and [`Algorithm::generation()`] respectively.
 pub trait Algorithm<F: ObjFunc> {
     /// Initialization implementation.
     ///
