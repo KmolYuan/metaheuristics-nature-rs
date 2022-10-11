@@ -13,18 +13,18 @@ use alloc::boxed::Box;
 ///     .solve(f)
 ///     .unwrap();
 /// ```
-pub struct Fx<'f, 'b, R: Fitness, const DIM: usize> {
-    func: Box<dyn Fn([f64; DIM]) -> R + Sync + Send + 'f>,
+pub struct Fx<'b, 'f, R: Fitness, const DIM: usize> {
     bound: &'b [[f64; 2]; DIM],
+    func: Box<dyn Fn([f64; DIM]) -> R + Sync + Send + 'f>,
 }
 
-impl<'f, 'b, R: Fitness, const DIM: usize> Fx<'f, 'b, R, DIM> {
+impl<'b, 'f, R: Fitness, const DIM: usize> Fx<'b, 'f, R, DIM> {
     /// Create objective function from a callable object.
     pub fn new<F>(bound: &'b [[f64; 2]; DIM], func: F) -> Self
     where
         F: Fn([f64; DIM]) -> R + Sync + Send + 'f,
     {
-        Self { bound, func: Box::new(func) }
+        Self { func: Box::new(func), bound }
     }
 }
 
