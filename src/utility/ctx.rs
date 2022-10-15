@@ -152,20 +152,22 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Find the best, and set it globally.
     pub fn find_best(&mut self) {
-        self.find_best_init(true);
+        self.find_best_inner(false);
     }
 
-    /// Find the best initially.
-    ///
-    /// Use the `check` option to control overriding.
-    pub fn find_best_init(&mut self, check: bool) {
+    /// Find the best and force override it.
+    pub fn find_best_force(&mut self) {
+        self.find_best_inner(true);
+    }
+
+    fn find_best_inner(&mut self, force: bool) {
         let (i, f) = self
             .pool_f
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
             .unwrap();
-        if !check || f < &self.best_f {
+        if force || f < &self.best_f {
             self.set_best(i);
         }
     }

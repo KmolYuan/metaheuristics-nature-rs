@@ -276,7 +276,7 @@ where
                 assert_shape(pool.shape() == ctx.pool_size())?;
                 ctx.pool = pool;
                 ctx.pool_f = fitness;
-                ctx.find_best_init(false);
+                ctx.find_best_force();
             }
             Pool::Func(f) => {
                 let pool = f(&ctx);
