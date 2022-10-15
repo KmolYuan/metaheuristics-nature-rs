@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
@@ -44,5 +46,5 @@
 ///     }
 /// }
 /// ```
-pub trait Fitness: Sync + Send + Default + Clone + PartialOrd {}
-impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd {}
+pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + Debug {}
+impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd + Debug {}

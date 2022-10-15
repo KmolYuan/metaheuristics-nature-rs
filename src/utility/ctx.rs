@@ -152,14 +152,21 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Find the best, and set it globally.
     pub fn find_best(&mut self) {
-        let mut best = 0;
-        for i in 1..self.pop_num() {
-            if self.pool_f[i] < self.pool_f[best] {
-                best = i;
-            }
-        }
-        if self.pool_f[best] < self.best_f {
-            self.set_best(best);
+        self.find_best_init(true);
+    }
+
+    /// Find the best initially.
+    ///
+    /// Use the `check` option to control overriding.
+    pub fn find_best_init(&mut self, check: bool) {
+        let (i, f) = self
+            .pool_f
+            .iter()
+            .enumerate()
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .unwrap();
+        if !check || f < &self.best_f {
+            self.set_best(i);
         }
     }
 

@@ -273,10 +273,10 @@ where
         let mut report = Vec::new();
         match pool {
             Pool::ReadyMade { pool, fitness } => {
+                assert_shape(pool.shape() == ctx.pool_size())?;
                 ctx.pool = pool;
                 ctx.pool_f = fitness;
-                assert_shape(ctx.pool.shape() == ctx.pool_size())?;
-                ctx.find_best();
+                ctx.find_best_init(false);
             }
             Pool::Func(f) => {
                 let pool = f(&ctx);
