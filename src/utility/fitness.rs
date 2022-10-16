@@ -46,5 +46,5 @@ use std::fmt::Debug;
 ///     }
 /// }
 /// ```
-pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + Debug {}
-impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd + Debug {}
+pub trait Fitness: Sync + Send + Default + Clone + PartialOrd {}
+impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd {}
