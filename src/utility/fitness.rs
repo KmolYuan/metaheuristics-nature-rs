@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
