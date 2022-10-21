@@ -164,10 +164,9 @@ where
     ///
     /// # Error
     ///
-    /// This method returns a `Result` object.
-    /// It will be `Ok` and returns result when the `ctx.pool` and `ctx.fitness`
-    /// initialized successfully;
-    /// `Err` when the boundary check fails.
+    /// This function will be `Ok` and returns result when the `ctx.pool` and
+    /// `ctx.fitness` initialized successfully; `Err` when the boundary check
+    /// fails.
     pub fn solve(self, func: F) -> Result<Solver<F>, ndarray::ShapeError>
     where
         S::Algorithm: Algorithm<F>,
