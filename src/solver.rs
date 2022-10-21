@@ -63,7 +63,7 @@ impl<F: ObjFunc> Solver<F> {
     where
         F: ObjFactory,
     {
-        self.func().produce(self.best_parameters())
+        self.ctx.result()
     }
 
     /// Seed of the random number generator.

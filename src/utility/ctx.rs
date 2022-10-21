@@ -97,6 +97,16 @@ impl<F: ObjFunc> Ctx<F> {
             .fitness(self.pool.slice(s![i, ..]).as_slice().unwrap());
     }
 
+    /// Get the current best result of the objective function.
+    ///
+    /// This method can generate midway product of convergence if necessary.
+    pub fn result(&self) -> F::Product
+    where
+        F: ObjFactory,
+    {
+        self.func.produce(self.best.as_slice().unwrap())
+    }
+
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
         let mut fitness = self.pool_f.clone();
         #[cfg(feature = "rayon")]
