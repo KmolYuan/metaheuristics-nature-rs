@@ -17,10 +17,10 @@ use crate::utility::prelude::*;
 /// let mut report = Vec::with_capacity(20);
 ///
 /// // Build and run the solver
-/// let s = Solver::build(Rga::default())
+/// let s = Solver::build(Rga::default(), MyFunc::new())
 ///     .task(|ctx| ctx.gen == 20)
 ///     .callback(|ctx| report.push(ctx.best_f))
-///     .solve(MyFunc::new())
+///     .solve()
 ///     .unwrap();
 /// // Get the result from objective function
 /// let ans = s.result();

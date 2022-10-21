@@ -38,10 +38,10 @@ where
     S::Algorithm: Algorithm<TestObj>,
 {
     let mut report = alloc::vec::Vec::new();
-    let s = Solver::build(S::default())
+    let s = Solver::build(S::default(), TestObj)
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
         .callback(|ctx| report.push(ctx.best_f))
-        .solve(TestObj)
+        .solve()
         .unwrap();
     let ans = s.result();
     let xs = s.best_parameters();

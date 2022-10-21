@@ -23,6 +23,7 @@ enum Pool<'a, F: ObjFunc> {
 /// This type is created by [`Solver::build()`] method.
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
+    func: F,
     pop_num: usize,
     seed: Option<u128>,
     setting: S,
@@ -64,10 +65,10 @@ where
     /// use metaheuristics_nature::{utility::gaussian_pool, Rga, Solver};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
-    /// let s = Solver::build(Rga::default())
+    /// let s = Solver::build(Rga::default(), MyFunc::new())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .pool(gaussian_pool(&[0.; 4], &[5.; 4]))
-    ///     .solve(MyFunc::new())
+    ///     .solve()
     ///     .unwrap();
     /// ```
     ///
@@ -113,9 +114,9 @@ where
     /// use metaheuristics_nature::{Rga, Solver};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
-    /// let s = Solver::build(Rga::default())
+    /// let s = Solver::build(Rga::default(), MyFunc::new())
     ///     .task(|ctx| ctx.gen == 20)
-    ///     .solve(MyFunc::new())
+    ///     .solve()
     ///     .unwrap();
     /// ```
     ///
@@ -140,10 +141,10 @@ where
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let mut gen = 0;
-    /// let s = Solver::build(Rga::default())
+    /// let s = Solver::build(Rga::default(), MyFunc::new())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .callback(|ctx| gen = ctx.gen)
-    ///     .solve(MyFunc::new())
+    ///     .solve()
     ///     .unwrap();
     /// ```
     ///
@@ -167,11 +168,19 @@ where
     /// This function will be `Ok` and returns result when the `ctx.pool` and
     /// `ctx.fitness` initialized successfully; `Err` when the boundary check
     /// fails.
-    pub fn solve(self, func: F) -> Result<Solver<F>, ndarray::ShapeError>
+    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError>
     where
         S::Algorithm: Algorithm<F>,
     {
-        let Self { pop_num, seed, setting, pool, task, mut callback } = self;
+        let Self {
+            func,
+            pop_num,
+            seed,
+            setting,
+            pool,
+            task,
+            mut callback,
+        } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
         let mut method = setting.algorithm();
         let mut ctx = Ctx::new(func, seed, pop_num);
@@ -210,11 +219,12 @@ impl<F: ObjFunc> Solver<F> {
     /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
     /// The default value of each option can be found in their document.
-    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F>
+    pub fn build<S>(setting: S, func: F) -> SolverBuilder<'static, S, F>
     where
         S: Setting,
     {
         SolverBuilder {
+            func,
             pop_num: S::default_pop(),
             seed: None,
             setting,

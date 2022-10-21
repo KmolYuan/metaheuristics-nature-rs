@@ -8,9 +8,9 @@ use alloc::boxed::Box;
 ///
 /// let bound = [[-50., 50.]; 4];
 /// let f = Fx::new(&bound, |[a, b, c, d]| a * a + 8. * b * b + c * c + d * d);
-/// let s = Solver::build(Rga::default())
+/// let s = Solver::build(Rga::default(), f)
 ///     .task(|ctx| ctx.gen == 20)
-///     .solve(f)
+///     .solve()
 ///     .unwrap();
 /// ```
 pub struct Fx<'b, 'f, R: Fitness, const DIM: usize> {
