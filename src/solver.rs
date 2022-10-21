@@ -1,5 +1,4 @@
 use crate::utility::prelude::*;
-use alloc::vec::Vec;
 
 /// A public API for using optimization methods.
 ///
@@ -15,9 +14,12 @@ use alloc::vec::Vec;
 /// use metaheuristics_nature::{Rga, Solver};
 /// # use metaheuristics_nature::tests::TestObj as MyFunc;
 ///
+/// let mut report = Vec::with_capacity(20);
+///
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default())
 ///     .task(|ctx| ctx.gen == 20)
+///     .callback(|ctx| report.push(ctx.best_f))
 ///     .solve(MyFunc::new())
 ///     .unwrap();
 /// // Get the result from objective function
@@ -26,17 +28,16 @@ use alloc::vec::Vec;
 /// let xs = s.best_parameters();
 /// let y = s.best_fitness();
 /// // Get the history reports
-/// let report = s.report();
+/// let y2 = report[2];
 /// ```
 #[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
-pub struct Solver<F: ObjFunc, R> {
+pub struct Solver<F: ObjFunc> {
     ctx: Ctx<F>,
-    report: Vec<R>,
 }
 
-impl<F: ObjFunc, R> Solver<F, R> {
-    pub(crate) fn new(ctx: Ctx<F>, report: Vec<R>) -> Self {
-        Self { ctx, report }
+impl<F: ObjFunc> Solver<F> {
+    pub(crate) fn new(ctx: Ctx<F>) -> Self {
+        Self { ctx }
     }
 
     /// Get the reference of the objective function.
@@ -45,11 +46,6 @@ impl<F: ObjFunc, R> Solver<F, R> {
     /// initialization process, which is stored in the objective function.
     pub fn func(&self) -> &F {
         &self.ctx.func
-    }
-
-    /// Get the history report returned by record function.
-    pub fn report(&self) -> &[R] {
-        &self.report
     }
 
     /// Get the best parameters.

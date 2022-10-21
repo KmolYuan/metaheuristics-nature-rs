@@ -37,15 +37,16 @@ where
     S: Setting + Default,
     S::Algorithm: Algorithm<TestObj>,
 {
+    let mut report = Vec::new();
     let s = Solver::build(S::default())
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
+        .callback(|ctx| report.push(ctx.best_f))
         .solve(TestObj)
         .unwrap();
     let ans = s.result();
     let xs = s.best_parameters();
     let y = s.best_fitness();
-    let report = s.report();
-    assert!(!report.is_empty(), "{}", report.len());
+    assert!(!report.is_empty());
     assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
     for (i, x) in xs.iter().enumerate() {
         assert!(x.abs() < 1e-6, "x{} = {}", i, x);

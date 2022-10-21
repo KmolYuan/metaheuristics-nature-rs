@@ -3,7 +3,6 @@ use alloc::{boxed::Box, vec::Vec};
 
 type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + 'a>;
 type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + 'a>;
-type RecordFunc<'a, F, R> = Box<dyn Fn(&Ctx<F>) -> R + 'a>;
 type CallbackFunc<'a, F> = Box<dyn FnMut(&mut Ctx<F>) + 'a>;
 
 fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
@@ -23,17 +22,16 @@ enum Pool<'a, F: ObjFunc> {
 ///
 /// This type is created by [`Solver::build()`] method.
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
-pub struct SolverBuilder<'a, S: Setting, F: ObjFunc, R> {
+pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     pop_num: usize,
     seed: Option<u128>,
     setting: S,
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
-    record: RecordFunc<'a, F, R>,
     callback: CallbackFunc<'a, F>,
 }
 
-impl<'a, S, F, R> SolverBuilder<'a, S, F, R>
+impl<'a, S, F> SolverBuilder<'a, S, F>
 where
     S: Setting,
     F: ObjFunc,
@@ -81,7 +79,7 @@ where
     /// # See Also
     ///
     /// [`Self::pool_and_fitness()`], [`uniform_pool()`], [`gaussian_pool()`].
-    pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F, R>
+    pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
         C: FnOnce(&Ctx<F>) -> Array2<f64> + 'b,
@@ -124,52 +122,12 @@ where
     /// # Default
     ///
     /// By default, the algorithm will iterate 200 generation.
-    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F, R>
+    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
         C: Fn(&Ctx<F>) -> bool + 'b,
     {
         SolverBuilder { task: Box::new(task), ..self }
-    }
-
-    /// Set record function.
-    ///
-    /// The record function will be called at each generation and save the
-    /// return value in the report. Due to memory allocation, this function
-    /// should record as less information as possible. For example, return
-    /// unit type `()` can totally disable this function.
-    ///
-    /// After calling [`Self::solve()`] function, you can take the report
-    /// value with [`Solver::report()`] method. The following example records
-    /// generation and spent time for the report.
-    ///
-    /// ```
-    /// use metaheuristics_nature::{Rga, Solver};
-    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    ///
-    /// let s = Solver::build(Rga::default())
-    /// #   .task(|ctx| ctx.gen == 1)
-    ///     .record(|ctx| (ctx.gen, ctx.best_f))
-    ///     .solve(MyFunc::new())
-    ///     .unwrap();
-    /// let report: &[(u64, f64)] = s.report();
-    /// ```
-    ///
-    /// # Default
-    ///
-    /// By default, this function returns unit type `()`, which allocates
-    /// nothing.
-    pub fn record<'b, C, NR>(self, record: C) -> SolverBuilder<'b, S, F, NR>
-    where
-        'a: 'b,
-        C: Fn(&Ctx<F>) -> NR + 'b,
-    {
-        macro_rules! builder {
-            ($field_new:ident, $($field:ident),+) => {
-                SolverBuilder { $field_new: Box::new($field_new), $($field: self.$field),+ }
-            };
-        }
-        builder!(record, pop_num, seed, setting, pool, task, callback)
     }
 
     /// Set callback function.
@@ -189,54 +147,10 @@ where
     ///     .unwrap();
     /// ```
     ///
-    /// In the example below, the fields of the `app` are mutable variables that
-    /// changes every time. But we still need to use its method in
-    /// [`Self::task()`] condition, so a [`RwLock`](std::sync::RwLock) /
-    /// [`Mutex`](std::sync::Mutex) lock / [`std::sync::atomic`] is required.
-    ///
-    /// If you spawn the optimization process into another thread, adding a
-    /// reference counter ([`Arc`](std::sync::Arc)) is also required.
-    ///
-    /// ```
-    /// use metaheuristics_nature::{Rga, Solver};
-    /// use std::sync::{
-    ///     atomic::{AtomicBool, AtomicU64, Ordering},
-    ///     Arc, Mutex,
-    /// };
-    /// # use metaheuristics_nature::tests::TestObj as MyFunc;
-    ///
-    /// #[derive(Default)]
-    /// struct App {
-    ///     is_start: Arc<AtomicBool>,
-    ///     gen: Arc<AtomicU64>,
-    ///     fitness: Arc<Mutex<f64>>,
-    /// }
-    ///
-    /// let app = App::default();
-    /// // Create references of Arc,
-    /// // they will be moved into a static closure
-    /// let is_start = app.is_start.clone();
-    /// let gen = app.gen.clone();
-    /// let fitness = app.fitness.clone();
-    /// // Spawn the solver here!
-    /// let handle = std::thread::spawn(move || {
-    ///     Solver::build(Rga::default())
-    ///         .task(|ctx| ctx.gen == 20 || !is_start.load(Ordering::Relaxed))
-    ///         .callback(|ctx| {
-    ///             gen.store(ctx.gen, Ordering::Relaxed);
-    ///             *fitness.lock().unwrap() = ctx.best_f;
-    ///         })
-    ///         .solve(MyFunc::new())
-    ///         .unwrap()
-    /// });
-    /// /* do other things such as GUI */
-    /// let s = handle.join();
-    /// ```
-    ///
     /// # Default
     ///
     /// By default, this function does nothing.
-    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F, R>
+    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
         C: FnMut(&mut Ctx<F>) + 'b,
@@ -254,23 +168,14 @@ where
     /// It will be `Ok` and returns result when the `ctx.pool` and `ctx.fitness`
     /// initialized successfully;
     /// `Err` when the boundary check fails.
-    pub fn solve(self, func: F) -> Result<Solver<F, R>, ndarray::ShapeError>
+    pub fn solve(self, func: F) -> Result<Solver<F>, ndarray::ShapeError>
     where
         S::Algorithm: Algorithm<F>,
     {
-        let Self {
-            pop_num,
-            seed,
-            setting,
-            pool,
-            task,
-            record,
-            mut callback,
-        } = self;
+        let Self { pop_num, seed, setting, pool, task, mut callback } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
         let mut method = setting.algorithm();
         let mut ctx = Ctx::new(func, seed, pop_num);
-        let mut report = Vec::new();
         match pool {
             Pool::ReadyMade { pool, fitness } => {
                 assert_shape(pool.shape() == ctx.pool_size())?;
@@ -284,24 +189,20 @@ where
                 ctx.init_pop(pool);
             }
         }
+        method.init(&mut ctx);
         loop {
-            if ctx.gen == 0 {
-                method.init(&mut ctx);
-            } else {
-                method.generation(&mut ctx);
-            }
-            report.push(record(&ctx));
             callback(&mut ctx);
             if task(&ctx) {
                 break;
             }
             ctx.gen += 1;
+            method.generation(&mut ctx);
         }
-        Ok(Solver::new(ctx, report))
+        Ok(Solver::new(ctx))
     }
 }
 
-impl<F: ObjFunc> Solver<F, ()> {
+impl<F: ObjFunc> Solver<F> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
     /// Please check [`SolverBuilder`] type, it will help you choose your
@@ -310,7 +211,7 @@ impl<F: ObjFunc> Solver<F, ()> {
     /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
     /// The default value of each option can be found in their document.
-    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F, ()>
+    pub fn build<S>(setting: S) -> SolverBuilder<'static, S, F>
     where
         S: Setting,
     {
@@ -320,7 +221,6 @@ impl<F: ObjFunc> Solver<F, ()> {
             setting,
             pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
-            record: Box::new(|_| ()),
             callback: Box::new(|_| ()),
         }
     }

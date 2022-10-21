@@ -19,9 +19,12 @@ test another algorithm by simply replacing `Rga` to `De`.
 ```rust
 use metaheuristics_nature::{Rga, Solver};
 
+let mut report = Vec::with_capacity(20);
+
 // Build and run the solver
 let s = Solver::build(Rga::default())
     .task(|ctx| ctx.gen == 20)
+    .callback(|ctx| report.push(ctx.best_f))
     .solve(MyFunc::new())
     .unwrap();
 // Get the result from objective function
@@ -30,7 +33,7 @@ let ans = s.result();
 let xs = s.best_parameters();
 let y = s.best_fitness();
 // Get the history reports
-let report = s.report();
+let y2 = report[2];
 ```
 
 ### What kinds of problems can be solved?
