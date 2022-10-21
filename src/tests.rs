@@ -37,7 +37,7 @@ where
     S: Setting + Default,
     S::Algorithm: Algorithm<TestObj>,
 {
-    let mut report = Vec::new();
+    let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default())
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
         .callback(|ctx| report.push(ctx.best_f))
