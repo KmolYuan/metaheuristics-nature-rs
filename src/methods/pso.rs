@@ -15,6 +15,7 @@ pub struct Pso<F: Fitness> {
 
 impl<F: Fitness> Pso<F> {
     impl_builders! {
+        default,
         /// Cognition factor.
         fn cognition(f64)
         /// Social factor.

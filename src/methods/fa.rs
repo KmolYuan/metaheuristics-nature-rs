@@ -14,6 +14,7 @@ pub struct Fa {
 
 impl Fa {
     impl_builders! {
+        default,
         /// Alpha factor.
         fn alpha(f64)
         /// Minimum beta factor.

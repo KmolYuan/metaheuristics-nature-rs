@@ -58,6 +58,7 @@ pub struct De {
 
 impl De {
     impl_builders! {
+        default,
         /// Strategy of the formula.
         fn strategy(Strategy)
         /// F factor.

@@ -112,6 +112,11 @@ pub use self::{algorithm::*, fx_func::*, methods::*, obj_func::*, setting::*, so
 /// ```
 #[macro_export]
 macro_rules! impl_builders {
+    (default, $($tt:tt)+) => {
+        /// Create default instance.
+        pub fn new() -> Self { Self::default() }
+        $crate::impl_builders!($($tt)+);
+    };
     ($($(#[$meta:meta])* fn $name:ident($ty:ty))+) => {$(
         $(#[$meta])*
         pub fn $name(self, $name: $ty) -> Self {

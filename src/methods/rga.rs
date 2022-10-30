@@ -20,6 +20,7 @@ pub struct Rga<F: Fitness> {
 
 impl<F: Fitness> Rga<F> {
     impl_builders! {
+        default,
         /// Crossing probability.
         fn cross(f64)
         /// Mutation probability.
