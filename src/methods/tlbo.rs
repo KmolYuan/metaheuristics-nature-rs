@@ -9,6 +9,13 @@ use crate::utility::prelude::*;
 #[derive(Default)]
 pub struct Tlbo;
 
+impl Tlbo {
+    /// Create default instance.
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 impl Setting for Tlbo {
     type Algorithm = Method;
 
