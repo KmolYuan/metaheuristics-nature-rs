@@ -1,4 +1,4 @@
-use self::ziggurat::{ZIG_NORM_F, ZIG_NORM_R, ZIG_NORM_X};
+use self::{rand::*, ziggurat::*};
 use core::{
     mem::{size_of, transmute},
     ops::Range,
@@ -7,8 +7,10 @@ use core::{
 use getrandom::getrandom;
 #[cfg(not(feature = "std"))]
 use num_traits::Float as _;
+use num_traits::Zero;
 use oorandom::Rand64;
 
+mod rand;
 mod ziggurat;
 
 struct AtomicU128 {
@@ -84,7 +86,7 @@ impl Rng {
     /// Generate a random values between `0..1` (exclusive).
     #[inline]
     pub fn rand(&self) -> f64 {
-        self.gen(|rng| rng.rand_float())
+        self.gen(Rand64::rand_float)
     }
 
     /// Generate a random boolean by positive (`true`) factor.
@@ -93,16 +95,36 @@ impl Rng {
         self.rand() < v
     }
 
-    /// Generate a random floating point value by range.
+    /// Generate a random value by range.
     #[inline]
-    pub fn float(&self, range: Range<f64>) -> f64 {
-        self.rand() * (range.end - range.start) + range.start
+    pub fn range<R: Rand>(&self, range: R) -> R::Result {
+        range.rand(self.rand())
     }
 
-    /// Generate a random integer value by range.
+    /// Generate a random value by upper bound.
+    ///
+    /// The lower bound is zero.
     #[inline]
-    pub fn int(&self, range: Range<usize>) -> usize {
-        (self.rand() * (range.end - range.start) as f64) as usize + range.start
+    pub fn ub<U>(&self, ub: U) -> U
+    where
+        U: Zero,
+        Range<U>: Rand<Result = U>,
+    {
+        (U::zero()..ub).rand(self.rand())
+    }
+
+    /// Generate a random floating point value by range.
+    #[inline]
+    #[deprecated = "Please use `range` method instead"]
+    pub fn float<R: Rand>(&self, range: R) -> R::Result {
+        range.rand(self.rand())
+    }
+
+    /// Generate a random floating point value by range.
+    #[inline]
+    #[deprecated = "Please use `range` method instead"]
+    pub fn int<R: Rand>(&self, range: R) -> R::Result {
+        range.rand(self.rand())
     }
 
     /// Sample with Gaussian distribution.
@@ -114,15 +136,17 @@ impl Rng {
     /// Generate (fill) a random vector.
     ///
     /// The start position of the vector can be set.
-    pub fn vector<A>(&self, mut v: A, start: usize, rng: Range<usize>) -> A
+    pub fn vector<A, V, R>(&self, mut v: V, start: usize, rng: R) -> V
     where
-        A: AsMut<[usize]>,
+        A: PartialEq,
+        V: AsMut<[A]>,
+        R: Rand<Result = A> + Clone,
     {
         let s = v.as_mut();
         for i in start..s.len() {
-            s[i] = self.int(rng.clone());
+            s[i] = self.range(rng.clone());
             while s[..i].contains(&s[i]) {
-                s[i] = self.int(rng.clone());
+                s[i] = self.range(rng.clone());
             }
         }
         v

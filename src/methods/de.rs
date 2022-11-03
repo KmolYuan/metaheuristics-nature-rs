@@ -3,16 +3,9 @@
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
 use crate::utility::prelude::*;
+use alloc::boxed::Box;
 
 type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
-
-macro_rules! impl_f45 {
-    ($ctx:ident, $v:ident, $n:ident, $f:ident) => {
-        $f * ($ctx.pool[[$v[0], $n]] + $ctx.pool[[$v[1], $n]]
-            - $ctx.pool[[$v[2], $n]]
-            - $ctx.pool[[$v[3], $n]])
-    };
-}
 
 /// The Differential Evolution strategy.
 ///
@@ -108,42 +101,44 @@ impl Method {
         let f = self.f;
         match self.strategy {
             S1 | S6 => {
-                let v = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
-                Box::new(move |ctx, _, n| {
-                    ctx.best[n] + f * (ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
-                })
+                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[[v0, s]] - ctx.pool[[v1, s]]))
             }
-            S2 | S7 => {
-                let v = ctx.rng.vector([0; 3], 0, 0..ctx.pop_num());
-                Box::new(move |ctx, _, n| {
-                    ctx.pool[[v[0], n]] + f * (ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]])
-                })
-            }
-            S3 | S8 => {
-                let v = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
-                Box::new(move |ctx, tmp, n| {
-                    tmp[n] + f * (ctx.best[n] - tmp[n] + ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
-                })
-            }
-            S4 | S9 => {
-                let v = ctx.rng.vector([0; 4], 0, 0..ctx.pop_num());
-                Box::new(move |ctx, _, n| ctx.best[n] + impl_f45!(ctx, v, n, f))
-            }
-            S5 | S10 => {
-                let v = ctx.rng.vector([0; 5], 0, 0..ctx.pop_num());
-                Box::new(move |ctx, _, n| ctx.pool[[v[4], n]] + impl_f45!(ctx, v, n, f))
-            }
+            S2 | S7 => Box::new({
+                let [v0, v1, v2] = ctx.rng.vector([0; 3], 0, 0..ctx.pop_num());
+                move |ctx, _, s| ctx.pool[[v0, s]] + f * (ctx.pool[[v1, s]] - ctx.pool[[v2, s]])
+            }),
+            S3 | S8 => Box::new({
+                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                move |ctx, tmp, s| {
+                    tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[[v0, s]] - ctx.pool[[v1, s]])
+                }
+            }),
+            S4 | S9 => Box::new({
+                let [v0, v1, v2, v3] = ctx.rng.vector([0; 4], 0, 0..ctx.pop_num());
+                move |ctx, _, s| {
+                    ctx.best[s]
+                        + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
+                            - ctx.pool[[v2, s]]
+                            - ctx.pool[[v3, s]])
+                }
+            }),
+            S5 | S10 => Box::new({
+                let [v0, v1, v2, v3, v4] = ctx.rng.vector([0; 5], 0, 0..ctx.pop_num());
+                move |ctx, _, s| {
+                    ctx.pool[[v4, s]]
+                        + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
+                            - ctx.pool[[v2, s]]
+                            - ctx.pool[[v3, s]])
+                }
+            }),
         }
     }
 
     fn c1<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
-        let mut n = ctx.rng.int(0..ctx.dim());
-        for _ in 0..ctx.dim() {
-            tmp[n] = formula(ctx, tmp, n);
-            n += 1;
-            if n >= ctx.dim() {
-                n = 0;
-            }
+        let s = ctx.rng.ub(ctx.dim());
+        for s in (0..ctx.dim()).cycle().skip(s).take(ctx.dim()) {
+            tmp[s] = formula(ctx, tmp, s);
             if !ctx.rng.maybe(self.cross) {
                 break;
             }
@@ -151,13 +146,10 @@ impl Method {
     }
 
     fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
-        let mut n = ctx.rng.int(0..ctx.dim());
-        for lv in 0..ctx.dim() {
-            if !ctx.rng.maybe(self.cross) || lv == ctx.dim() - 1 {
-                tmp[n] = formula(ctx, tmp, n);
-            }
-            if n >= ctx.dim() {
-                n = 0;
+        let s = ctx.rng.ub(ctx.dim());
+        for s in (0..ctx.dim()).cycle().skip(s).take(ctx.dim()) {
+            if ctx.rng.maybe(self.cross) {
+                tmp[s] = formula(ctx, tmp, s);
             }
         }
     }
@@ -174,7 +166,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, formula),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, formula),
             }
-            if !(0..ctx.dim()).all(|s| ctx.bound_range(s).contains(&tmp[s])) {
+            if (0..ctx.dim()).any(|s| !ctx.bound_range(s).contains(&tmp[s])) {
                 continue;
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());

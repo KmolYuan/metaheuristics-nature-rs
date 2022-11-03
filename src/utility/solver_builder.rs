@@ -239,7 +239,7 @@ impl<F: ObjFunc> Solver<F> {
 ///
 /// Please see [`SolverBuilder::pool()`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
-    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| ctx.rng.float(ctx.bound_range(s)))
+    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| ctx.rng.range(ctx.bound_range(s)))
 }
 
 /// A function generates a Gaussian pool.

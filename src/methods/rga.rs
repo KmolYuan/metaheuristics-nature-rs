@@ -117,7 +117,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             }
             ctx.pool_f = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
-            let i = ctx.rng.int(0..ctx.pop_num());
+            let i = ctx.rng.ub(ctx.pop_num());
             ctx.assign_from_best(i);
         }
         // Crossover
@@ -147,7 +147,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                         v[s] = if range.contains(&var) {
                             var
                         } else {
-                            ctx.rng.float(range)
+                            ctx.rng.range(range)
                         };
                     }
                     let f = ctx.func.fitness(v.as_slice().unwrap());
@@ -163,7 +163,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             if !ctx.rng.maybe(self.mutate) {
                 continue;
             }
-            let s = ctx.rng.int(0..ctx.dim());
+            let s = ctx.rng.ub(ctx.dim());
             if ctx.rng.maybe(0.5) {
                 ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
             } else {

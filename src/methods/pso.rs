@@ -81,8 +81,8 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             .zip(best_past.axis_iter_mut(Axis(0)))
             .zip(&mut best_past_f)
             .map(|(((f, mut v), mut past), past_f)| {
-                let alpha = ctx.rng.float(0.0..self.cognition);
-                let beta = ctx.rng.float(0.0..self.social);
+                let alpha = ctx.rng.range(0.0..self.cognition);
+                let beta = ctx.rng.range(0.0..self.social);
                 for s in 0..ctx.dim() {
                     let variable = self.velocity * v[s]
                         + alpha * (past[s] - v[s])

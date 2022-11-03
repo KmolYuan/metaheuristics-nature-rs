@@ -48,7 +48,7 @@ impl Method {
             }
             mean /= ctx.dim() as f64;
             let v =
-                ctx.pool[[i, s]] + ctx.rng.float(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
+                ctx.pool[[i, s]] + ctx.rng.range(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
             student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
@@ -56,7 +56,7 @@ impl Method {
 
     fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
         let j = {
-            let j = ctx.rng.int(0..ctx.pop_num() - 1);
+            let j = ctx.rng.ub(ctx.pop_num() - 1);
             if j >= i {
                 j + 1
             } else {
@@ -69,7 +69,7 @@ impl Method {
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]
             };
-            let v = ctx.pool[[i, s]] + ctx.rng.float(1.0..ctx.dim() as f64) * diff;
+            let v = ctx.pool[[i, s]] + ctx.rng.range(1.0..ctx.dim() as f64) * diff;
             student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
