@@ -136,22 +136,21 @@ impl Method {
     }
 
     fn c1<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
-        let s = ctx.rng.ub(ctx.dim());
-        for s in (0..ctx.dim()).cycle().skip(s).take(ctx.dim()) {
-            tmp[s] = formula(ctx, tmp, s);
-            if !ctx.rng.maybe(self.cross) {
-                break;
-            }
-        }
+        (0..ctx.dim())
+            .cycle()
+            .skip(ctx.rng.ub(ctx.dim()))
+            .take(ctx.dim())
+            .take_while(|_| ctx.rng.maybe(self.cross))
+            .for_each(|s| tmp[s] = formula(ctx, tmp, s))
     }
 
     fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
-        let s = ctx.rng.ub(ctx.dim());
-        for s in (0..ctx.dim()).cycle().skip(s).take(ctx.dim()) {
-            if ctx.rng.maybe(self.cross) {
-                tmp[s] = formula(ctx, tmp, s);
-            }
-        }
+        (0..ctx.dim())
+            .cycle()
+            .skip(ctx.rng.ub(ctx.dim()))
+            .take(ctx.dim())
+            .filter(|_| ctx.rng.maybe(self.cross))
+            .for_each(|s| tmp[s] = formula(ctx, tmp, s))
     }
 }
 
