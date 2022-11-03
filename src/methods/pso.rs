@@ -40,10 +40,11 @@ impl<F: Fitness> Setting for Pso<F> {
     type Algorithm = Method<F>;
 
     fn algorithm(self) -> Self::Algorithm {
+        let Self { cognition, social, velocity, _marker } = self;
         Method {
-            cognition: self.cognition,
-            social: self.social,
-            velocity: self.velocity,
+            cognition,
+            social,
+            velocity,
             best_past: Array2::zeros((1, 1)),
             best_past_f: Vec::new(),
         }

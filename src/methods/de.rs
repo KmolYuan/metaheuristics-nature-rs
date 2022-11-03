@@ -78,18 +78,14 @@ impl Setting for De {
     type Algorithm = Method;
 
     fn algorithm(self) -> Self::Algorithm {
-        let num = match self.strategy {
+        let Self { strategy, f, cross } = self;
+        let num = match strategy {
             S1 | S3 | S6 | S8 => 2,
             S2 | S7 => 3,
             S4 | S9 => 4,
             S5 | S10 => 5,
         };
-        Method {
-            f: self.f,
-            cross: self.cross,
-            num,
-            strategy: self.strategy,
-        }
+        Method { f, cross, num, strategy }
     }
 
     fn default_pop() -> usize {

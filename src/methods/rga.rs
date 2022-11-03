@@ -48,11 +48,12 @@ impl<F: Fitness> Setting for Rga<F> {
     type Algorithm = Method<F>;
 
     fn algorithm(self) -> Self::Algorithm {
+        let Self { cross, mutate, win, delta, _marker } = self;
         Method {
-            cross: self.cross,
-            mutate: self.mutate,
-            win: self.win,
-            delta: self.delta,
+            cross,
+            mutate,
+            win,
+            delta,
             fitness_new: Vec::new(),
             pool_new: Array2::zeros((1, 1)),
         }

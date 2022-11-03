@@ -34,11 +34,8 @@ impl Setting for Fa {
     type Algorithm = Method;
 
     fn algorithm(self) -> Self::Algorithm {
-        Method {
-            alpha: self.alpha,
-            beta_min: self.beta_min,
-            gamma: self.gamma,
-        }
+        let Self { alpha, beta_min, gamma } = self;
+        Method { alpha, beta_min, gamma }
     }
 
     fn default_pop() -> usize {
