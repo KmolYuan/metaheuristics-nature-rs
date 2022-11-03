@@ -105,26 +105,26 @@ impl Rng {
     ///
     /// The lower bound is zero.
     #[inline]
-    pub fn ub<U>(&self, ub: U) -> U
+    pub fn ub<U>(&self, ub: U) -> <Range<U> as Rand>::Result
     where
         U: Zero,
-        Range<U>: Rand<Result = U>,
+        Range<U>: Rand,
     {
-        (U::zero()..ub).rand(self.rand())
+        self.range(U::zero()..ub)
     }
 
     /// Generate a random floating point value by range.
     #[inline]
     #[deprecated = "Please use `range` method instead"]
-    pub fn float<R: Rand>(&self, range: R) -> R::Result {
-        range.rand(self.rand())
+    pub fn float(&self, range: Range<f64>) -> f64 {
+        self.range(range)
     }
 
     /// Generate a random floating point value by range.
     #[inline]
     #[deprecated = "Please use `range` method instead"]
-    pub fn int<R: Rand>(&self, range: R) -> R::Result {
-        range.rand(self.rand())
+    pub fn int(&self, range: Range<usize>) -> usize {
+        self.range(range)
     }
 
     /// Sample with Gaussian distribution.
