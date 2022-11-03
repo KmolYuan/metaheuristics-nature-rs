@@ -5,6 +5,10 @@ use self::Strategy::*;
 use crate::utility::prelude::*;
 use alloc::{vec, vec::Vec};
 
+fn f45<F: ObjFunc>(ctx: &Ctx<F>, v: &[usize], f: f64, n: usize) -> f64 {
+    (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]] - ctx.pool[[v[3], n]]) * f
+}
+
 /// The Differential Evolution strategy.
 ///
 /// Each strategy has different formulas on the recombination.
@@ -102,20 +106,16 @@ pub struct Method {
 }
 
 impl Method {
-    fn f45<F: ObjFunc>(&self, ctx: &Ctx<F>, v: &[usize], n: usize) -> f64 {
-        (ctx.pool[[v[0], n]] + ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]] - ctx.pool[[v[3], n]])
-            * self.f
-    }
-
     fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, tmp: &Array1<f64>, v: &[usize], n: usize) -> f64 {
-        match self.strategy {
-            S1 | S6 => ctx.best[n] + self.f * (ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]]),
-            S2 | S7 => ctx.pool[[v[0], n]] + self.f * (ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]]),
+        let Self { strategy, f, .. } = self;
+        match strategy {
+            S1 | S6 => ctx.best[n] + f * (ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]]),
+            S2 | S7 => ctx.pool[[v[0], n]] + f * (ctx.pool[[v[1], n]] - ctx.pool[[v[2], n]]),
             S3 | S8 => {
-                tmp[n] + self.f * (ctx.best[n] - tmp[n] + ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
+                tmp[n] + f * (ctx.best[n] - tmp[n] + ctx.pool[[v[0], n]] - ctx.pool[[v[1], n]])
             }
-            S4 | S9 => ctx.best[n] + self.f45(ctx, v, n),
-            S5 | S10 => ctx.pool[[v[4], n]] + self.f45(ctx, v, n),
+            S4 | S9 => ctx.best[n] + f45(ctx, v, *f, n),
+            S5 | S10 => ctx.pool[[v[4], n]] + f45(ctx, v, *f, n),
         }
     }
 
