@@ -71,7 +71,7 @@ impl Rng {
     }
 
     #[inline]
-    fn gen<R>(&self, f: impl Fn(&mut Rand64) -> R) -> R {
+    fn gen<R>(&self, f: impl FnOnce(&mut Rand64) -> R) -> R {
         let mut rng = Rand64::from_state((
             self.s1.load(Ordering::Relaxed),
             self.s2.load(Ordering::Relaxed),
@@ -98,7 +98,7 @@ impl Rng {
     /// Generate a random value by range.
     #[inline]
     pub fn range<R: Rand>(&self, range: R) -> R::Result {
-        range.rand(self.rand())
+        self.gen(|rng| range.rand(rng))
     }
 
     /// Generate a random value by upper bound.

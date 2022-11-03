@@ -84,7 +84,7 @@ impl<Ft: Fitness> Method<Ft> {
         } else {
             1.
         };
-        y * ctx.rng.rand() * (1. - r).powf(self.delta)
+        ctx.rng.ub(y * (1. - r).powf(self.delta))
     }
 }
 
