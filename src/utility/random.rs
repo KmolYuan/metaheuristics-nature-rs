@@ -114,13 +114,18 @@ impl Rng {
     /// Generate (fill) a random vector.
     ///
     /// The start position of the vector can be set.
-    pub fn vector(&self, v: &mut [usize], start: usize, rng: Range<usize>) {
-        for i in start..v.len() {
-            v[i] = self.int(rng.clone());
-            while v[..i].contains(&v[i]) {
-                v[i] = self.int(rng.clone());
+    pub fn vector<A>(&self, mut v: A, start: usize, rng: Range<usize>) -> A
+    where
+        A: AsMut<[usize]>,
+    {
+        let s = v.as_mut();
+        for i in start..s.len() {
+            s[i] = self.int(rng.clone());
+            while s[..i].contains(&s[i]) {
+                s[i] = self.int(rng.clone());
             }
         }
+        v
     }
 }
 
