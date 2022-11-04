@@ -67,7 +67,7 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Seed of the random number generator.
-    pub fn seed(&self) -> u128 {
+    pub fn seed(&self) -> Seed {
         self.ctx.rng.seed()
     }
 

@@ -25,7 +25,7 @@ enum Pool<'a, F: ObjFunc> {
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     func: F,
     pop_num: usize,
-    seed: Option<u128>,
+    seed: Option<Seed>,
     setting: S,
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
@@ -49,8 +49,8 @@ where
         ///
         /// # Default
         ///
-        /// By default, the random seed is `None`, which is decided by [`getrandom::getrandom()`].
-        fn seed(Option<u128>)
+        /// By default, the random seed is `None`, which is decided by `getrandom`.
+        fn seed(Option<Seed>)
     }
 
     /// Give a pool generating function.
