@@ -122,20 +122,6 @@ impl Rng {
         self.range(U::zero()..ub)
     }
 
-    /// Generate a random floating point value by range.
-    #[inline]
-    #[deprecated = "Please use `range` method instead"]
-    pub fn float(&self, range: Range<f64>) -> f64 {
-        self.range(range)
-    }
-
-    /// Generate a random floating point value by range.
-    #[inline]
-    #[deprecated = "Please use `range` method instead"]
-    pub fn int(&self, range: Range<usize>) -> usize {
-        self.range(range)
-    }
-
     /// Sample with Gaussian distribution.
     #[inline]
     pub fn rand_norm<F>(&self, mean: F, std: F) -> F
