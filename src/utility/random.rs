@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use core::{
     mem::transmute,
     sync::atomic::{AtomicU64, Ordering},
