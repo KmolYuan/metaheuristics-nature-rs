@@ -3,7 +3,7 @@ use core::{
     mem::transmute,
     sync::atomic::{AtomicU64, Ordering},
 };
-use num_traits::Float;
+use num_traits::{Float, Zero};
 use rand::{
     distributions::{
         uniform::{SampleRange, SampleUniform},
@@ -118,7 +118,7 @@ impl Rng {
     #[inline]
     pub fn ub<U>(&self, ub: U) -> U
     where
-        U: num_traits::Zero + SampleUniform,
+        U: Zero + SampleUniform,
         core::ops::Range<U>: SampleRange<U>,
     {
         self.range(U::zero()..ub)
@@ -139,17 +139,25 @@ impl Rng {
         self.gen(|r| s.shuffle(r));
     }
 
+    /// Generate a random array with no-repeat values.
+    pub fn array<A, C, const N: usize>(&self, candi: C) -> [A; N]
+    where
+        A: Zero + Copy + PartialEq + SampleUniform,
+        C: IntoIterator<Item = A>,
+    {
+        self.array_by([A::zero(); N], 0, candi)
+    }
+
     /// Fill a vector with no-repeat values.
     ///
     /// The start position of the vector can be set.
-    pub fn vector<A, V, C>(&self, mut v: V, start: usize, candi: C) -> V
+    pub fn array_by<A, V, C>(&self, mut v: V, start: usize, candi: C) -> V
     where
         A: PartialEq + SampleUniform,
         V: AsMut<[A]>,
         C: IntoIterator<Item = A>,
     {
-        let s = v.as_mut();
-        let (pre, curr) = s.split_at_mut(start);
+        let (pre, curr) = v.as_mut().split_at_mut(start);
         let mut candi = candi
             .into_iter()
             .filter(|e| !pre.contains(e))

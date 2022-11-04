@@ -99,7 +99,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         // Select
         for i in 0..ctx.pop_num() {
-            let [_, j, k] = ctx.rng.vector([i, 0, 0], 1, 0..ctx.pop_num());
+            let [_, j, k] = ctx.rng.array_by([i, 0, 0], 1, 0..ctx.pop_num());
             if ctx.pool_f[j] > ctx.pool_f[k] && ctx.rng.maybe(self.win) {
                 self.fitness_new[i] = ctx.pool_f[k].clone();
                 self.pool_new

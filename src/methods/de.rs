@@ -101,21 +101,21 @@ impl Method {
         let f = self.f;
         match self.strategy {
             S1 | S6 => {
-                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
                 Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[[v0, s]] - ctx.pool[[v1, s]]))
             }
             S2 | S7 => Box::new({
-                let [v0, v1, v2] = ctx.rng.vector([0; 3], 0, 0..ctx.pop_num());
+                let [v0, v1, v2] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| ctx.pool[[v0, s]] + f * (ctx.pool[[v1, s]] - ctx.pool[[v2, s]])
             }),
             S3 | S8 => Box::new({
-                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, tmp, s| {
                     tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[[v0, s]] - ctx.pool[[v1, s]])
                 }
             }),
             S4 | S9 => Box::new({
-                let [v0, v1, v2, v3] = ctx.rng.vector([0; 4], 0, 0..ctx.pop_num());
+                let [v0, v1, v2, v3] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.best[s]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
@@ -124,7 +124,7 @@ impl Method {
                 }
             }),
             S5 | S10 => Box::new({
-                let [v0, v1, v2, v3, v4] = ctx.rng.vector([0; 5], 0, 0..ctx.pop_num());
+                let [v0, v1, v2, v3, v4] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.pool[[v4, s]]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
