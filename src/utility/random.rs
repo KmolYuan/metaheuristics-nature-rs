@@ -67,7 +67,10 @@ impl Rng {
         self.seed
     }
 
-    fn gen<R>(&self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
+    /// Low-level access to the RNG type.
+    ///
+    /// Please import necessary traits first.
+    pub fn gen<R>(&self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
         let mut rng = ChaCha8Rng::from_seed(self.seed);
         rng.set_stream(self.stream.load(Ordering::SeqCst));
         rng.set_word_pos(self.word_pos.load(Ordering::SeqCst));
