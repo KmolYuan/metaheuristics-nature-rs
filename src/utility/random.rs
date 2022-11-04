@@ -142,15 +142,15 @@ impl Rng {
     /// Fill a vector with no-repeat values.
     ///
     /// The start position of the vector can be set.
-    pub fn vector<A, V, R>(&self, mut v: V, start: usize, range: R) -> V
+    pub fn vector<A, V, C>(&self, mut v: V, start: usize, candi: C) -> V
     where
         A: PartialEq + SampleUniform,
         V: AsMut<[A]>,
-        R: IntoIterator<Item = A>,
+        C: IntoIterator<Item = A>,
     {
         let s = v.as_mut();
         let (pre, curr) = s.split_at_mut(start);
-        let mut candi = range
+        let mut candi = candi
             .into_iter()
             .filter(|e| !pre.contains(e))
             .collect::<Vec<_>>();
