@@ -1,6 +1,5 @@
 use core::{
     mem::transmute,
-    ops::Range,
     sync::atomic::{AtomicU64, Ordering},
 };
 use num_traits::{Float, Zero};
@@ -69,7 +68,6 @@ impl Rng {
         self.seed
     }
 
-    #[inline]
     fn gen<R>(&self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
         let mut rng = ChaCha8Rng::from_seed(self.seed);
         rng.set_stream(self.stream.load(Ordering::SeqCst));
@@ -117,7 +115,7 @@ impl Rng {
     pub fn ub<U>(&self, ub: U) -> U
     where
         U: Zero + SampleUniform,
-        Range<U>: SampleRange<U>,
+        core::ops::Range<U>: SampleRange<U>,
     {
         self.range(U::zero()..ub)
     }
