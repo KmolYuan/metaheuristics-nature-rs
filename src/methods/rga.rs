@@ -139,7 +139,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                     let mut v = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
                         let var = match id {
-                            Id::I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
+                            Id::I1 => 0.5 * (ctx.pool[[i, s]] + ctx.pool[[i + 1, s]]),
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };

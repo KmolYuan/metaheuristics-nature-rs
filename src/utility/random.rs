@@ -81,7 +81,7 @@ impl Rng {
     /// Generate a classic random value between `0..1` (exclusive range).
     #[inline]
     pub fn rand(&self) -> f64 {
-        self.range(0.0..1.)
+        self.ub(1.)
     }
 
     /// Generate a random boolean by positive (`true`) factor.
@@ -108,7 +108,7 @@ impl Rng {
         self.gen(|r| r.sample(distr))
     }
 
-    /// Generate a random value by upper bound.
+    /// Generate a random value by upper bound (exclusive range).
     ///
     /// The lower bound is zero.
     #[inline]
