@@ -7,7 +7,6 @@ pub trait Rand {
     fn rand(self, rng: &mut Rand64) -> Self::Result;
 }
 
-// TODO: Need to Optimize
 impl<N> Rand for Range<N>
 where
     N: AsPrimitive<f64> + Sub<Output = N>,
