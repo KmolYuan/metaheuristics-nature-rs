@@ -2,16 +2,16 @@ use core::{
     mem::transmute,
     sync::atomic::{AtomicU64, Ordering},
 };
-use num_traits::{Float, Zero};
+use num_traits::Float;
 use rand::{
     distributions::{
         uniform::{SampleRange, SampleUniform},
         Distribution,
     },
+    seq::SliceRandom as _,
     Rng as _, SeedableRng,
 };
 use rand_chacha::ChaCha8Rng;
-use rand_distr::Normal;
 
 /// The seed type of the ChaCha algorithm.
 pub type Seed = <ChaCha8Rng as SeedableRng>::Seed;
@@ -23,7 +23,7 @@ struct AtomicU128 {
 
 impl AtomicU128 {
     fn new(v: u128) -> Self {
-        let [a, b] = unsafe { transmute::<_, [u64; 2]>(v) };
+        let [a, b] = unsafe { transmute::<_, [_; 2]>(v) };
         Self { s1: AtomicU64::new(a), s2: AtomicU64::new(b) }
     }
 
@@ -32,7 +32,7 @@ impl AtomicU128 {
     }
 
     fn store(&self, v: u128, order: Ordering) {
-        let [a, b] = unsafe { transmute::<_, [u64; 2]>(v) };
+        let [a, b] = unsafe { transmute::<_, [_; 2]>(v) };
         self.s1.store(a, order);
         self.s2.store(b, order);
     }
@@ -52,10 +52,9 @@ impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
     pub fn new(seed: Option<Seed>) -> Self {
-        let rng = match seed {
-            Some(seed) => ChaCha8Rng::from_seed(seed),
-            None => ChaCha8Rng::from_entropy(),
-        };
+        let rng = seed
+            .map(ChaCha8Rng::from_seed)
+            .unwrap_or_else(ChaCha8Rng::from_entropy);
         Self {
             seed: rng.get_seed(),
             stream: AtomicU64::new(rng.get_stream()),
@@ -101,6 +100,7 @@ impl Rng {
     }
 
     /// Sample from a distribution.
+    #[inline]
     pub fn sample<T, D>(&self, distr: D) -> T
     where
         D: Distribution<T>,
@@ -114,7 +114,7 @@ impl Rng {
     #[inline]
     pub fn ub<U>(&self, ub: U) -> U
     where
-        U: Zero + SampleUniform,
+        U: num_traits::Zero + SampleUniform,
         core::ops::Range<U>: SampleRange<U>,
     {
         self.range(U::zero()..ub)
@@ -122,30 +122,36 @@ impl Rng {
 
     /// Sample with Gaussian distribution.
     #[inline]
-    pub fn rand_norm<F>(&self, mean: F, std: F) -> F
+    pub fn normal<F>(&self, mean: F, std: F) -> F
     where
         F: Float,
         rand_distr::StandardNormal: Distribution<F>,
     {
-        self.sample(Normal::new(mean, std).unwrap())
+        self.sample(rand_distr::Normal::new(mean, std).unwrap())
     }
 
-    /// Generate (fill) a random vector.
+    /// Shuffle a slice.
+    pub fn shuffle<A>(&self, s: &mut [A]) {
+        self.gen(|r| s.shuffle(r));
+    }
+
+    /// Fill a vector with no-repeat values.
     ///
     /// The start position of the vector can be set.
-    pub fn vector<A, V, R>(&self, mut v: V, start: usize, rng: R) -> V
+    pub fn vector<A, V, R>(&self, mut v: V, start: usize, range: R) -> V
     where
         A: PartialEq + SampleUniform,
         V: AsMut<[A]>,
-        R: SampleRange<A> + Clone,
+        R: IntoIterator<Item = A>,
     {
         let s = v.as_mut();
-        for i in start..s.len() {
-            s[i] = self.range(rng.clone());
-            while s[..i].contains(&s[i]) {
-                s[i] = self.range(rng.clone());
-            }
-        }
+        let (pre, curr) = s.split_at_mut(start);
+        let mut candi = range
+            .into_iter()
+            .filter(|e| !pre.contains(e))
+            .collect::<Vec<_>>();
+        self.shuffle(&mut candi);
+        curr.iter_mut().zip(candi).for_each(|(a, b)| *a = b);
         v
     }
 }

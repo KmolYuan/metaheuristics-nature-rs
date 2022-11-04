@@ -259,7 +259,7 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
             let [min, max] = ctx.bound(s);
-            ctx.rng.rand_norm(mean[s], std[s]).clamp(min, max)
+            ctx.rng.normal(mean[s], std[s]).clamp(min, max)
         })
     }
 }
@@ -283,7 +283,7 @@ pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
             if i == 0 {
                 mean[s]
             } else {
-                ctx.clamp(s, ctx.rng.rand_norm(mean[s], std[s]))
+                ctx.clamp(s, ctx.rng.normal(mean[s], std[s]))
             }
         })
     }

@@ -138,6 +138,15 @@ pub mod ndarray {
     #[doc(no_inline)]
     pub use ndarray::*;
 }
+pub mod rand {
+    //! The re-export of the crate `rand` and its related crates.
+    #[doc(no_inline)]
+    pub use rand::*;
+    #[doc(no_inline)]
+    pub use rand_chacha::*;
+    #[doc(no_inline)]
+    pub use rand_distr::*;
+}
 pub mod rayon {
     //! The re-export of the crate `rayon`.
     #![cfg(feature = "rayon")]
