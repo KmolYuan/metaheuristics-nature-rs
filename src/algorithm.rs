@@ -12,7 +12,7 @@ use crate::utility::prelude::*;
 /// ```
 /// use metaheuristics_nature::utility::prelude::*;
 ///
-/// /// A setting with additional fields.
+/// /// A setting with fields.
 /// #[derive(Default)]
 /// pub struct MySetting1 {
 ///     my_option: u32,
@@ -23,11 +23,11 @@ use crate::utility::prelude::*;
 ///     type Algorithm<F: ObjFunc> = Method;
 ///
 ///     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-///         Method
+///         Method /* inherit setting */
 ///     }
 /// }
 ///
-/// /// Tuple-like setting.
+/// /// No setting.
 /// #[derive(Default)]
 /// pub struct MySetting2;
 ///
@@ -40,19 +40,20 @@ use crate::utility::prelude::*;
 ///     }
 /// }
 ///
+/// /// The type implements our algorithm.
 /// pub struct Method;
 ///
 /// impl<F: ObjFunc> Algorithm<F> for Method {
 ///     fn generation(&mut self, ctx: &mut Ctx<F>) {
-///         /* implement method here! */
+///         /* implement the method */
 ///     }
 /// }
 /// ```
 ///
-/// Your algorithm will be implemented by the [`Solver`](crate::Solver) type
-/// automatically. All you have to do is implement the "initialization" method
-/// and "generation" method, which are corresponded to the [`Algorithm::init()`]
-/// and [`Algorithm::generation()`] respectively.
+/// The complete algorithm will be implemented by the [`Solver`](crate::Solver)
+/// type automatically. All you have to do is implement the "initialization"
+/// method and "generation" method, which are corresponded to the
+/// [`Algorithm::init()`] and [`Algorithm::generation()`] respectively.
 pub trait Algorithm<F: ObjFunc> {
     /// Initialization implementation.
     ///
