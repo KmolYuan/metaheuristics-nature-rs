@@ -23,9 +23,9 @@ type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
 /// + *f4*: best{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
 /// + *f5*: v4{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
 ///
-/// # Crossing formula
+/// # Crossover formula
 ///
-/// + *c1*: Continue crossing with the variables order until failure.
+/// + *c1*: Continue crossover in order until end with probability.
 /// + *c2*: Each variable has independent probability.
 #[derive(Clone)]
 pub enum Strategy {
@@ -146,9 +146,6 @@ impl Method {
 
     fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
         (0..ctx.dim())
-            .cycle()
-            .skip(ctx.rng.ub(ctx.dim()))
-            .take(ctx.dim())
             .filter(|_| ctx.rng.maybe(self.cross))
             .for_each(|s| tmp[s] = formula(ctx, tmp, s))
     }
