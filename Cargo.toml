@@ -19,7 +19,7 @@ std = [
     "rand_chacha/std",
     "rand_distr/std",
 ]
-clap = ["dep:clap"]
+clap = ["std", "dep:clap"]
 rayon = ["std", "dep:rayon", "ndarray/rayon"]
 
 [dependencies]
