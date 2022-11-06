@@ -7,6 +7,8 @@ use alloc::boxed::Box;
 
 type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
 
+const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
+
 /// The Differential Evolution strategy.
 ///
 /// Each strategy has different formulas on the recombination.
@@ -27,9 +29,11 @@ type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
 ///
 /// + *c1*: Continue crossover in order until end with probability.
 /// + *c2*: Each variable has independent probability.
-#[derive(Clone)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum Strategy {
     /// *f1* + *c1*
+    #[default]
     S1,
     /// *f2* + *c1*
     S2,
@@ -52,9 +56,13 @@ pub enum Strategy {
 }
 
 /// Differential Evolution settings.
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct De {
+    #[cfg_attr(feature = "clap", clap(long, value_enum, default_value_t = DEF.strategy))]
     strategy: Strategy,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.f))]
     f: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
     cross: f64,
 }
 
@@ -72,14 +80,14 @@ impl De {
 
 impl Default for De {
     fn default() -> Self {
-        Self { strategy: S1, f: 0.6, cross: 0.9 }
+        DEF
     }
 }
 
 impl Setting for De {
-    type Algorithm = Method;
+    type Algorithm<F: ObjFunc> = Method;
 
-    fn algorithm(self) -> Self::Algorithm {
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         let Self { strategy, f, cross } = self;
         Method { f, cross, strategy }
     }

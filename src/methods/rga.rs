@@ -7,18 +7,23 @@
 //! This method require floating point power function.
 use crate::utility::prelude::*;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
+
+const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 
 /// Real-coded Genetic Algorithm settings.
-pub struct Rga<F: Fitness> {
+#[cfg_attr(feature = "clap", derive(clap::Args))]
+pub struct Rga {
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
     cross: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.mutate))]
     mutate: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.win))]
     win: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.delta))]
     delta: f64,
-    _marker: PhantomData<F>,
 }
 
-impl<F: Fitness> Rga<F> {
+impl Rga {
     impl_builders! {
         default,
         /// Crossing probability.
@@ -32,23 +37,17 @@ impl<F: Fitness> Rga<F> {
     }
 }
 
-impl<F: Fitness> Default for Rga<F> {
+impl Default for Rga {
     fn default() -> Self {
-        Self {
-            cross: 0.95,
-            mutate: 0.05,
-            win: 0.95,
-            delta: 5.,
-            _marker: PhantomData,
-        }
+        DEF
     }
 }
 
-impl<F: Fitness> Setting for Rga<F> {
-    type Algorithm = Method<F>;
+impl Setting for Rga {
+    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
-    fn algorithm(self) -> Self::Algorithm {
-        let Self { cross, mutate, win, delta, _marker } = self;
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
+        let Self { cross, mutate, win, delta } = self;
         Method {
             cross,
             mutate,

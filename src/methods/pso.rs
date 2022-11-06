@@ -3,17 +3,21 @@
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::utility::prelude::*;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
+
+const DEF: Pso = Pso { cognition: 2.05, social: 2.05, velocity: 1.3 };
 
 /// Particle Swarm Optimization settings.
-pub struct Pso<F: Fitness> {
+#[cfg_attr(feature = "clap", derive(clap::Args))]
+pub struct Pso {
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cognition))]
     cognition: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.social))]
     social: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.velocity))]
     velocity: f64,
-    _marker: PhantomData<F>,
 }
 
-impl<F: Fitness> Pso<F> {
+impl Pso {
     impl_builders! {
         default,
         /// Cognition factor.
@@ -25,22 +29,17 @@ impl<F: Fitness> Pso<F> {
     }
 }
 
-impl<F: Fitness> Default for Pso<F> {
+impl Default for Pso {
     fn default() -> Self {
-        Self {
-            cognition: 2.05,
-            social: 2.05,
-            velocity: 1.3,
-            _marker: PhantomData,
-        }
+        DEF
     }
 }
 
-impl<F: Fitness> Setting for Pso<F> {
-    type Algorithm = Method<F>;
+impl Setting for Pso {
+    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
-    fn algorithm(self) -> Self::Algorithm {
-        let Self { cognition, social, velocity, _marker } = self;
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
+        let Self { cognition, social, velocity } = self;
         Method {
             cognition,
             social,

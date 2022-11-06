@@ -20,9 +20,9 @@ use crate::utility::prelude::*;
 ///
 /// /// The implementation of the structure with fields.
 /// impl Setting for MySetting1 {
-///     type Algorithm = Method;
+///     type Algorithm<F: ObjFunc> = Method;
 ///
-///     fn algorithm(self) -> Self::Algorithm {
+///     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
 ///         Method
 ///     }
 /// }
@@ -33,9 +33,9 @@ use crate::utility::prelude::*;
 ///
 /// /// The implementation of a tuple-like structure.
 /// impl Setting for MySetting2 {
-///     type Algorithm = Method;
+///     type Algorithm<F: ObjFunc> = Method;
 ///
-///     fn algorithm(self) -> Self::Algorithm {
+///     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
 ///         Method
 ///     }
 /// }

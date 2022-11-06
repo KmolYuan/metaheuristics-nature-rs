@@ -48,6 +48,8 @@
 //! running without ordered. Disable it for the platform that doesn't supported
 //! threading, or if your objective function is not complicate enough. This
 //! feature require `std` feature.
+//! + `clap`: Add CLI argument support for the provided algorithms and their
+//! options.
 //!
 //! # Compatibility
 //!

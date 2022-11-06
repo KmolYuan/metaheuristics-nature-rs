@@ -1,14 +1,14 @@
+use crate::{Algorithm, ObjFunc};
+
 /// A trait that provides a conversion to original setting.
 ///
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
 pub trait Setting {
     /// Associated algorithm.
-    ///
-    /// This type should implement [`Algorithm`](super::Algorithm) trait.
-    type Algorithm;
+    type Algorithm<F: ObjFunc>: Algorithm<F>;
 
     /// Create the algorithm.
-    fn algorithm(self) -> Self::Algorithm;
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F>;
 
     /// Default population number.
     fn default_pop() -> usize {

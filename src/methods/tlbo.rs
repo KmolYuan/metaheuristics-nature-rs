@@ -7,6 +7,7 @@ use crate::utility::prelude::*;
 
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Tlbo;
 
 impl Tlbo {
@@ -17,9 +18,9 @@ impl Tlbo {
 }
 
 impl Setting for Tlbo {
-    type Algorithm = Method;
+    type Algorithm<F: ObjFunc> = Method;
 
-    fn algorithm(self) -> Self::Algorithm {
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method
     }
 }

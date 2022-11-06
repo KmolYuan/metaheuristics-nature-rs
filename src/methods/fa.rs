@@ -5,10 +5,16 @@
 //! This method require exponential function.
 use crate::utility::prelude::*;
 
+const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
+
 /// Firefly Algorithm settings.
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Fa {
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.alpha))]
     alpha: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.beta_min))]
     beta_min: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.gamma))]
     gamma: f64,
 }
 
@@ -26,14 +32,14 @@ impl Fa {
 
 impl Default for Fa {
     fn default() -> Self {
-        Self { alpha: 1., beta_min: 1., gamma: 0.01 }
+        DEF
     }
 }
 
 impl Setting for Fa {
-    type Algorithm = Method;
+    type Algorithm<F: ObjFunc> = Method;
 
-    fn algorithm(self) -> Self::Algorithm {
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         let Self { alpha, beta_min, gamma } = self;
         Method { alpha, beta_min, gamma }
     }

@@ -168,10 +168,7 @@ where
     /// This function will be `Ok` and returns result when the `ctx.pool` and
     /// `ctx.fitness` initialized successfully; `Err` when the boundary check
     /// fails.
-    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError>
-    where
-        S::Algorithm: Algorithm<F>,
-    {
+    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError> {
         let Self {
             func,
             pop_num,
