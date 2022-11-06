@@ -39,11 +39,8 @@ impl Setting for Pso {
     type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        let Self { cognition, social, velocity } = self;
         Method {
-            cognition,
-            social,
-            velocity,
+            pso: self,
             best_past: Array2::zeros((1, 1)),
             best_past_f: Vec::new(),
         }
@@ -52,11 +49,17 @@ impl Setting for Pso {
 
 /// Particle Swarm Optimization type.
 pub struct Method<F: Fitness> {
-    cognition: f64,
-    social: f64,
-    velocity: f64,
+    pso: Pso,
     best_past: Array2<f64>,
     best_past_f: Vec<F>,
+}
+
+impl<F: Fitness> core::ops::Deref for Method<F> {
+    type Target = Pso;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pso
+    }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {

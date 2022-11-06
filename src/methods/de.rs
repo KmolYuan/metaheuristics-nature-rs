@@ -5,6 +5,8 @@ use self::Strategy::*;
 use crate::utility::prelude::*;
 use alloc::boxed::Box;
 
+/// Differential Evolution type.
+pub type Method = De;
 type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
 
 const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
@@ -88,20 +90,12 @@ impl Setting for De {
     type Algorithm<F: ObjFunc> = Method;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        let Self { strategy, f, cross } = self;
-        Method { f, cross, strategy }
+        self
     }
 
     fn default_pop() -> usize {
         400
     }
-}
-
-/// Differential Evolution type.
-pub struct Method {
-    f: f64,
-    cross: f64,
-    strategy: Strategy,
 }
 
 impl Method {

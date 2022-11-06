@@ -5,6 +5,9 @@
 //! This method require round function.
 use crate::utility::prelude::*;
 
+/// Teaching Learning Based Optimization type.
+pub type Method = Tlbo;
+
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
@@ -21,12 +24,9 @@ impl Setting for Tlbo {
     type Algorithm<F: ObjFunc> = Method;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        Method
+        self
     }
 }
-
-/// Teaching Learning Based Optimization type.
-pub struct Method;
 
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {

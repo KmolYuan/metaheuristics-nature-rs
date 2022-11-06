@@ -47,12 +47,8 @@ impl Setting for Rga {
     type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        let Self { cross, mutate, win, delta } = self;
         Method {
-            cross,
-            mutate,
-            win,
-            delta,
+            rga: self,
             fitness_new: Vec::new(),
             pool_new: Array2::zeros((1, 1)),
         }
@@ -65,12 +61,17 @@ impl Setting for Rga {
 
 /// Real-coded Genetic Algorithm type.
 pub struct Method<F: Fitness> {
-    cross: f64,
-    mutate: f64,
-    win: f64,
-    delta: f64,
+    rga: Rga,
     fitness_new: Vec<F>,
     pool_new: Array2<f64>,
+}
+
+impl<F: Fitness> core::ops::Deref for Method<F> {
+    type Target = Rga;
+
+    fn deref(&self) -> &Self::Target {
+        &self.rga
+    }
 }
 
 impl<Ft: Fitness> Method<Ft> {

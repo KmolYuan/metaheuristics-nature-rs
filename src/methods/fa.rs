@@ -5,6 +5,9 @@
 //! This method require exponential function.
 use crate::utility::prelude::*;
 
+/// Firefly Algorithm type.
+pub type Method = Fa;
+
 const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
 
 /// Firefly Algorithm settings.
@@ -40,20 +43,12 @@ impl Setting for Fa {
     type Algorithm<F: ObjFunc> = Method;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        let Self { alpha, beta_min, gamma } = self;
-        Method { alpha, beta_min, gamma }
+        self
     }
 
     fn default_pop() -> usize {
         80
     }
-}
-
-/// Firefly Algorithm type.
-pub struct Method {
-    alpha: f64,
-    beta_min: f64,
-    gamma: f64,
 }
 
 impl Method {
