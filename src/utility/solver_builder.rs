@@ -15,6 +15,10 @@ enum Pool<'a, F: ObjFunc> {
         pool: Array2<f64>,
         fitness: Vec<F::Fitness>,
     },
+    Sorted {
+        pool: Array2<f64>,
+        fitness: Vec<F::Fitness>,
+    },
     Func(PoolFunc<'a, F>),
 }
 
@@ -49,7 +53,7 @@ where
         ///
         /// # Default
         ///
-        /// By default, the random seed is `None`, which is decided by [`getrandom::getrandom()`].
+        /// By default, the random seed is `None`, which is decided by `getrandom`.
         fn seed(Option<u128>)
     }
 
@@ -94,15 +98,20 @@ where
     /// `[ctx.lb(), ctx.ub())`, and the `fitness` must have the same length
     /// as `ctx.pop_num()`.
     ///
-    /// # Default
+    /// # See Also
     ///
-    /// The default pool will generate with uniform distribution in the bounds.
+    /// [`Self::pool()`], [`Self::pool_and_fitness()`].
+    pub fn pool_and_fitness(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
+        Self { pool: Pool::ReadyMade { pool, fitness }, ..self }
+    }
+
+    /// Give a sorted pool and its fitness values directly.
     ///
     /// # See Also
     ///
-    /// [`Self::pool()`].
-    pub fn pool_and_fitness(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
-        Self { pool: Pool::ReadyMade { pool, fitness }, ..self }
+    /// [`Self::pool()`], [`Self::pool_and_fitness()`].
+    pub fn pool_and_fitness_sorted(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
+        Self { pool: Pool::Sorted { pool, fitness }, ..self }
     }
 
     /// Termination condition.
@@ -191,6 +200,13 @@ where
                 ctx.pool_f = fitness;
                 ctx.find_best_force();
             }
+            Pool::Sorted { pool, fitness } => {
+                assert_shape(pool.shape() == ctx.pool_size())?;
+                ctx.pool = pool;
+                ctx.pool_f = fitness;
+                ctx.best = ctx.pool.slice(s![0, ..]).to_owned();
+                ctx.best_f = ctx.pool_f[0].clone();
+            }
             Pool::Func(f) => {
                 let pool = f(&ctx);
                 assert_shape(pool.shape() == ctx.pool_size())?;
@@ -205,6 +221,11 @@ where
             }
             ctx.gen += 1;
             method.generation(&mut ctx);
+            ctx.pool
+                .axis_iter_mut(Axis(0))
+                .zip(ctx.pool_f.iter_mut())
+                .filter(|(_, f)| f.partial_cmp(f).is_none())
+                .for_each(|(xs, f)| *f = ctx.func.fitness(xs.as_slice().unwrap()));
         }
         Ok(Solver::new(ctx))
     }

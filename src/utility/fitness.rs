@@ -5,6 +5,12 @@
 /// be used, so the fitness can add special mark during comparison
 /// ([`PartialOrd`]).
 ///
+/// # Validity
+///
+/// `f.partial_cmp(&f).is_none()` should returns true if the fitness is invalid.
+///
+/// # Example
+///
 /// In the following example, an "important" marker has higher priority in the
 /// comparison.
 ///

@@ -27,8 +27,9 @@
 //! For a quick demo with callable object, please see [`Fx`].
 //!
 //! You can define your question as an objective function through implementing
-//! [`ObjFunc`], and then the upper bound, lower bound, and objective function
-//! [`ObjFunc::fitness()`] should be defined.
+//! [`ObjFunc`], and then the upper bound, lower bound, and an objective
+//! function [`ObjFunc::fitness()`] returns [`utility::Fitness`] should be
+//! defined.
 //!
 //! A high level trait is [`ObjFactory`], its final answer is
 //! [`ObjFactory::Product`], which is calculated from the design parameters.
