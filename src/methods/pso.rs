@@ -3,17 +3,21 @@
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::utility::prelude::*;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
+
+const DEF: Pso = Pso { cognition: 2.05, social: 2.05, velocity: 1.3 };
 
 /// Particle Swarm Optimization settings.
-pub struct Pso<F: Fitness> {
+#[cfg_attr(feature = "clap", derive(clap::Args))]
+pub struct Pso {
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cognition))]
     cognition: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.social))]
     social: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.velocity))]
     velocity: f64,
-    _marker: PhantomData<F>,
 }
 
-impl<F: Fitness> Pso<F> {
+impl Pso {
     impl_builders! {
         default,
         /// Cognition factor.
@@ -25,26 +29,18 @@ impl<F: Fitness> Pso<F> {
     }
 }
 
-impl<F: Fitness> Default for Pso<F> {
+impl Default for Pso {
     fn default() -> Self {
-        Self {
-            cognition: 2.05,
-            social: 2.05,
-            velocity: 1.3,
-            _marker: PhantomData,
-        }
+        DEF
     }
 }
 
-impl<F: Fitness> Setting for Pso<F> {
-    type Algorithm = Method<F>;
+impl Setting for Pso {
+    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
-    fn algorithm(self) -> Self::Algorithm {
-        let Self { cognition, social, velocity, _marker } = self;
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method {
-            cognition,
-            social,
-            velocity,
+            pso: self,
             best_past: Array2::zeros((1, 1)),
             best_past_f: Vec::new(),
         }
@@ -53,11 +49,17 @@ impl<F: Fitness> Setting for Pso<F> {
 
 /// Particle Swarm Optimization type.
 pub struct Method<F: Fitness> {
-    cognition: f64,
-    social: f64,
-    velocity: f64,
+    pso: Pso,
     best_past: Array2<f64>,
     best_past_f: Vec<F>,
+}
+
+impl<F: Fitness> core::ops::Deref for Method<F> {
+    type Target = Pso;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pso
+    }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
@@ -81,13 +83,13 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             .zip(best_past.axis_iter_mut(Axis(0)))
             .zip(&mut best_past_f)
             .map(|(((f, mut v), mut past), past_f)| {
-                let alpha = ctx.rng.range(0.0..self.cognition);
-                let beta = ctx.rng.range(0.0..self.social);
+                let alpha = ctx.rng.ub(self.cognition);
+                let beta = ctx.rng.ub(self.social);
                 for s in 0..ctx.dim() {
-                    let variable = self.velocity * v[s]
+                    let var = self.velocity * v[s]
                         + alpha * (past[s] - v[s])
                         + beta * (ctx.best[s] - v[s]);
-                    v[s] = ctx.clamp(s, variable);
+                    v[s] = ctx.clamp(s, var);
                 }
                 *f = ctx.func.fitness(v.as_slice().unwrap());
                 if *f < *past_f {

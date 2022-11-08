@@ -5,7 +5,11 @@ use self::Strategy::*;
 use crate::utility::prelude::*;
 use alloc::boxed::Box;
 
+/// Differential Evolution type.
+pub type Method = De;
 type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
+
+const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 
 /// The Differential Evolution strategy.
 ///
@@ -23,13 +27,15 @@ type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
 /// + *f4*: best{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
 /// + *f5*: v4{n} + F * (v0{n} + v1{n} - v2{n} - v3{n})
 ///
-/// # Crossing formula
+/// # Crossover formula
 ///
-/// + *c1*: Continue crossing with the variables order until failure.
+/// + *c1*: Continue crossover in order until end with probability.
 /// + *c2*: Each variable has independent probability.
-#[derive(Clone)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum Strategy {
     /// *f1* + *c1*
+    #[default]
     S1,
     /// *f2* + *c1*
     S2,
@@ -52,9 +58,13 @@ pub enum Strategy {
 }
 
 /// Differential Evolution settings.
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct De {
+    #[cfg_attr(feature = "clap", clap(long, value_enum, default_value_t = DEF.strategy))]
     strategy: Strategy,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.f))]
     f: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
     cross: f64,
 }
 
@@ -72,16 +82,15 @@ impl De {
 
 impl Default for De {
     fn default() -> Self {
-        Self { strategy: S1, f: 0.6, cross: 0.9 }
+        DEF
     }
 }
 
 impl Setting for De {
-    type Algorithm = Method;
+    type Algorithm<F: ObjFunc> = Method;
 
-    fn algorithm(self) -> Self::Algorithm {
-        let Self { strategy, f, cross } = self;
-        Method { f, cross, strategy }
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
+        self
     }
 
     fn default_pop() -> usize {
@@ -89,33 +98,26 @@ impl Setting for De {
     }
 }
 
-/// Differential Evolution type.
-pub struct Method {
-    f: f64,
-    cross: f64,
-    strategy: Strategy,
-}
-
 impl Method {
     fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>) -> Func<F> {
         let f = self.f;
         match self.strategy {
             S1 | S6 => {
-                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
                 Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[[v0, s]] - ctx.pool[[v1, s]]))
             }
             S2 | S7 => Box::new({
-                let [v0, v1, v2] = ctx.rng.vector([0; 3], 0, 0..ctx.pop_num());
+                let [v0, v1, v2] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| ctx.pool[[v0, s]] + f * (ctx.pool[[v1, s]] - ctx.pool[[v2, s]])
             }),
             S3 | S8 => Box::new({
-                let [v0, v1] = ctx.rng.vector([0; 2], 0, 0..ctx.pop_num());
+                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, tmp, s| {
                     tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[[v0, s]] - ctx.pool[[v1, s]])
                 }
             }),
             S4 | S9 => Box::new({
-                let [v0, v1, v2, v3] = ctx.rng.vector([0; 4], 0, 0..ctx.pop_num());
+                let [v0, v1, v2, v3] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.best[s]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
@@ -124,7 +126,7 @@ impl Method {
                 }
             }),
             S5 | S10 => Box::new({
-                let [v0, v1, v2, v3, v4] = ctx.rng.vector([0; 5], 0, 0..ctx.pop_num());
+                let [v0, v1, v2, v3, v4] = ctx.rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.pool[[v4, s]]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
@@ -146,9 +148,6 @@ impl Method {
 
     fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
         (0..ctx.dim())
-            .cycle()
-            .skip(ctx.rng.ub(ctx.dim()))
-            .take(ctx.dim())
             .filter(|_| ctx.rng.maybe(self.cross))
             .for_each(|s| tmp[s] = formula(ctx, tmp, s))
     }

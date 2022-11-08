@@ -35,7 +35,6 @@ impl ObjFactory for TestObj {
 fn test<S>()
 where
     S: Setting + Default,
-    S::Algorithm: Algorithm<TestObj>,
 {
     let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default(), TestObj)
@@ -61,7 +60,7 @@ fn de() {
 
 #[test]
 fn pso() {
-    test::<Pso<_>>();
+    test::<Pso>();
 }
 
 #[test]
@@ -71,7 +70,7 @@ fn fa() {
 
 #[test]
 fn rga() {
-    test::<Rga<_>>();
+    test::<Rga>();
 }
 
 #[test]

@@ -5,8 +5,12 @@
 //! This method require round function.
 use crate::utility::prelude::*;
 
+/// Teaching Learning Based Optimization type.
+pub type Method = Tlbo;
+
 /// Teaching Learning Based Optimization settings.
 #[derive(Default)]
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Tlbo;
 
 impl Tlbo {
@@ -17,15 +21,12 @@ impl Tlbo {
 }
 
 impl Setting for Tlbo {
-    type Algorithm = Method;
+    type Algorithm<F: ObjFunc> = Method;
 
-    fn algorithm(self) -> Self::Algorithm {
-        Method
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
+        self
     }
 }
-
-/// Teaching Learning Based Optimization type.
-pub struct Method;
 
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {
@@ -40,7 +41,7 @@ impl Method {
     }
 
     fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
-        let tf = (ctx.rng.rand() + 1.).round();
+        let tf = ctx.rng.range(1f64..2.).round();
         for s in 0..ctx.dim() {
             let mut mean = 0.;
             for j in 0..ctx.pop_num() {

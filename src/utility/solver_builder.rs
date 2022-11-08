@@ -29,7 +29,7 @@ enum Pool<'a, F: ObjFunc> {
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     func: F,
     pop_num: usize,
-    seed: Option<u128>,
+    seed: Option<Seed>,
     setting: S,
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
@@ -54,7 +54,7 @@ where
         /// # Default
         ///
         /// By default, the random seed is `None`, which is decided by `getrandom`.
-        fn seed(Option<u128>)
+        fn seed(Option<Seed>)
     }
 
     /// Give a pool generating function.
@@ -177,10 +177,7 @@ where
     /// This function will be `Ok` and returns result when the `ctx.pool` and
     /// `ctx.fitness` initialized successfully; `Err` when the boundary check
     /// fails.
-    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError>
-    where
-        S::Algorithm: Algorithm<F>,
-    {
+    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError> {
         let Self {
             func,
             pop_num,
@@ -280,7 +277,7 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
             let [min, max] = ctx.bound(s);
-            ctx.rng.rand_norm(mean[s], std[s]).clamp(min, max)
+            ctx.rng.normal(mean[s], std[s]).clamp(min, max)
         })
     }
 }
@@ -304,7 +301,7 @@ pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
             if i == 0 {
                 mean[s]
             } else {
-                ctx.clamp(s, ctx.rng.rand_norm(mean[s], std[s]))
+                ctx.clamp(s, ctx.rng.normal(mean[s], std[s]))
             }
         })
     }

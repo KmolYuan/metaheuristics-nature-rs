@@ -22,6 +22,8 @@ pub mod prelude {
 
     #[doc(no_inline)]
     pub use crate::ndarray::prelude::*;
+    #[doc(no_inline)]
+    pub use crate::rand::prelude::*;
     #[cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use crate::rayon::prelude::*;

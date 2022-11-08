@@ -7,18 +7,23 @@
 //! This method require floating point power function.
 use crate::utility::prelude::*;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
+
+const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 
 /// Real-coded Genetic Algorithm settings.
-pub struct Rga<F: Fitness> {
+#[cfg_attr(feature = "clap", derive(clap::Args))]
+pub struct Rga {
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
     cross: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.mutate))]
     mutate: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.win))]
     win: f64,
+    #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.delta))]
     delta: f64,
-    _marker: PhantomData<F>,
 }
 
-impl<F: Fitness> Rga<F> {
+impl Rga {
     impl_builders! {
         default,
         /// Crossing probability.
@@ -32,28 +37,18 @@ impl<F: Fitness> Rga<F> {
     }
 }
 
-impl<F: Fitness> Default for Rga<F> {
+impl Default for Rga {
     fn default() -> Self {
-        Self {
-            cross: 0.95,
-            mutate: 0.05,
-            win: 0.95,
-            delta: 5.,
-            _marker: PhantomData,
-        }
+        DEF
     }
 }
 
-impl<F: Fitness> Setting for Rga<F> {
-    type Algorithm = Method<F>;
+impl Setting for Rga {
+    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
-    fn algorithm(self) -> Self::Algorithm {
-        let Self { cross, mutate, win, delta, _marker } = self;
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method {
-            cross,
-            mutate,
-            win,
-            delta,
+            rga: self,
             fitness_new: Vec::new(),
             pool_new: Array2::zeros((1, 1)),
         }
@@ -66,12 +61,17 @@ impl<F: Fitness> Setting for Rga<F> {
 
 /// Real-coded Genetic Algorithm type.
 pub struct Method<F: Fitness> {
-    cross: f64,
-    mutate: f64,
-    win: f64,
-    delta: f64,
+    rga: Rga,
     fitness_new: Vec<F>,
     pool_new: Array2<f64>,
+}
+
+impl<F: Fitness> core::ops::Deref for Method<F> {
+    type Target = Rga;
+
+    fn deref(&self) -> &Self::Target {
+        &self.rga
+    }
 }
 
 impl<Ft: Fitness> Method<Ft> {
@@ -84,7 +84,7 @@ impl<Ft: Fitness> Method<Ft> {
         } else {
             1.
         };
-        y * ctx.rng.rand() * (1. - r).powf(self.delta)
+        ctx.rng.ub(y * (1. - r).powf(self.delta))
     }
 }
 
@@ -99,11 +99,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         // Select
         for i in 0..ctx.pop_num() {
-            let (j, k) = {
-                let mut v = [i, 0, 0];
-                ctx.rng.vector(&mut v, 1, 0..ctx.pop_num());
-                (v[1], v[2])
-            };
+            let [_, j, k] = ctx.rng.array_by([i, 0, 0], 1, 0..ctx.pop_num());
             if ctx.pool_f[j] > ctx.pool_f[k] && ctx.rng.maybe(self.win) {
                 self.fitness_new[i] = ctx.pool_f[k].clone();
                 self.pool_new
@@ -139,7 +135,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                     let mut v = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
                         let var = match id {
-                            Id::I1 => 0.5 * ctx.pool[[i, s]] + 0.5 * ctx.pool[[i + 1, s]],
+                            Id::I1 => 0.5 * (ctx.pool[[i, s]] + ctx.pool[[i + 1, s]]),
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };

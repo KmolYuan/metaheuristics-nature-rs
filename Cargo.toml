@@ -1,7 +1,7 @@
 [package]
 name = "metaheuristics-nature"
 description = "A collection of nature-inspired meta-heuristic algorithms."
-version = "5.1.2"
+version = "7.0.0"
 authors = ["KmolYuan <pyslvs@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -12,15 +12,24 @@ categories = ["algorithms", "no-std"]
 
 [features]
 default = ["std"]
-std = ["ndarray/std", "num-traits/std"]
+std = [
+    "ndarray/std",
+    "num-traits/std",
+    "rand/std",
+    "rand_chacha/std",
+    "rand_distr/std",
+]
+clap = ["std", "dep:clap"]
 rayon = ["std", "dep:rayon", "ndarray/rayon"]
 
 [dependencies]
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+rand = { version = "0.8", default-features = false, features = ["getrandom"] }
+rand_chacha = { version = "0.3", default-features = false }
+rand_distr = { version = "0.4", default-features = false }
 ndarray = { version = "0.15", default-features = false }
+clap = { version = "4", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }
-getrandom = "0.2"
-oorandom = "11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
