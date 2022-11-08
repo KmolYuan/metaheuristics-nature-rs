@@ -139,7 +139,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
-                        let range = ctx.bound_range(s);
+                        let range = ctx.func.bound_range(s);
                         v[s] = if range.contains(&var) {
                             var
                         } else {
@@ -161,9 +161,9 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             }
             let s = ctx.rng.ub(ctx.dim());
             if ctx.rng.maybe(0.5) {
-                ctx.pool[[i, s]] += self.get_delta(ctx, ctx.ub(s) - ctx.pool[[i, s]]);
+                ctx.pool[[i, s]] += self.get_delta(ctx, ctx.func.ub(s) - ctx.pool[[i, s]]);
             } else {
-                ctx.pool[[i, s]] -= self.get_delta(ctx, ctx.pool[[i, s]] - ctx.lb(s));
+                ctx.pool[[i, s]] -= self.get_delta(ctx, ctx.pool[[i, s]] - ctx.func.lb(s));
             }
             ctx.fitness(i);
         }

@@ -9,6 +9,37 @@ pub trait Bounded: Sync + Send {
     ///
     /// This function should be cheap.
     fn bound(&self) -> &[[f64; 2]];
+
+    /// Get the upper bound and the lower bound values.
+    fn bound_of(&self, s: usize) -> [f64; 2] {
+        self.bound()[s]
+    }
+
+    ///Get the width of the upper bound and the lower bound.
+    fn bound_width(&self, s: usize) -> f64 {
+        let [min, max] = self.bound_of(s);
+        max - min
+    }
+
+    /// Get the upper bound and the lower bound as a range.
+    fn bound_range(&self, s: usize) -> core::ops::Range<f64> {
+        let [min, max] = self.bound_of(s);
+        min..max
+    }
+
+    /// Get the lower bound.
+    #[inline(always)]
+    #[must_use = "the bound value should be used"]
+    fn lb(&self, s: usize) -> f64 {
+        self.bound_of(s)[0]
+    }
+
+    /// Get the upper bound.
+    #[inline(always)]
+    #[must_use = "the bound value should be used"]
+    fn ub(&self, s: usize) -> f64 {
+        self.bound_of(s)[1]
+    }
 }
 
 /// A trait for the objective function.

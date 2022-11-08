@@ -30,6 +30,7 @@ pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     func: F,
     pop_num: usize,
     seed: Option<Seed>,
+    regen: bool,
     setting: S,
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
@@ -55,6 +56,13 @@ where
         ///
         /// By default, the random seed is `None`, which is decided by `getrandom`.
         fn seed(Option<Seed>)
+
+        /// Regenerate the invalid individuals per generation. May spent more time.
+        ///
+        /// # Default
+        ///
+        /// By default, this function is disabled.
+        fn regen(bool)
     }
 
     /// Give a pool generating function.
@@ -182,6 +190,7 @@ where
             func,
             pop_num,
             seed,
+            regen,
             setting,
             pool,
             task,
@@ -218,11 +227,18 @@ where
             }
             ctx.gen += 1;
             method.generation(&mut ctx);
-            ctx.pool
-                .axis_iter_mut(Axis(0))
-                .zip(ctx.pool_f.iter_mut())
-                .filter(|(_, f)| f.partial_cmp(f).is_none())
-                .for_each(|(xs, f)| *f = ctx.func.fitness(xs.as_slice().unwrap()));
+            if regen {
+                ctx.pool
+                    .axis_iter_mut(Axis(0))
+                    .zip(ctx.pool_f.iter_mut())
+                    .filter(|(_, f)| f.partial_cmp(f).is_none())
+                    .for_each(|(mut xs, f)| {
+                        xs.iter_mut()
+                            .enumerate()
+                            .for_each(|(s, x)| *x = ctx.rng.range(ctx.func.bound_range(s)));
+                        *f = ctx.func.fitness(xs.as_slice().unwrap());
+                    });
+            }
         }
         Ok(Solver::new(ctx))
     }
@@ -245,6 +261,7 @@ impl<F: ObjFunc> Solver<F> {
             func,
             pop_num: S::default_pop(),
             seed: None,
+            regen: false,
             setting,
             pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
@@ -257,7 +274,9 @@ impl<F: ObjFunc> Solver<F> {
 ///
 /// Please see [`SolverBuilder::pool()`] for more information.
 pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
-    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| ctx.rng.range(ctx.bound_range(s)))
+    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
+        ctx.rng.range(ctx.func.bound_range(s))
+    })
 }
 
 /// A function generates a Gaussian pool.
@@ -276,7 +295,7 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
     assert_eq!(mean.len(), std.len());
     move |ctx| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-            let [min, max] = ctx.bound(s);
+            let [min, max] = ctx.func.bound_of(s);
             ctx.rng.normal(mean[s], std[s]).clamp(min, max)
         })
     }
