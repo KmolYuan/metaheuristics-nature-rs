@@ -22,9 +22,11 @@ pub trait Bounded: Sync + Send {
     }
 
     /// Get the upper bound and the lower bound as a range.
-    fn bound_range(&self, s: usize) -> core::ops::Range<f64> {
+    ///
+    /// The variable is constrain with lower <= x <= upper.
+    fn bound_range(&self, s: usize) -> core::ops::RangeInclusive<f64> {
         let [min, max] = self.bound_of(s);
-        min..max
+        min..=max
     }
 
     /// Get the lower bound.
