@@ -158,3 +158,11 @@ impl<F: ObjFunc> Ctx<F> {
         v.clamp(min, max)
     }
 }
+
+impl<F: ObjFunc> core::ops::Deref for Ctx<F> {
+    type Target = F;
+
+    fn deref(&self) -> &Self::Target {
+        &self.func
+    }
+}
