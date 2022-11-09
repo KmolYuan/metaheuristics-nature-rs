@@ -154,7 +154,7 @@ impl<F: ObjFunc> Ctx<F> {
     /// Check the bounds of the index `s` with the value `v`.
     #[inline(always)]
     pub fn clamp(&self, s: usize, v: f64) -> f64 {
-        let [min, max] = self.func.bound()[s];
+        let [min, max] = self.func.bound_of(s);
         v.clamp(min, max)
     }
 }
