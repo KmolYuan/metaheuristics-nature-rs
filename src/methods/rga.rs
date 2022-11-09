@@ -13,14 +13,18 @@ const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 /// Real-coded Genetic Algorithm settings.
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Rga {
+    /// Crossover rate
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
-    cross: f64,
+    pub cross: f64,
+    /// Mutation rate
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.mutate))]
-    mutate: f64,
+    pub mutate: f64,
+    /// Win rate
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.win))]
-    win: f64,
+    pub win: f64,
+    /// Delta
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.delta))]
-    delta: f64,
+    pub delta: f64,
 }
 
 impl Rga {

@@ -60,12 +60,15 @@ pub enum Strategy {
 /// Differential Evolution settings.
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct De {
+    /// Strategy
     #[cfg_attr(feature = "clap", clap(long, value_enum, default_value_t = DEF.strategy))]
-    strategy: Strategy,
+    pub strategy: Strategy,
+    /// F factor in the formula
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.f))]
-    f: f64,
+    pub f: f64,
+    /// Crossover rate
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cross))]
-    cross: f64,
+    pub cross: f64,
 }
 
 impl De {

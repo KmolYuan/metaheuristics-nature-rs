@@ -13,12 +13,15 @@ const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
 /// Firefly Algorithm settings.
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Fa {
+    /// Alpha factor
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.alpha))]
-    alpha: f64,
+    pub alpha: f64,
+    /// Min beta value
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.beta_min))]
-    beta_min: f64,
+    pub beta_min: f64,
+    /// Gamma factor
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.gamma))]
-    gamma: f64,
+    pub gamma: f64,
 }
 
 impl Fa {
