@@ -53,8 +53,8 @@ impl Setting for Rga {
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method {
             rga: self,
-            fitness_new: Vec::new(),
-            pool_new: Array2::zeros((1, 1)),
+            pool_f: Vec::new(),
+            pool: Array2::zeros((1, 1)),
         }
     }
 
@@ -66,8 +66,8 @@ impl Setting for Rga {
 /// Real-coded Genetic Algorithm type.
 pub struct Method<F: Fitness> {
     rga: Rga,
-    fitness_new: Vec<F>,
-    pool_new: Array2<f64>,
+    pool: Array2<f64>,
+    pool_f: Vec<F>,
 }
 
 impl<F: Fitness> core::ops::Deref for Method<F> {
@@ -94,8 +94,8 @@ impl<Ft: Fitness> Method<Ft> {
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     fn init(&mut self, ctx: &mut Ctx<F>) {
-        self.pool_new = Array2::zeros(ctx.pool.raw_dim());
-        self.fitness_new = ctx.pool_f.clone();
+        self.pool = Array2::zeros(ctx.pool.raw_dim());
+        self.pool_f = ctx.pool_f.clone();
     }
 
     fn generation(&mut self, ctx: &mut Ctx<F>) {
@@ -103,18 +103,18 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         for i in 0..ctx.pop_num() {
             let [_, j, k] = ctx.rng.array_by([i, 0, 0], 1, 0..ctx.pop_num());
             if ctx.pool_f[j] > ctx.pool_f[k] && ctx.rng.maybe(self.win) {
-                self.fitness_new[i] = ctx.pool_f[k].clone();
-                self.pool_new
+                self.pool_f[i] = ctx.pool_f[k].clone();
+                self.pool
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![k, ..]));
             } else {
-                self.fitness_new[i] = ctx.pool_f[j].clone();
-                self.pool_new
+                self.pool_f[i] = ctx.pool_f[j].clone();
+                self.pool
                     .slice_mut(s![i, ..])
                     .assign(&ctx.pool.slice(s![j, ..]));
             }
-            ctx.pool_f = self.fitness_new.clone();
-            ctx.pool.assign(&self.pool_new);
+            ctx.pool_f = self.pool_f.clone();
+            ctx.pool.assign(&self.pool);
             ctx.assign_from_best(ctx.rng.ub(ctx.pop_num()));
         }
         // Crossover
