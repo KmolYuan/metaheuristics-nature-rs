@@ -30,14 +30,14 @@ pub trait Bounded: Sync + Send {
     }
 
     /// Get the lower bound.
-    #[inline(always)]
+    #[inline]
     #[must_use = "the bound value should be used"]
     fn lb(&self, s: usize) -> f64 {
         self.bound_of(s)[0]
     }
 
     /// Get the upper bound.
-    #[inline(always)]
+    #[inline]
     #[must_use = "the bound value should be used"]
     fn ub(&self, s: usize) -> f64 {
         self.bound_of(s)[1]

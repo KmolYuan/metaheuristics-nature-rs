@@ -61,7 +61,7 @@ pub trait Algorithm<F: ObjFunc> {
     /// preliminarily.
     ///
     /// The default behavior is do nothing.
-    #[inline(always)]
+    #[inline]
     #[allow(unused_variables)]
     fn init(&mut self, ctx: &mut Ctx<F>) {}
 

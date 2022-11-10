@@ -39,21 +39,21 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Get population number.
-    #[inline(always)]
+    #[inline]
     #[must_use = "the population number should be used"]
     pub fn pop_num(&self) -> usize {
         self.pool_f.len()
     }
 
     /// Get dimension (number of variables).
-    #[inline(always)]
+    #[inline]
     #[must_use = "the dimension value should be used"]
     pub fn dim(&self) -> usize {
         self.best.len()
     }
 
     /// Get pool shape.
-    #[inline(always)]
+    #[inline]
     #[must_use = "the pool size should be used"]
     pub fn pool_size(&self) -> [usize; 2] {
         [self.pop_num(), self.dim()]
@@ -96,14 +96,12 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Set the index to best.
-    #[inline(always)]
     pub fn set_best(&mut self, i: usize) {
         self.best_f = self.pool_f[i].clone();
         self.best.assign(&self.pool.slice(s![i, ..]));
     }
 
     /// Set the fitness and variables to best.
-    #[inline(always)]
     pub fn set_best_from<'a, A>(&mut self, f: F::Fitness, v: A)
     where
         A: AsArray<'a, f64>,
@@ -113,14 +111,12 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Assign the index from best.
-    #[inline(always)]
     pub fn assign_from_best(&mut self, i: usize) {
         self.pool_f[i] = self.best_f.clone();
         self.pool.slice_mut(s![i, ..]).assign(&self.best);
     }
 
     /// Assign the index from source.
-    #[inline(always)]
     pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Fitness, v: A)
     where
         A: AsArray<'a, f64>,
@@ -151,11 +147,22 @@ impl<F: ObjFunc> Ctx<F> {
         }
     }
 
-    /// Check the bounds of the index `s` with the value `v`.
-    #[inline(always)]
+    /// Check the bounds of the index `s` with the value `v`, and set the value
+    /// to max and min if out of bound.
     pub fn clamp(&self, s: usize, v: f64) -> f64 {
         let [min, max] = self.func.bound_of(s);
         v.clamp(min, max)
+    }
+
+    /// Check the bounds of the index `s` with the value `v`, and set the value
+    /// to random value if out of bound.
+    pub fn clamp_rand(&self, s: usize, v: f64) -> f64 {
+        let range = self.func.bound_range(s);
+        if range.contains(&v) {
+            v
+        } else {
+            self.rng.range(range)
+        }
     }
 }
 

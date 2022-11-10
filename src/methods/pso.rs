@@ -66,7 +66,6 @@ impl<F: Fitness> core::ops::Deref for Method<F> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
-    #[inline(always)]
     fn init(&mut self, ctx: &mut Ctx<F>) {
         self.best_past = ctx.pool.clone();
         self.best_past_f = ctx.pool_f.clone();

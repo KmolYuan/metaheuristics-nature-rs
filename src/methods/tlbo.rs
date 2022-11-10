@@ -78,7 +78,6 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    #[inline(always)]
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         for i in 0..ctx.pop_num() {
             let mut student = Array1::zeros(ctx.dim());

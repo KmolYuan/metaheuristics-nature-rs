@@ -93,13 +93,11 @@ impl<Ft: Fitness> Method<Ft> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
-    #[inline(always)]
     fn init(&mut self, ctx: &mut Ctx<F>) {
         self.pool_new = Array2::zeros(ctx.pool.raw_dim());
         self.fitness_new = ctx.pool_f.clone();
     }
 
-    #[inline(always)]
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         // Select
         for i in 0..ctx.pop_num() {
@@ -143,12 +141,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
-                        let range = ctx.func.bound_range(s);
-                        v[s] = if range.contains(&var) {
-                            var
-                        } else {
-                            ctx.rng.range(range)
-                        };
+                        v[s] = ctx.clamp_rand(s, var);
                     }
                     let f = ctx.func.fitness(v.as_slice().unwrap());
                     (f, v)

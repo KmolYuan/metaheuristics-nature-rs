@@ -146,13 +146,13 @@ impl Method {
             .skip(ctx.rng.ub(ctx.dim()))
             .take(ctx.dim())
             .take_while(|_| ctx.rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = ctx.clamp(s, formula(ctx, tmp, s)))
+            .for_each(|s| tmp[s] = ctx.clamp_rand(s, formula(ctx, tmp, s)))
     }
 
     fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
         (0..ctx.dim())
             .filter(|_| ctx.rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = ctx.clamp(s, formula(ctx, tmp, s)))
+            .for_each(|s| tmp[s] = ctx.clamp_rand(s, formula(ctx, tmp, s)))
     }
 }
 

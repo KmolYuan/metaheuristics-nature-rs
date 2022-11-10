@@ -104,7 +104,6 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    #[inline(always)]
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         self.move_fireflies(ctx);
         self.alpha *= 0.95;
