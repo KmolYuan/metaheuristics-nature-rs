@@ -8,6 +8,9 @@
 use crate::utility::prelude::*;
 use alloc::vec::Vec;
 
+/// Real-coded Genetic Algorithm type.
+pub type Method = Rga;
+
 const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 
 /// Real-coded Genetic Algorithm settings.
@@ -48,14 +51,10 @@ impl Default for Rga {
 }
 
 impl Setting for Rga {
-    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
+    type Algorithm<F: ObjFunc> = Method;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        Method {
-            rga: self,
-            pool_f: Vec::new(),
-            pool: Array2::zeros((1, 1)),
-        }
+        self
     }
 
     fn default_pop() -> usize {
@@ -63,25 +62,10 @@ impl Setting for Rga {
     }
 }
 
-/// Real-coded Genetic Algorithm type.
-pub struct Method<F: Fitness> {
-    rga: Rga,
-    pool: Array2<f64>,
-    pool_f: Vec<F>,
-}
-
-impl<F: Fitness> core::ops::Deref for Method<F> {
-    type Target = Rga;
-
-    fn deref(&self) -> &Self::Target {
-        &self.rga
-    }
-}
-
-impl<Ft: Fitness> Method<Ft> {
+impl Method {
     fn get_delta<F>(&self, ctx: &Ctx<F>, y: f64) -> f64
     where
-        F: ObjFunc<Fitness = Ft>,
+        F: ObjFunc,
     {
         let r = if ctx.gen < 100 {
             ctx.gen as f64 / 100.
@@ -92,31 +76,24 @@ impl<Ft: Fitness> Method<Ft> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
-    fn init(&mut self, ctx: &mut Ctx<F>) {
-        self.pool = Array2::zeros(ctx.pool.raw_dim());
-        self.pool_f = ctx.pool_f.clone();
-    }
-
+impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>) {
         // Select
-        for i in 0..ctx.pop_num() {
-            let [_, j, k] = ctx.rng.array_by([i, 0, 0], 1, 0..ctx.pop_num());
-            if ctx.pool_f[j] > ctx.pool_f[k] && ctx.rng.maybe(self.win) {
-                self.pool_f[i] = ctx.pool_f[k].clone();
-                self.pool
-                    .slice_mut(s![i, ..])
-                    .assign(&ctx.pool.slice(s![k, ..]));
-            } else {
-                self.pool_f[i] = ctx.pool_f[j].clone();
-                self.pool
-                    .slice_mut(s![i, ..])
-                    .assign(&ctx.pool.slice(s![j, ..]));
-            }
-            ctx.pool_f = self.pool_f.clone();
-            ctx.pool.assign(&self.pool);
-            ctx.assign_from_best(ctx.rng.ub(ctx.pop_num()));
-        }
+        let mut pool = ctx.pool.clone();
+        let mut pool_f = ctx.pool_f.clone();
+        pool.axis_iter_mut(Axis(0))
+            .zip(pool_f.iter_mut())
+            .for_each(|(mut selected, f)| {
+                let [a, b] = ctx.rng.array(0..ctx.pop_num());
+                let i = if ctx.pool_f[a] < ctx.pool_f[b] { a } else { b };
+                if ctx.rng.maybe(self.win) {
+                    *f = ctx.pool_f[i].clone();
+                    selected.assign(&ctx.pool.slice(s![i, ..]));
+                }
+            });
+        ctx.pool = pool;
+        ctx.pool_f = pool_f;
+        ctx.assign_from_best(ctx.rng.ub(ctx.pop_num()));
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
             if !ctx.rng.maybe(self.cross) {

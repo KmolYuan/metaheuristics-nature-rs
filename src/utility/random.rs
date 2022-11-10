@@ -148,7 +148,7 @@ impl Rng {
         self.array_by([A::zero(); N], 0, candi)
     }
 
-    /// Fill a vector with no-repeat values.
+    /// Fill a mutable slice with no-repeat values.
     ///
     /// The start position of the vector can be set.
     pub fn array_by<A, V, C>(&self, mut v: V, start: usize, candi: C) -> V
