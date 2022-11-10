@@ -1,6 +1,6 @@
-//! Real-coded Genetic Algorithm.
+//! # Real-coded Genetic Algorithm
 //!
-//! (Real-valued Genetic Algorithm)
+//! Aka Real-valued Genetic Algorithm.
 //!
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 //!

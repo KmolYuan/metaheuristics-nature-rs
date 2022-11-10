@@ -1,4 +1,4 @@
-//! Teaching Learning Based Optimization.
+//! # Teaching Learning Based Optimization
 //!
 //! <https://doi.org/10.1016/j.cad.2010.12.015>
 //!

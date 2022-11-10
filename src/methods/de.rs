@@ -1,4 +1,4 @@
-//! Differential Evolution.
+//! # Differential Evolution
 //!
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;

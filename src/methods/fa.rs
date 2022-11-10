@@ -1,4 +1,4 @@
-//! Firefly Algorithm.
+//! # Firefly Algorithm
 //!
 //! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 //!

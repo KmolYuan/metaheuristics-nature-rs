@@ -1,4 +1,4 @@
-//! Particle Swarm Optimization.
+//! # Particle Swarm Optimization
 //!
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
 use crate::utility::prelude::*;
