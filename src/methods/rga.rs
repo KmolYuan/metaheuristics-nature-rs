@@ -115,8 +115,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             }
             ctx.pool_f = self.fitness_new.clone();
             ctx.pool.assign(&self.pool_new);
-            let i = ctx.rng.ub(ctx.pop_num());
-            ctx.assign_from_best(i);
+            ctx.assign_from_best(ctx.rng.ub(ctx.pop_num()));
         }
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
