@@ -121,6 +121,9 @@ pub trait ObjFunc: Bounded {
 ///
 /// This is a higher level interface than [`ObjFunc`], it will auto-implement
 /// for this trait.
+///
+/// The objective function `f: X -> Y` crosses two areas, domain, and codomain,
+/// where the "product" type is the codomain before yield fitness value.
 pub trait ObjFactory: Bounded {
     /// "Product" type.
     type Product;
