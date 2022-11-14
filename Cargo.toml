@@ -24,15 +24,16 @@ rayon = ["std", "dep:rayon", "ndarray/rayon"]
 
 [dependencies]
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
-rand = { version = "0.8", default-features = false, features = [
-    "getrandom",
-    "alloc",
-] }
 rand_chacha = { version = "0.3", default-features = false }
 rand_distr = { version = "0.4", default-features = false }
 ndarray = { version = "0.15", default-features = false }
 clap = { version = "4", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }
+
+[dependencies.rand]
+version = "0.8"
+default-features = false
+features = ["getrandom", "alloc"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
