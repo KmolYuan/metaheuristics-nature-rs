@@ -76,8 +76,12 @@ pub struct De {
 }
 
 impl De {
+    /// Constant default value.
+    pub const fn new() -> Self {
+        DEF
+    }
+
     impl_builders! {
-        default,
         /// Strategy of the formula.
         fn strategy(Strategy)
         /// F factor.

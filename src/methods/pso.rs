@@ -24,8 +24,12 @@ pub struct Pso {
 }
 
 impl Pso {
+    /// Constant default value.
+    pub const fn new() -> Self {
+        DEF
+    }
+
     impl_builders! {
-        default,
         /// Cognition factor.
         fn cognition(f64)
         /// Social factor.

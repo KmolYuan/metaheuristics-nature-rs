@@ -28,8 +28,12 @@ pub struct Fa {
 }
 
 impl Fa {
+    /// Constant default value.
+    pub const fn new() -> Self {
+        DEF
+    }
+
     impl_builders! {
-        default,
         /// Alpha factor.
         fn alpha(f64)
         /// Minimum beta factor.

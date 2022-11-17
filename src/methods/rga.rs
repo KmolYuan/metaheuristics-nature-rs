@@ -34,8 +34,12 @@ pub struct Rga {
 }
 
 impl Rga {
+    /// Constant default value.
+    pub const fn new() -> Self {
+        DEF
+    }
+
     impl_builders! {
-        default,
         /// Crossing probability.
         fn cross(f64)
         /// Mutation probability.
