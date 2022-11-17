@@ -14,6 +14,7 @@ pub type Method = Rga;
 const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 
 /// Real-coded Genetic Algorithm settings.
+#[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Rga {
     /// Crossover rate

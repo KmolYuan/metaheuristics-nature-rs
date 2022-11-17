@@ -9,7 +9,7 @@ use crate::utility::prelude::*;
 pub type Method = Tlbo;
 
 /// Teaching Learning Based Optimization settings.
-#[derive(Default)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Tlbo;
 

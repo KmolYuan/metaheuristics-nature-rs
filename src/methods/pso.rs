@@ -7,6 +7,7 @@ use alloc::vec::Vec;
 const DEF: Pso = Pso { cognition: 2.05, social: 2.05, velocity: 1.3 };
 
 /// Particle Swarm Optimization settings.
+#[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Pso {
     /// Cognition factor

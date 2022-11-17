@@ -11,6 +11,7 @@ pub type Method = Fa;
 const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
 
 /// Firefly Algorithm settings.
+#[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Fa {
     /// Alpha factor

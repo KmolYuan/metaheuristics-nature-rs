@@ -58,6 +58,7 @@ pub enum Strategy {
 }
 
 /// Differential Evolution settings.
+#[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct De {
     /// Strategy
