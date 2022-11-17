@@ -9,6 +9,8 @@ const DEF: Pso = Pso { cognition: 2.05, social: 2.05, velocity: 1.3 };
 /// Particle Swarm Optimization settings.
 #[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct Pso {
     /// Cognition factor
     #[cfg_attr(feature = "clap", clap(long, default_value_t = DEF.cognition))]

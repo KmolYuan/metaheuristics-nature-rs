@@ -11,6 +11,7 @@ pub type Method = Tlbo;
 /// Teaching Learning Based Optimization settings.
 #[derive(Default, Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Tlbo;
 
 impl Tlbo {

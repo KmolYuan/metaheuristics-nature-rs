@@ -1,7 +1,7 @@
 [package]
 name = "metaheuristics-nature"
 description = "A collection of nature-inspired meta-heuristic algorithms."
-version = "7.1.2"
+version = "7.2.0"
 authors = ["KmolYuan <pyslvs@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -18,9 +18,11 @@ std = [
     "rand/std",
     "rand_chacha/std",
     "rand_distr/std",
+    "serde?/std",
 ]
 clap = ["std", "dep:clap"]
 rayon = ["std", "dep:rayon", "ndarray/rayon"]
+serde = ["dep:serde"]
 
 [dependencies]
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
@@ -28,6 +30,7 @@ rand_chacha = { version = "0.3", default-features = false }
 rand_distr = { version = "0.4", default-features = false }
 ndarray = { version = "0.15", default-features = false }
 clap = { version = "4", features = ["derive"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }
 
 [dependencies.rand]

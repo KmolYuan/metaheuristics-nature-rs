@@ -33,6 +33,7 @@ const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 /// + *c2*: Each variable has independent probability.
 #[derive(Clone, Default)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Strategy {
     /// *f1* + *c1*
     #[default]
@@ -60,6 +61,8 @@ pub enum Strategy {
 /// Differential Evolution settings.
 #[derive(Clone)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct De {
     /// Strategy
     #[cfg_attr(feature = "clap", clap(long, value_enum, default_value_t = DEF.strategy))]
