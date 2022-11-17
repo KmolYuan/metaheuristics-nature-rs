@@ -15,8 +15,8 @@ pub type Method = Tlbo;
 pub struct Tlbo;
 
 impl Tlbo {
-    /// Create default instance.
-    pub fn new() -> Self {
+    /// Constant default value.
+    pub const fn new() -> Self {
         Self
     }
 }
