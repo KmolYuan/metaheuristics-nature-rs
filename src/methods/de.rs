@@ -31,7 +31,7 @@ const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 ///
 /// + *c1*: Continue crossover in order until end with probability.
 /// + *c2*: Each variable has independent probability.
-#[derive(Clone, Default)]
+#[derive(Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Strategy {
@@ -59,7 +59,7 @@ pub enum Strategy {
 }
 
 /// Differential Evolution settings.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]

@@ -14,7 +14,7 @@ pub type Method = Rga;
 const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
 
 /// Real-coded Genetic Algorithm settings.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]

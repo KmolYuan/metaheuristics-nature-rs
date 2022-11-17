@@ -11,7 +11,7 @@ pub type Method = Fa;
 const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
 
 /// Firefly Algorithm settings.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
