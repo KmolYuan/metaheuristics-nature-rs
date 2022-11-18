@@ -136,13 +136,13 @@ mod setting;
 mod solver;
 pub mod tests;
 pub mod utility;
+/// The re-export of the crate `ndarray`.
 pub mod ndarray {
-    //! The re-export of the crate `ndarray`.
     #[doc(no_inline)]
     pub use ndarray::*;
 }
+/// The re-export of the crate `rand` and its related crates.
 pub mod rand {
-    //! The re-export of the crate `rand` and its related crates.
     #[doc(no_inline)]
     pub use rand::*;
     #[doc(no_inline)]
@@ -150,9 +150,9 @@ pub mod rand {
     #[doc(no_inline)]
     pub use rand_distr::*;
 }
+/// The re-export of the crate `rayon`.
+#[cfg(feature = "rayon")]
 pub mod rayon {
-    //! The re-export of the crate `rayon`.
-    #![cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use rayon::*;
 
@@ -161,9 +161,13 @@ pub mod rayon {
     /// ```
     /// use metaheuristics_nature::rayon::single_thread;
     ///
-    /// # let use_single_thread = true;
-    /// single_thread(use_single_thread, || { /* Do the job */ });
+    /// # let is_single = true;
+    /// single_thread(is_single, || { /* Do the job */ });
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panic if initialization failed.
     pub fn single_thread<F, R>(when: bool, f: F) -> R
     where
         F: FnOnce() -> R + Send,
