@@ -42,11 +42,8 @@
 //!
 //! In parallelization, the random number is **unstable** because of the dynamic
 //! planning of the rayon library. Fix the seed and change the thread to one via
-//! setting `RAYON_NUM_THREADS=1` to obtain a determined result.
-//!
-//! ```
-//! std::env::set_var("RAYON_NUM_THREADS", "1");
-//! ```
+//! to obtain a determined result. Please see `crate::rayon::single_thread` when
+//! enabled `rayon` feature.
 //!
 //! # Features
 //!
@@ -158,4 +155,24 @@ pub mod rayon {
     #![cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use rayon::*;
+
+    /// Single thread scope.
+    ///
+    /// ```
+    /// use metaheuristics_nature::rayon::single_thread;
+    ///
+    /// # let use_single_thread = true;
+    /// single_thread(use_single_thread, || { /* Do the job */ });
+    /// ```
+    pub fn single_thread<F, R>(when: bool, f: F) -> R
+    where
+        F: FnOnce() -> R + Send,
+        R: Send,
+    {
+        ThreadPoolBuilder::new()
+            .num_threads(if when { 1 } else { current_num_threads() })
+            .build()
+            .unwrap()
+            .install(f)
+    }
 }

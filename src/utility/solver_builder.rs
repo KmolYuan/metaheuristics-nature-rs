@@ -1,9 +1,9 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + 'a>;
-type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + 'a>;
-type CallbackFunc<'a, F> = Box<dyn FnMut(&mut Ctx<F>) + 'a>;
+type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + Send + 'a>;
+type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + Send + 'a>;
+type CallbackFunc<'a, F> = Box<dyn FnMut(&mut Ctx<F>) + Send + 'a>;
 
 fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
     b.then_some(())
@@ -97,7 +97,7 @@ where
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
-        C: FnOnce(&Ctx<F>) -> Array2<f64> + 'b,
+        C: FnOnce(&Ctx<F>) -> Array2<f64> + Send + 'b,
     {
         SolverBuilder { pool: Pool::Func(Box::new(pool)), ..self }
     }
@@ -145,7 +145,7 @@ where
     pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
-        C: Fn(&Ctx<F>) -> bool + 'b,
+        C: Fn(&Ctx<F>) -> bool + Send + 'b,
     {
         SolverBuilder { task: Box::new(task), ..self }
     }
@@ -173,7 +173,7 @@ where
     pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
-        C: FnMut(&mut Ctx<F>) + 'b,
+        C: FnMut(&mut Ctx<F>) + Send + 'b,
     {
         SolverBuilder { callback: Box::new(callback), ..self }
     }
