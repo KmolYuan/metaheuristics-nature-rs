@@ -178,6 +178,19 @@ where
         SolverBuilder { callback: Box::new(callback), ..self }
     }
 
+    /// Run the algorithm with a single thread condition.
+    ///
+    /// This function can control the thread number to one.
+    ///
+    /// See also [`crate::rayon::single_thread()`].
+    #[cfg(feature = "rayon")]
+    pub fn solve_single_thread(self, when: bool) -> Result<Solver<F>, ndarray::ShapeError>
+    where
+        S: Send,
+    {
+        crate::rayon::single_thread(when, || self.solve())
+    }
+
     /// Create the task and run the algorithm, which may takes a lot of time.
     ///
     /// Generation `ctx.gen` is start from 1, initialized at 0.
