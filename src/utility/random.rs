@@ -10,12 +10,43 @@ use rand::{
         Distribution,
     },
     seq::SliceRandom as _,
-    Rng as _, SeedableRng,
+    Rng as _, SeedableRng as _,
 };
 use rand_chacha::ChaCha8Rng;
 
 /// The seed type of the ChaCha algorithm.
-pub type Seed = <ChaCha8Rng as SeedableRng>::Seed;
+pub type Seed = [u8; 32];
+
+/// The seed option.
+pub enum SeedOption {
+    /// Seed from non-crypto u64
+    U64(u64),
+    /// Crypto seed series
+    Seed(Seed),
+    /// Auto-decided crypto seed
+    None,
+}
+
+impl From<Option<u64>> for SeedOption {
+    fn from(opt: Option<u64>) -> Self {
+        match opt {
+            Some(seed) => Self::U64(seed),
+            None => Self::None,
+        }
+    }
+}
+
+impl From<u64> for SeedOption {
+    fn from(seed: u64) -> Self {
+        Self::U64(seed)
+    }
+}
+
+impl From<Seed> for SeedOption {
+    fn from(seed: Seed) -> Self {
+        Self::Seed(seed)
+    }
+}
 
 struct AtomicU128 {
     s1: AtomicU64,
@@ -52,10 +83,12 @@ pub struct Rng {
 impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
-    pub fn new(seed: Option<Seed>) -> Self {
-        let rng = seed
-            .map(ChaCha8Rng::from_seed)
-            .unwrap_or_else(ChaCha8Rng::from_entropy);
+    pub fn new(seed: SeedOption) -> Self {
+        let rng = match seed {
+            SeedOption::U64(seed) => ChaCha8Rng::seed_from_u64(seed),
+            SeedOption::Seed(seed) => ChaCha8Rng::from_seed(seed),
+            SeedOption::None => ChaCha8Rng::from_entropy(),
+        };
         Self {
             seed: rng.get_seed(),
             stream: AtomicU64::new(rng.get_stream()),

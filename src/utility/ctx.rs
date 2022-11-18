@@ -25,7 +25,7 @@ pub struct Ctx<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Ctx<F> {
-    pub(crate) fn new(func: F, seed: Option<Seed>, pop_num: usize) -> Self {
+    pub(crate) fn new(func: F, seed: SeedOption, pop_num: usize) -> Self {
         let dim = func.bound().len();
         Self {
             rng: Rng::new(seed),

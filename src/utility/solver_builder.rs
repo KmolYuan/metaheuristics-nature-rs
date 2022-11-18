@@ -29,7 +29,7 @@ enum Pool<'a, F: ObjFunc> {
 pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
     func: F,
     pop_num: usize,
-    seed: Option<Seed>,
+    seed: SeedOption,
     regen: bool,
     setting: S,
     pool: Pool<'a, F>,
@@ -50,19 +50,21 @@ where
         /// If not changed by the algorithm setting, the default number is 200.
         fn pop_num(usize)
 
-        /// Set random seed.
-        ///
-        /// # Default
-        ///
-        /// By default, the random seed is `None`, which is decided by `getrandom`.
-        fn seed(Option<Seed>)
-
         /// Regenerate the invalid individuals per generation. May spent more time.
         ///
         /// # Default
         ///
         /// By default, this function is disabled.
         fn regen(bool)
+    }
+
+    /// Set random seed.
+    ///
+    /// # Default
+    ///
+    /// By default, the random seed is auto-decided.
+    pub fn seed(self, seed: impl Into<SeedOption>) -> Self {
+        Self { seed: seed.into(), ..self }
     }
 
     /// Give a pool generating function.
@@ -260,7 +262,7 @@ impl<F: ObjFunc> Solver<F> {
         SolverBuilder {
             func,
             pop_num: S::default_pop(),
-            seed: None,
+            seed: SeedOption::None,
             regen: false,
             setting,
             pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
