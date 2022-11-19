@@ -58,7 +58,7 @@ where
         fn regen(bool)
     }
 
-    /// Set random seed.
+    /// Set the random seed to get a determined result.
     ///
     /// # Default
     ///

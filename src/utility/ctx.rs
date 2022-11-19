@@ -156,6 +156,7 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Check the bounds of the index `s` with the value `v`, and set the value
     /// to random value if out of bound.
+    #[deprecated = "This function cannot run in the parallel region, use `ctx.rng.stream()` instead."]
     pub fn clamp_rand(&self, s: usize, v: f64) -> f64 {
         let range = self.func.bound_range(s);
         if range.contains(&v) {

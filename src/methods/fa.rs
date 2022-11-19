@@ -65,6 +65,7 @@ impl Method {
     fn move_firefly<F: ObjFunc>(
         &self,
         ctx: &Ctx<F>,
+        rng: &Rng,
         i: usize,
         j: usize,
     ) -> (Array1<f64>, F::Fitness) {
@@ -79,7 +80,7 @@ impl Method {
             .sum();
         let beta = self.beta_min * (-self.gamma * r).exp();
         for s in 0..ctx.dim() {
-            let step = self.alpha * ctx.func.bound_width(s) * ctx.rng.range(-0.5..0.5);
+            let step = self.alpha * ctx.func.bound_width(s) * rng.range(-0.5..0.5);
             let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);
             v[s] = ctx.clamp(s, surround + step);
         }
@@ -95,10 +96,11 @@ impl Method {
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
         iter.zip(pool.axis_iter_mut(Axis(0)))
+            .zip(ctx.rng.stream(ctx.pop_num()))
             .enumerate()
-            .for_each(|(i, (fitness, mut pool))| {
+            .for_each(|(i, ((fitness, mut pool), rng))| {
                 for j in i + 1..ctx.pop_num() {
-                    let (v, f) = self.move_firefly(ctx, i, j);
+                    let (v, f) = self.move_firefly(ctx, &rng, i, j);
                     if f < *fitness {
                         *fitness = f;
                         pool.assign(&v);

@@ -1,6 +1,7 @@
 use alloc::vec::Vec;
 use core::{
     mem::transmute,
+    ops::RangeBounds,
     sync::atomic::{AtomicU64, Ordering},
 };
 use num_traits::{Float, Zero};
@@ -102,14 +103,18 @@ impl Rng {
         self.seed
     }
 
-    /// Clone and set the stream number.
-    pub fn stream(&self, n: u64) -> Self {
+    /// Stream for parallel threading.
+    ///
+    /// Use the iterators `.zip()` method to fork this RNG set.
+    pub fn stream(&self, n: usize) -> Vec<Self> {
         let word_pos = self.word_pos.load(Ordering::SeqCst);
-        Self {
-            seed: self.seed,
-            stream: AtomicU64::new(n),
-            word_pos: AtomicU128::new(word_pos),
-        }
+        (1..=n)
+            .map(|i| Self {
+                seed: self.seed,
+                stream: AtomicU64::new(i as u64),
+                word_pos: AtomicU128::new(word_pos),
+            })
+            .collect()
     }
 
     /// Low-level access to the RNG type.
@@ -166,6 +171,20 @@ impl Rng {
         core::ops::Range<U>: SampleRange<U>,
     {
         self.range(U::zero()..ub)
+    }
+
+    /// Generate a random value by range.
+    #[inline]
+    pub fn clamp<T, R>(&self, v: T, range: R) -> T
+    where
+        T: SampleUniform + PartialOrd,
+        R: SampleRange<T> + RangeBounds<T>,
+    {
+        if range.contains(&v) {
+            v
+        } else {
+            self.range(range)
+        }
     }
 
     /// Sample with Gaussian distribution.

@@ -32,48 +32,74 @@ impl ObjFactory for TestObj {
 }
 
 #[cfg(test)]
-fn test<S>()
+fn test<S>() -> Solver<TestObj>
 where
     S: Setting + Default,
 {
     let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default(), TestObj)
+        .seed(0)
         .task(|ctx| ctx.best_f - OFFSET < 1e-20)
         .callback(|ctx| report.push(ctx.best_f))
         .solve()
         .unwrap();
-    let ans = s.result();
-    let xs = s.best_parameters();
-    let y = s.best_fitness();
     assert!(!report.is_empty());
-    assert!((ans - OFFSET).abs() < 1e-20, "{}", ans);
-    for (i, x) in xs.iter().enumerate() {
-        assert!(x.abs() < 1e-6, "x{} = {}", i, x);
-    }
-    assert_eq!(y.abs(), ans);
+    assert_eq!(s.result(), OFFSET);
+    assert_eq!(s.best_fitness(), s.result());
+    s
 }
 
 #[test]
 fn de() {
-    test::<De>();
+    let xs = &[
+        -1.4096013263903092e-8,
+        5.9294512524583e-9,
+        -1.1682725196001081e-8,
+        -1.686041215945611e-8,
+    ];
+    assert_eq!(test::<De>().best_parameters(), xs);
 }
 
 #[test]
 fn pso() {
-    test::<Pso>();
+    let xs = &[
+        -5.8952389010136305e-9,
+        -6.556757596629172e-9,
+        3.995683568281232e-9,
+        -5.049790405009771e-9,
+    ];
+    assert_eq!(test::<Pso>().best_parameters(), xs);
 }
 
 #[test]
 fn fa() {
-    test::<Fa>();
+    let xs = &[
+        1.6004926526143065e-8,
+        -3.990108320609924e-9,
+        -1.025895099819533e-8,
+        -1.331288383548763e-8,
+    ];
+    assert_eq!(test::<Fa>().best_parameters(), xs);
 }
 
 #[test]
 fn rga() {
-    test::<Rga>();
+    let xs = &[
+        -2.0994884944079517e-8,
+        -3.802650390006022e-9,
+        -3.352451856642831e-10,
+        1.4403675944455944e-8,
+    ];
+    assert_eq!(test::<Rga>().best_parameters(), xs);
 }
 
 #[test]
 fn tlbo() {
-    test::<Tlbo>();
+    let xs = &[
+        -1.3786481627246014e-8,
+        -1.830262228970864e-10,
+        -1.6444290908967627e-8,
+        -1.0078724638383442e-9,
+    ];
+    assert_eq!(test::<Tlbo>().best_parameters(), xs);
 }

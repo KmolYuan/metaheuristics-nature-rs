@@ -116,18 +116,19 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             #[cfg(not(feature = "rayon"))]
             let iter = [Id::I1, Id::I2, Id::I3].into_iter();
             let mut v = iter
-                .map(|id| {
-                    let mut v = Array1::zeros(ctx.dim());
+                .zip(ctx.rng.stream(3))
+                .map(|(id, rng)| {
+                    let mut xs = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
-                        let var = match id {
+                        let v = match id {
                             Id::I1 => 0.5 * (ctx.pool[[i, s]] + ctx.pool[[i + 1, s]]),
                             Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
                             Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
                         };
-                        v[s] = ctx.clamp_rand(s, var);
+                        xs[s] = rng.clamp(v, ctx.func.bound_range(s));
                     }
-                    let f = ctx.func.fitness(v.as_slice().unwrap());
-                    (f, v)
+                    let f = ctx.func.fitness(xs.as_slice().unwrap());
+                    (f, xs)
                 })
                 .collect::<Vec<_>>();
             v.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
