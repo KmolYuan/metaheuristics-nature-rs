@@ -84,21 +84,32 @@ impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
     pub fn new(seed: SeedOption) -> Self {
-        let rng = match seed {
-            SeedOption::U64(seed) => ChaCha8Rng::seed_from_u64(seed),
-            SeedOption::Seed(seed) => ChaCha8Rng::from_seed(seed),
-            SeedOption::None => ChaCha8Rng::from_entropy(),
+        let seed = match seed {
+            SeedOption::Seed(seed) => seed,
+            SeedOption::U64(seed) => ChaCha8Rng::seed_from_u64(seed).get_seed(),
+            SeedOption::None => ChaCha8Rng::from_entropy().get_seed(),
         };
         Self {
-            seed: rng.get_seed(),
-            stream: AtomicU64::new(rng.get_stream()),
-            word_pos: AtomicU128::new(rng.get_word_pos()),
+            seed,
+            stream: AtomicU64::new(0),
+            word_pos: AtomicU128::new(0),
         }
     }
 
     /// Seed of this generator.
+    #[inline]
     pub fn seed(&self) -> Seed {
         self.seed
+    }
+
+    /// Clone and set the stream number.
+    pub fn stream(&self, n: u64) -> Self {
+        let word_pos = self.word_pos.load(Ordering::SeqCst);
+        Self {
+            seed: self.seed,
+            stream: AtomicU64::new(n),
+            word_pos: AtomicU128::new(word_pos),
+        }
     }
 
     /// Low-level access to the RNG type.
