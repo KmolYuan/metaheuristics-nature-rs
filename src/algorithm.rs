@@ -44,7 +44,7 @@ use crate::utility::prelude::*;
 /// pub struct Method;
 ///
 /// impl<F: ObjFunc> Algorithm<F> for Method {
-///     fn generation(&mut self, ctx: &mut Ctx<F>) {
+///     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
 ///         /* implement the method */
 ///     }
 /// }
@@ -63,8 +63,8 @@ pub trait Algorithm<F: ObjFunc> {
     /// The default behavior is do nothing.
     #[inline]
     #[allow(unused_variables)]
-    fn init(&mut self, ctx: &mut Ctx<F>) {}
+    fn init(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {}
 
     /// Processing implementation of each generation.
-    fn generation(&mut self, ctx: &mut Ctx<F>);
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng);
 }

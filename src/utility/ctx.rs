@@ -8,8 +8,6 @@ use alloc::{vec, vec::Vec};
 /// Please see [`Algorithm`] for the implementation.
 #[non_exhaustive]
 pub struct Ctx<F: ObjFunc> {
-    /// Random number generator
-    pub rng: Rng,
     /// The best variables
     pub best: Array1<f64>,
     /// Best fitness
@@ -25,10 +23,9 @@ pub struct Ctx<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Ctx<F> {
-    pub(crate) fn new(func: F, seed: SeedOption, pop_num: usize) -> Self {
+    pub(crate) fn new(func: F, pop_num: usize) -> Self {
         let dim = func.bound().len();
         Self {
-            rng: Rng::new(seed),
             best: Array1::zeros(dim),
             best_f: Default::default(),
             pool: Array2::zeros((pop_num, dim)),
@@ -144,25 +141,6 @@ impl<F: ObjFunc> Ctx<F> {
             .unwrap();
         if force || f < &self.best_f {
             self.set_best(i);
-        }
-    }
-
-    /// Check the bounds of the index `s` with the value `v`, and set the value
-    /// to max and min if out of bound.
-    pub fn clamp(&self, s: usize, v: f64) -> f64 {
-        let [min, max] = self.func.bound_of(s);
-        v.clamp(min, max)
-    }
-
-    /// Check the bounds of the index `s` with the value `v`, and set the value
-    /// to random value if out of bound.
-    #[deprecated = "This function cannot run in the parallel region, use `ctx.rng.stream()` instead."]
-    pub fn clamp_rand(&self, s: usize, v: f64) -> f64 {
-        let range = self.func.bound_range(s);
-        if range.contains(&v) {
-            v
-        } else {
-            self.rng.range(range)
         }
     }
 }

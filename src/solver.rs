@@ -33,11 +33,12 @@ use crate::utility::prelude::*;
 #[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
 pub struct Solver<F: ObjFunc> {
     ctx: Ctx<F>,
+    seed: Seed,
 }
 
 impl<F: ObjFunc> Solver<F> {
-    pub(crate) fn new(ctx: Ctx<F>) -> Self {
-        Self { ctx }
+    pub(crate) fn new(ctx: Ctx<F>, seed: Seed) -> Self {
+        Self { ctx, seed }
     }
 
     /// Get the reference of the objective function.
@@ -68,7 +69,7 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Seed of the random number generator.
     pub fn seed(&self) -> Seed {
-        self.ctx.rng.seed()
+        self.seed
     }
 
     /// Get the pool from the last status.

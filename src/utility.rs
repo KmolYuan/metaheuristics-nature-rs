@@ -5,11 +5,10 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{ctx::*, fitness::*, random::*, solver_builder::*};
+pub use self::{ctx::*, fitness::*, solver_builder::*};
 
 mod ctx;
 mod fitness;
-mod random;
 mod solver_builder;
 
 /// A prelude module for algorithm implementation.
@@ -18,12 +17,10 @@ mod solver_builder;
 /// and external items from "ndarray" and "rayon" (if `rayon` feature enabled).
 pub mod prelude {
     pub use super::*;
-    pub use crate::*;
+    pub use crate::{random::*, *};
 
     #[doc(no_inline)]
     pub use crate::ndarray::prelude::*;
-    #[doc(no_inline)]
-    pub use crate::rand::prelude::*;
     #[cfg(feature = "rayon")]
     #[doc(no_inline)]
     pub use crate::rayon::prelude::*;

@@ -87,8 +87,11 @@ impl Method {
         let f = ctx.func.fitness(v.as_slice().unwrap());
         (v, f)
     }
+}
 
-    fn move_fireflies<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>) {
+impl<F: ObjFunc> Algorithm<F> for Method {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+        // Move fireflies
         let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
         #[cfg(feature = "rayon")]
@@ -96,7 +99,7 @@ impl Method {
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
         iter.zip(pool.axis_iter_mut(Axis(0)))
-            .zip(ctx.rng.stream(ctx.pop_num()))
+            .zip(rng.stream(ctx.pop_num()))
             .enumerate()
             .for_each(|(i, ((fitness, mut pool), rng))| {
                 for j in i + 1..ctx.pop_num() {
@@ -109,12 +112,6 @@ impl Method {
             });
         ctx.pool_f = fitness;
         ctx.pool = pool;
-    }
-}
-
-impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>) {
-        self.move_fireflies(ctx);
         self.alpha *= 0.95;
         ctx.find_best();
     }

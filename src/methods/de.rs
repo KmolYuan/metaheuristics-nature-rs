@@ -110,25 +110,25 @@ impl Setting for De {
 }
 
 impl Method {
-    fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>) -> Func<F> {
+    fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, rng: &Rng) -> Func<F> {
         let f = self.f;
         match self.strategy {
             S1 | S6 => {
-                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
+                let [v0, v1] = rng.array(0..ctx.pop_num());
                 Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[[v0, s]] - ctx.pool[[v1, s]]))
             }
             S2 | S7 => Box::new({
-                let [v0, v1, v2] = ctx.rng.array(0..ctx.pop_num());
+                let [v0, v1, v2] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| ctx.pool[[v0, s]] + f * (ctx.pool[[v1, s]] - ctx.pool[[v2, s]])
             }),
             S3 | S8 => Box::new({
-                let [v0, v1] = ctx.rng.array(0..ctx.pop_num());
+                let [v0, v1] = rng.array(0..ctx.pop_num());
                 move |ctx, tmp, s| {
                     tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[[v0, s]] - ctx.pool[[v1, s]])
                 }
             }),
             S4 | S9 => Box::new({
-                let [v0, v1, v2, v3] = ctx.rng.array(0..ctx.pop_num());
+                let [v0, v1, v2, v3] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.best[s]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
@@ -137,7 +137,7 @@ impl Method {
                 }
             }),
             S5 | S10 => Box::new({
-                let [v0, v1, v2, v3, v4] = ctx.rng.array(0..ctx.pop_num());
+                let [v0, v1, v2, v3, v4] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.pool[[v4, s]]
                         + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
@@ -148,32 +148,38 @@ impl Method {
         }
     }
 
-    fn c1<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
+    fn c1<F>(&mut self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    where
+        F: ObjFunc,
+    {
         (0..ctx.dim())
             .cycle()
-            .skip(ctx.rng.ub(ctx.dim()))
+            .skip(rng.ub(ctx.dim()))
             .take(ctx.dim())
-            .take_while(|_| ctx.rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = ctx.rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
+            .take_while(|_| rng.maybe(self.cross))
+            .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
     }
 
-    fn c2<F: ObjFunc>(&mut self, ctx: &Ctx<F>, tmp: &mut Array1<f64>, formula: Func<F>) {
+    fn c2<F>(&mut self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    where
+        F: ObjFunc,
+    {
         (0..ctx.dim())
-            .filter(|_| ctx.rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = ctx.rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
+            .filter(|_| rng.maybe(self.cross))
+            .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         for i in 0..ctx.pop_num() {
             // Generate Vector
-            let formula = self.formula(ctx);
+            let formula = self.formula(ctx, rng);
             // Recombination
             let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
             match self.strategy {
-                S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut tmp, formula),
-                S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut tmp, formula),
+                S1 | S2 | S3 | S4 | S5 => self.c1(ctx, rng, &mut tmp, formula),
+                S6 | S7 | S8 | S9 | S10 => self.c2(ctx, rng, &mut tmp, formula),
             }
             if (0..ctx.dim()).any(|s| !ctx.func.bound_range(s).contains(&tmp[s])) {
                 continue;

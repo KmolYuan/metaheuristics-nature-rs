@@ -42,6 +42,13 @@ pub trait Bounded: Sync + Send {
     fn ub(&self, s: usize) -> f64 {
         self.bound_of(s)[1]
     }
+
+    /// Check the bounds of the index `s` with the value `v`, and set the value
+    /// to max and min if out of bound.
+    fn clamp(&self, s: usize, v: f64) -> f64 {
+        let [min, max] = self.bound_of(s);
+        v.clamp(min, max)
+    }
 }
 
 /// A trait for the objective function.

@@ -1,7 +1,7 @@
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>) -> Array2<f64> + Send + 'a>;
+type PoolFunc<'a, F> = Box<dyn FnOnce(&Ctx<F>, &Rng) -> Array2<f64> + Send + 'a>;
 type TaskFunc<'a, F> = Box<dyn Fn(&Ctx<F>) -> bool + Send + 'a>;
 type CallbackFunc<'a, F> = Box<dyn FnMut(&mut Ctx<F>) + Send + 'a>;
 
@@ -97,7 +97,7 @@ where
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
-        C: FnOnce(&Ctx<F>) -> Array2<f64> + Send + 'b,
+        C: FnOnce(&Ctx<F>, &Rng) -> Array2<f64> + Send + 'b,
     {
         SolverBuilder { pool: Pool::Func(Box::new(pool)), ..self }
     }
@@ -213,7 +213,8 @@ where
         } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
         let mut method = setting.algorithm();
-        let mut ctx = Ctx::new(func, seed, pop_num);
+        let mut ctx = Ctx::new(func, pop_num);
+        let rng = Rng::new(seed);
         match pool {
             Pool::ReadyMade { pool, fitness } => {
                 assert_shape(pool.shape() == ctx.pool_size())?;
@@ -229,19 +230,19 @@ where
                 ctx.best_f = ctx.pool_f[0].clone();
             }
             Pool::Func(f) => {
-                let pool = f(&ctx);
+                let pool = f(&ctx, &rng);
                 assert_shape(pool.shape() == ctx.pool_size())?;
                 ctx.init_pop(pool);
             }
         }
-        method.init(&mut ctx);
+        method.init(&mut ctx, &rng);
         loop {
             callback(&mut ctx);
             if task(&ctx) {
                 break;
             }
             ctx.gen += 1;
-            method.generation(&mut ctx);
+            method.generation(&mut ctx, &rng);
             if regen {
                 ctx.pool
                     .axis_iter_mut(Axis(0))
@@ -250,12 +251,12 @@ where
                     .for_each(|(mut xs, f)| {
                         xs.iter_mut()
                             .enumerate()
-                            .for_each(|(s, x)| *x = ctx.rng.range(ctx.func.bound_range(s)));
+                            .for_each(|(s, x)| *x = rng.range(ctx.func.bound_range(s)));
                         *f = ctx.func.fitness(xs.as_slice().unwrap());
                     });
             }
         }
-        Ok(Solver::new(ctx))
+        Ok(Solver::new(ctx, rng.seed()))
     }
 }
 
@@ -278,7 +279,7 @@ impl<F: ObjFunc> Solver<F> {
             seed: SeedOption::None,
             regen: false,
             setting,
-            pool: Pool::Func(Box::new(|ctx| uniform_pool(ctx))), // dynamic lifetime
+            pool: Pool::Func(Box::new(|ctx, rng| uniform_pool(ctx, rng))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
             callback: Box::new(|_| ()),
         }
@@ -288,10 +289,8 @@ impl<F: ObjFunc> Solver<F> {
 /// A function generates a uniform pool.
 ///
 /// Please see [`SolverBuilder::pool()`] for more information.
-pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
-    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-        ctx.rng.range(ctx.func.bound_range(s))
-    })
+pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>, rng: &Rng) -> Array2<f64> {
+    Array2::from_shape_fn(ctx.pool_size(), |(_, s)| rng.range(ctx.func.bound_range(s)))
 }
 
 /// A function generates a Gaussian pool.
@@ -306,12 +305,11 @@ pub fn uniform_pool<F: ObjFunc>(ctx: &Ctx<F>) -> Array2<f64> {
 pub fn gaussian_pool<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
-) -> impl Fn(&Ctx<F>) -> Array2<f64> + 'a {
+) -> impl Fn(&Ctx<F>, &Rng) -> Array2<f64> + 'a {
     assert_eq!(mean.len(), std.len());
-    move |ctx| {
+    move |ctx, rng| {
         Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-            let [min, max] = ctx.func.bound_of(s);
-            ctx.rng.normal(mean[s], std[s]).clamp(min, max)
+            ctx.clamp(s, rng.normal(mean[s], std[s]))
         })
     }
 }
@@ -328,14 +326,14 @@ pub fn gaussian_pool<'a, F: ObjFunc>(
 pub fn gaussian_pool_inclusive<'a, F: ObjFunc>(
     mean: &'a [f64],
     std: &'a [f64],
-) -> impl Fn(&Ctx<F>) -> Array2<f64> + 'a {
+) -> impl Fn(&Ctx<F>, &Rng) -> Array2<f64> + 'a {
     assert_eq!(mean.len(), std.len());
-    move |ctx| {
+    move |ctx, rng| {
         Array2::from_shape_fn(ctx.pool_size(), |(i, s)| {
             if i == 0 {
                 mean[s]
             } else {
-                ctx.clamp(s, ctx.rng.normal(mean[s], std[s]))
+                ctx.clamp(s, rng.normal(mean[s], std[s]))
             }
         })
     }

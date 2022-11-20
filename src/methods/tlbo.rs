@@ -41,24 +41,35 @@ impl Method {
         }
     }
 
-    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
-        let tf = ctx.rng.range(1f64..2.).round();
+    fn teaching<F: ObjFunc>(
+        &mut self,
+        ctx: &mut Ctx<F>,
+        rng: &Rng,
+        i: usize,
+        student: &mut Array1<f64>,
+    ) {
+        let tf = rng.range(1f64..2.).round();
         for s in 0..ctx.dim() {
             let mut mean = 0.;
             for j in 0..ctx.pop_num() {
                 mean += ctx.pool[[j, s]];
             }
             mean /= ctx.dim() as f64;
-            let v =
-                ctx.pool[[i, s]] + ctx.rng.range(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
+            let v = ctx.pool[[i, s]] + rng.range(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
             student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
     }
 
-    fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, i: usize, student: &mut Array1<f64>) {
+    fn learning<F: ObjFunc>(
+        &mut self,
+        ctx: &mut Ctx<F>,
+        rng: &Rng,
+        i: usize,
+        student: &mut Array1<f64>,
+    ) {
         let j = {
-            let j = ctx.rng.ub(ctx.pop_num() - 1);
+            let j = rng.ub(ctx.pop_num() - 1);
             if j >= i {
                 j + 1
             } else {
@@ -71,7 +82,7 @@ impl Method {
             } else {
                 ctx.pool[[j, s]] - ctx.pool[[i, s]]
             };
-            let v = ctx.pool[[i, s]] + ctx.rng.range(1.0..ctx.dim() as f64) * diff;
+            let v = ctx.pool[[i, s]] + rng.range(1.0..ctx.dim() as f64) * diff;
             student[s] = ctx.clamp(s, v);
         }
         Self::register(ctx, i, student);
@@ -79,11 +90,11 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         for i in 0..ctx.pop_num() {
             let mut student = Array1::zeros(ctx.dim());
-            self.teaching(ctx, i, &mut student);
-            self.learning(ctx, i, &mut student);
+            self.teaching(ctx, rng, i, &mut student);
+            self.learning(ctx, rng, i, &mut student);
         }
     }
 }

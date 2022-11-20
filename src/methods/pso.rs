@@ -73,12 +73,12 @@ impl<F: Fitness> core::ops::Deref for Method<F> {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
-    fn init(&mut self, ctx: &mut Ctx<F>) {
+    fn init(&mut self, ctx: &mut Ctx<F>, _: &Rng) {
         self.best_past = ctx.pool.clone();
         self.best_past_f = ctx.pool_f.clone();
     }
 
-    fn generation(&mut self, ctx: &mut Ctx<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
         let mut best_past = self.best_past.clone();
@@ -91,7 +91,7 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
             .zip(pool.axis_iter_mut(Axis(0)))
             .zip(best_past.axis_iter_mut(Axis(0)))
             .zip(&mut best_past_f)
-            .zip(ctx.rng.stream(ctx.pop_num()))
+            .zip(rng.stream(ctx.pop_num()))
             .map(|((((f, mut v), mut past), past_f), rng)| {
                 let alpha = rng.ub(self.cognition);
                 let beta = rng.ub(self.social);

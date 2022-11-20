@@ -70,40 +70,33 @@ impl Setting for Rga {
 }
 
 impl Method {
-    fn get_delta<F>(&self, ctx: &Ctx<F>, y: f64) -> f64
-    where
-        F: ObjFunc,
-    {
-        let r = if ctx.gen < 100 {
-            ctx.gen as f64 / 100.
-        } else {
-            1.
-        };
-        ctx.rng.rand() * y * (1. - r).powf(self.delta)
+    fn get_delta(&self, gen: u64, rng: &Rng, y: f64) -> f64 {
+        let r = if gen < 100 { gen as f64 / 100. } else { 1. };
+        rng.rand() * y * (1. - r).powf(self.delta)
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         // Select
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
         pool.axis_iter_mut(Axis(0))
             .zip(pool_f.iter_mut())
             .for_each(|(mut selected, f)| {
-                let [a, b] = ctx.rng.array(0..ctx.pop_num());
+                let [a, b] = rng.array(0..ctx.pop_num());
                 let i = if ctx.pool_f[a] < ctx.pool_f[b] { a } else { b };
-                if ctx.rng.maybe(self.win) {
+                if rng.maybe(self.win) {
                     *f = ctx.pool_f[i].clone();
                     selected.assign(&ctx.pool.slice(s![i, ..]));
                 }
             });
         ctx.pool = pool;
         ctx.pool_f = pool_f;
-        ctx.assign_from_best(ctx.rng.ub(ctx.pop_num()));
+        ctx.assign_from_best(rng.ub(ctx.pop_num()));
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
-            if !ctx.rng.maybe(self.cross) {
+            if !rng.maybe(self.cross) {
                 continue;
             }
             enum Id {
@@ -116,7 +109,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             #[cfg(not(feature = "rayon"))]
             let iter = [Id::I1, Id::I2, Id::I3].into_iter();
             let mut v = iter
-                .zip(ctx.rng.stream(3))
+                .zip(rng.stream(3))
                 .map(|(id, rng)| {
                     let mut xs = Array1::zeros(ctx.dim());
                     for s in 0..ctx.dim() {
@@ -137,14 +130,14 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         }
         // Mutate
         for i in 0..ctx.pop_num() {
-            if !ctx.rng.maybe(self.mutate) {
+            if !rng.maybe(self.mutate) {
                 continue;
             }
-            let s = ctx.rng.ub(ctx.dim());
-            if ctx.rng.maybe(0.5) {
-                ctx.pool[[i, s]] += self.get_delta(ctx, ctx.func.ub(s) - ctx.pool[[i, s]]);
+            let s = rng.ub(ctx.dim());
+            if rng.maybe(0.5) {
+                ctx.pool[[i, s]] += self.get_delta(ctx.gen, rng, ctx.func.ub(s) - ctx.pool[[i, s]]);
             } else {
-                ctx.pool[[i, s]] -= self.get_delta(ctx, ctx.pool[[i, s]] - ctx.func.lb(s));
+                ctx.pool[[i, s]] -= self.get_delta(ctx.gen, rng, ctx.pool[[i, s]] - ctx.func.lb(s));
             }
             ctx.fitness(i);
         }

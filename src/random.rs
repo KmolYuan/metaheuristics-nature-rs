@@ -1,9 +1,6 @@
+//! Random number generator module.
 use alloc::vec::Vec;
-use core::{
-    mem::transmute,
-    ops::RangeBounds,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use core::{cell::Cell, ops::RangeBounds};
 use num_traits::{Float, Zero};
 use rand::{
     distributions::{
@@ -49,36 +46,14 @@ impl From<Seed> for SeedOption {
     }
 }
 
-struct AtomicU128 {
-    s1: AtomicU64,
-    s2: AtomicU64,
-}
-
-impl AtomicU128 {
-    fn new(v: u128) -> Self {
-        let [a, b] = unsafe { transmute::<_, [_; 2]>(v) };
-        Self { s1: AtomicU64::new(a), s2: AtomicU64::new(b) }
-    }
-
-    fn load(&self, order: Ordering) -> u128 {
-        unsafe { transmute([self.s1.load(order), self.s2.load(order)]) }
-    }
-
-    fn store(&self, v: u128, order: Ordering) {
-        let [a, b] = unsafe { transmute::<_, [_; 2]>(v) };
-        self.s1.store(a, order);
-        self.s2.store(b, order);
-    }
-}
-
 /// An uniformed random number generator.
 ///
 /// This generator doesn't require mutability,
 /// because the state is saved as atomic values.
 pub struct Rng {
     seed: Seed,
-    stream: AtomicU64,
-    word_pos: AtomicU128,
+    stream: Cell<u64>,
+    word_pos: Cell<u128>,
 }
 
 impl Rng {
@@ -90,11 +65,7 @@ impl Rng {
             SeedOption::U64(seed) => ChaCha8Rng::seed_from_u64(seed).get_seed(),
             SeedOption::None => ChaCha8Rng::from_entropy().get_seed(),
         };
-        Self {
-            seed,
-            stream: AtomicU64::new(0),
-            word_pos: AtomicU128::new(0),
-        }
+        Self { seed, stream: Cell::new(0), word_pos: Cell::new(0) }
     }
 
     /// Seed of this generator.
@@ -107,12 +78,12 @@ impl Rng {
     ///
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&self, n: usize) -> Vec<Self> {
-        let word_pos = self.word_pos.load(Ordering::SeqCst);
+        let word_pos = self.word_pos.get();
         (1..=n)
             .map(|i| Self {
                 seed: self.seed,
-                stream: AtomicU64::new(i as u64),
-                word_pos: AtomicU128::new(word_pos),
+                stream: Cell::new(i as u64),
+                word_pos: Cell::new(word_pos),
             })
             .collect()
     }
@@ -122,11 +93,11 @@ impl Rng {
     /// Please import necessary traits first.
     pub fn gen<R>(&self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
         let mut rng = ChaCha8Rng::from_seed(self.seed);
-        rng.set_stream(self.stream.load(Ordering::SeqCst));
-        rng.set_word_pos(self.word_pos.load(Ordering::SeqCst));
+        rng.set_stream(self.stream.get());
+        rng.set_word_pos(self.word_pos.get());
         let r = f(&mut rng);
-        self.stream.store(rng.get_stream(), Ordering::SeqCst);
-        self.word_pos.store(rng.get_word_pos(), Ordering::SeqCst);
+        self.stream.set(rng.get_stream());
+        self.word_pos.set(rng.get_word_pos());
         r
     }
 
