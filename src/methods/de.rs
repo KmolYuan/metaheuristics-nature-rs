@@ -181,9 +181,6 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 S1 | S2 | S3 | S4 | S5 => self.c1(ctx, rng, &mut tmp, formula),
                 S6 | S7 | S8 | S9 | S10 => self.c2(ctx, rng, &mut tmp, formula),
             }
-            if (0..ctx.dim()).any(|s| !ctx.func.bound_range(s).contains(&tmp[s])) {
-                continue;
-            }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
             if tmp_f < ctx.pool_f[i] {
                 ctx.assign_from(i, tmp_f, &tmp);
