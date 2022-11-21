@@ -3,6 +3,15 @@ use crate::utility::prelude::*;
 
 const OFFSET: f64 = 7.;
 
+#[cfg(test)]
+macro_rules! assert_xs {
+    ($a:expr, $b:expr) => {
+        $a.iter()
+            .zip($b)
+            .for_each(|(a, b)| assert!((a - b).abs() < f64::EPSILON * 2., "a: {a}, b: {b}"));
+    };
+}
+
 // An example case for doctest
 pub struct TestObj;
 
@@ -57,7 +66,7 @@ fn de() {
         1.7712336364110176e-8,
         6.205413654882022e-9,
     ];
-    assert_eq!(test::<De>().best_parameters(), xs);
+    assert_xs!(test::<De>().best_parameters(), xs);
 }
 
 #[test]
@@ -68,7 +77,7 @@ fn pso() {
         3.995683568281232e-9,
         -5.049790405009771e-9,
     ];
-    assert_eq!(test::<Pso>().best_parameters(), xs);
+    assert_xs!(test::<Pso>().best_parameters(), xs);
 }
 
 #[test]
@@ -79,7 +88,7 @@ fn fa() {
         -1.025895099819533e-8,
         -1.331288383548763e-8,
     ];
-    assert_eq!(test::<Fa>().best_parameters(), xs);
+    assert_xs!(test::<Fa>().best_parameters(), xs);
 }
 
 #[test]
@@ -90,7 +99,7 @@ fn rga() {
         -3.352451856642831e-10,
         1.4403675944455944e-8,
     ];
-    assert_eq!(test::<Rga>().best_parameters(), xs);
+    assert_xs!(test::<Rga>().best_parameters(), xs);
 }
 
 #[test]
@@ -101,5 +110,5 @@ fn tlbo() {
         -1.6444290908967627e-8,
         -1.0078724638383442e-9,
     ];
-    assert_eq!(test::<Tlbo>().best_parameters(), xs);
+    assert_xs!(test::<Tlbo>().best_parameters(), xs);
 }
