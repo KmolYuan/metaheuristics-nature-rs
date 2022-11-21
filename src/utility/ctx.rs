@@ -99,12 +99,12 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Set the fitness and variables to best.
-    pub fn set_best_from<'a, A>(&mut self, f: F::Fitness, v: A)
+    pub fn set_best_from<'a, A>(&mut self, f: F::Fitness, xs: A)
     where
         A: AsArray<'a, f64>,
     {
         self.best_f = f;
-        self.best.assign(&v.into());
+        self.best.assign(&xs.into());
     }
 
     /// Assign the index from best.
@@ -114,12 +114,12 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Assign the index from source.
-    pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Fitness, v: A)
+    pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Fitness, xs: A)
     where
         A: AsArray<'a, f64>,
     {
         self.pool_f[i] = f;
-        self.pool.slice_mut(s![i, ..]).assign(&v.into());
+        self.pool.slice_mut(s![i, ..]).assign(&xs.into());
     }
 
     /// Find the best, and set it globally.

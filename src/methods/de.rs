@@ -148,7 +148,7 @@ impl Method {
         }
     }
 
-    fn c1<F>(&mut self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
     where
         F: ObjFunc,
     {
@@ -160,7 +160,7 @@ impl Method {
             .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
     }
 
-    fn c2<F>(&mut self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
     where
         F: ObjFunc,
     {
@@ -183,9 +183,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             }
             let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
             if tmp_f < ctx.pool_f[i] {
+                if tmp_f < ctx.best_f {
+                    ctx.set_best_from(tmp_f.clone(), &tmp);
+                }
                 ctx.assign_from(i, tmp_f, &tmp);
             }
         }
-        ctx.find_best();
     }
 }
