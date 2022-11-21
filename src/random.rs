@@ -96,7 +96,6 @@ impl Rng {
         rng.set_stream(self.stream.get());
         rng.set_word_pos(self.word_pos.get());
         let r = f(&mut rng);
-        self.stream.set(rng.get_stream());
         self.word_pos.set(rng.get_word_pos());
         r
     }
