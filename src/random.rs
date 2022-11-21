@@ -78,11 +78,13 @@ impl Rng {
     ///
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&self, n: usize) -> Vec<Self> {
+        let stream = self.stream.get();
         let word_pos = self.word_pos.get();
+        self.stream.set(stream + n as u64);
         (1..=n)
             .map(|i| Self {
                 seed: self.seed,
-                stream: Cell::new(i as u64),
+                stream: Cell::new(stream.wrapping_add(i as u64)),
                 word_pos: Cell::new(word_pos),
             })
             .collect()

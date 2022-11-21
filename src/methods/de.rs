@@ -172,22 +172,28 @@ impl Method {
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
-        for i in 0..ctx.pop_num() {
-            // Generate Vector
-            let formula = self.formula(ctx, rng);
-            // Recombination
-            let mut tmp = ctx.pool.slice(s![i, ..]).to_owned();
-            match self.strategy {
-                S1 | S2 | S3 | S4 | S5 => self.c1(ctx, rng, &mut tmp, formula),
-                S6 | S7 | S8 | S9 | S10 => self.c2(ctx, rng, &mut tmp, formula),
-            }
-            let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
-            if tmp_f < ctx.pool_f[i] {
-                if tmp_f < ctx.best_f {
-                    ctx.set_best_from(tmp_f.clone(), &tmp);
+        let mut pool = ctx.pool.clone();
+        let mut pool_f = ctx.pool_f.clone();
+        pool.axis_iter_mut(Axis(0))
+            .zip(&mut pool_f)
+            .zip(rng.stream(ctx.pop_num()))
+            .for_each(|((mut xs, f), rng)| {
+                // Generate Vector
+                let formula = self.formula(ctx, &rng);
+                // Recombination
+                let mut tmp = xs.to_owned();
+                match self.strategy {
+                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut tmp, formula),
+                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut tmp, formula),
                 }
-                ctx.assign_from(i, tmp_f, &tmp);
-            }
-        }
+                let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
+                if tmp_f < *f {
+                    xs.assign(&tmp);
+                    *f = tmp_f;
+                }
+            });
+        ctx.pool = pool;
+        ctx.pool_f = pool_f;
+        ctx.find_best();
     }
 }
