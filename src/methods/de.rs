@@ -174,10 +174,13 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
-        pool.axis_iter_mut(Axis(0))
+        let iter = pool.axis_iter_mut(Axis(0));
+        #[cfg(feature = "rayon")]
+        let iter = iter.into_par_iter();
+        let (i, _) = iter
             .zip(&mut pool_f)
             .zip(rng.stream(ctx.pop_num()))
-            .for_each(|((mut xs, f), rng)| {
+            .map(|((mut xs, f), rng)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &rng);
                 // Recombination
@@ -191,9 +194,13 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                     xs.assign(&tmp);
                     *f = tmp_f;
                 }
-            });
+                f
+            })
+            .enumerate()
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .unwrap();
         ctx.pool = pool;
         ctx.pool_f = pool_f;
-        ctx.find_best();
+        ctx.set_best(i);
     }
 }
