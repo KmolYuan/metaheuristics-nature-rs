@@ -49,8 +49,8 @@ where
         .solve()
         .unwrap();
     assert!(!report.is_empty());
-    assert_eq!(*s.result(), OFFSET);
-    assert_eq!(s.best_fitness().fitness, *s.result());
+    assert_eq!(*s.as_result(), OFFSET);
+    assert_eq!(s.best_fitness().fitness, *s.as_result());
     s
 }
 

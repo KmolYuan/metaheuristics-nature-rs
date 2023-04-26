@@ -23,7 +23,7 @@ use crate::utility::prelude::*;
 ///     .solve()
 ///     .unwrap();
 /// // Get the result from objective function
-/// let ans = s.result();
+/// let ans = s.as_result();
 /// // Get the optimized XY value of your function
 /// let xs = s.best_parameters();
 /// let y = s.best_fitness();
@@ -60,12 +60,21 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Get the result of the objective function.
-    pub fn result<P, Fit>(&self) -> &P
+    pub fn as_result<P, Fit>(&self) -> &P
     where
         Fit: Fitness,
         F: ObjFunc<Fitness = Product<P, Fit>>,
     {
-        self.ctx.result()
+        &self.ctx.best_f.product
+    }
+
+    /// Unwrap and get the result of the objective function.
+    pub fn into_result<P, Fit>(self) -> P
+    where
+        Fit: Fitness,
+        F: ObjFunc<Fitness = Product<P, Fit>>,
+    {
+        self.ctx.best_f.product
     }
 
     /// Seed of the random number generator.

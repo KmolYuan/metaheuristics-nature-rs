@@ -56,10 +56,8 @@ impl<F: ObjFunc> Ctx<F> {
         [self.pop_num(), self.dim()]
     }
 
-    /// Get the current best result of the objective function.
-    ///
-    /// This method can generate midway product of convergence if necessary.
-    pub fn result<P, Fit>(&self) -> &P
+    /// Get the result of the objective function.
+    pub fn as_result<P, Fit>(&self) -> &P
     where
         Fit: Fitness,
         F: ObjFunc<Fitness = Product<P, Fit>>,

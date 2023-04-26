@@ -27,8 +27,6 @@ let s = Solver::build(Rga::default(), MyFunc::new())
     .callback(|ctx| report.push(ctx.best_f))
     .solve()
     .unwrap();
-// Get the result from objective function
-let ans = s.result();
 // Get the optimized XY value of your function
 let xs = s.best_parameters();
 let y = s.best_fitness();

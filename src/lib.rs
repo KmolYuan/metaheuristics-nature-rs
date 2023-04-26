@@ -71,7 +71,9 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use self::{algorithm::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*};
+pub use self::{
+    algorithm::*, fitness::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*,
+};
 
 /// A tool macro used to generate multiple builder functions (methods).
 ///
@@ -126,6 +128,7 @@ macro_rules! impl_builders {
 }
 
 mod algorithm;
+mod fitness;
 mod fx_func;
 pub mod methods;
 mod obj_func;

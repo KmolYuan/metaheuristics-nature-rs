@@ -15,7 +15,7 @@
 /// comparison.
 ///
 /// ```
-/// use metaheuristics_nature::{utility::Fitness, Bounded, ObjFunc};
+/// use metaheuristics_nature::{Bounded, ObjFunc};
 /// use std::cmp::Ordering;
 ///
 /// struct MyFunc;

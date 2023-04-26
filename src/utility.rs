@@ -5,10 +5,9 @@
 //! ```
 //! use metaheuristics_nature::utility::prelude::*;
 //! ```
-pub use self::{ctx::*, fitness::*, solver_builder::*};
+pub use self::{ctx::*, solver_builder::*};
 
 mod ctx;
-mod fitness;
 mod solver_builder;
 
 /// A prelude module for algorithm implementation.
