@@ -28,8 +28,7 @@
 //!
 //! You can define your question as an objective function through implementing
 //! [`ObjFunc`], and then the upper bound, lower bound, and an objective
-//! function [`ObjFunc::fitness()`] returns [`utility::Fitness`] should be
-//! defined.
+//! function [`ObjFunc::fitness()`] returns [`Fitness`] should be defined.
 //!
 //! # Random Function
 //!
