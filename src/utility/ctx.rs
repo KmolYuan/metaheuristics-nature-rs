@@ -56,21 +56,15 @@ impl<F: ObjFunc> Ctx<F> {
         [self.pop_num(), self.dim()]
     }
 
-    /// Get fitness from individual `i`.
-    pub fn fitness(&mut self, i: usize) {
-        self.pool_f[i] = self
-            .func
-            .fitness(self.pool.slice(s![i, ..]).as_slice().unwrap());
-    }
-
     /// Get the current best result of the objective function.
     ///
     /// This method can generate midway product of convergence if necessary.
-    pub fn result(&self) -> F::Product
+    pub fn result<P, Fit>(&self) -> &P
     where
-        F: ObjFactory,
+        Fit: Fitness,
+        F: ObjFunc<Fitness = Product<P, Fit>>,
     {
-        self.func.produce(self.best.as_slice().unwrap())
+        &self.best_f.product
     }
 
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {

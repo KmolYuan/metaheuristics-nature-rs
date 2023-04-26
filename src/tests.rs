@@ -27,16 +27,12 @@ impl Bounded for TestObj {
     }
 }
 
-impl ObjFactory for TestObj {
-    type Product = f64;
-    type Eval = f64;
+impl ObjFunc for TestObj {
+    type Fitness = Product<f64, f64>;
 
-    fn produce(&self, x: &[f64]) -> Self::Product {
-        OFFSET + x[0] * x[0] + 8. * x[1] * x[1] + x[2] * x[2] + x[3] * x[3]
-    }
-
-    fn evaluate(&self, product: Self::Product) -> Self::Eval {
-        product
+    fn fitness(&self, xs: &[f64]) -> Self::Fitness {
+        let y = OFFSET + xs[0] * xs[0] + 8. * xs[1] * xs[1] + xs[2] * xs[2] + xs[3] * xs[3];
+        Product::new(y, y)
     }
 }
 
@@ -48,13 +44,13 @@ where
     let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default(), TestObj)
         .seed(0)
-        .task(|ctx| ctx.best_f - OFFSET < 1e-20)
-        .callback(|ctx| report.push(ctx.best_f))
+        .task(|ctx| ctx.best_f.fitness - OFFSET < 1e-20)
+        .callback(|ctx| report.push(ctx.best_f.clone()))
         .solve()
         .unwrap();
     assert!(!report.is_empty());
-    assert_eq!(s.result(), OFFSET);
-    assert_eq!(s.best_fitness(), s.result());
+    assert_eq!(*s.result(), OFFSET);
+    assert_eq!(s.best_fitness().fitness, *s.result());
     s
 }
 

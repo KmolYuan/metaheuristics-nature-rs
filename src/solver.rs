@@ -19,7 +19,7 @@ use crate::utility::prelude::*;
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default(), MyFunc::new())
 ///     .task(|ctx| ctx.gen == 20)
-///     .callback(|ctx| report.push(ctx.best_f))
+///     .callback(|ctx| report.push(ctx.best_f.clone()))
 ///     .solve()
 ///     .unwrap();
 /// // Get the result from objective function
@@ -28,7 +28,7 @@ use crate::utility::prelude::*;
 /// let xs = s.best_parameters();
 /// let y = s.best_fitness();
 /// // Get the history reports
-/// let y2 = report[2];
+/// let y2 = &report[2];
 /// ```
 #[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
 pub struct Solver<F: ObjFunc> {
@@ -60,9 +60,10 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Get the result of the objective function.
-    pub fn result(&self) -> F::Product
+    pub fn result<P, Fit>(&self) -> &P
     where
-        F: ObjFactory,
+        Fit: Fitness,
+        F: ObjFunc<Fitness = Product<P, Fit>>,
     {
         self.ctx.result()
     }

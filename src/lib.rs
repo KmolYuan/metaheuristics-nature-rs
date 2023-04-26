@@ -31,9 +31,6 @@
 //! function [`ObjFunc::fitness()`] returns [`utility::Fitness`] should be
 //! defined.
 //!
-//! A high level trait is [`ObjFactory`], its final answer is
-//! [`ObjFactory::Product`], which is calculated from the design parameters.
-//!
 //! # Random Function
 //!
 //! This crate uses a 64bit ChaCha algorithm ([`random::Rng`]) to generate
@@ -74,7 +71,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
-pub use self::{algorithm::*, fx_func::*, methods::*, obj::*, setting::*, solver::*};
+pub use self::{algorithm::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*};
 
 /// A tool macro used to generate multiple builder functions (methods).
 ///
@@ -131,7 +128,7 @@ macro_rules! impl_builders {
 mod algorithm;
 mod fx_func;
 pub mod methods;
-mod obj;
+mod obj_func;
 pub mod random;
 mod setting;
 mod solver;

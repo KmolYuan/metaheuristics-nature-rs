@@ -50,5 +50,39 @@
 ///     }
 /// }
 /// ```
+///
+/// # See Also
+///
+/// [`Product`] provides a field for a final result.
 pub trait Fitness: Sync + Send + Default + Clone + PartialOrd {}
 impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd {}
+
+/// A [`Fitness`] type carrying final results.
+///
+/// You can use [`Solver::result()`](crate::Solver) to access product field.
+#[derive(Default, Clone)]
+pub struct Product<P, F: Fitness> {
+    /// Product
+    pub product: P,
+    /// Fitness
+    pub fitness: F,
+}
+
+impl<P, F: Fitness> Product<P, F> {
+    /// Create a product.
+    pub fn new(product: P, fitness: F) -> Self {
+        Self { product, fitness }
+    }
+}
+
+impl<P, F: Fitness> PartialEq for Product<P, F> {
+    fn eq(&self, other: &Self) -> bool {
+        self.fitness.eq(&other.fitness)
+    }
+}
+
+impl<P, F: Fitness> PartialOrd for Product<P, F> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.fitness.partial_cmp(&other.fitness)
+    }
+}

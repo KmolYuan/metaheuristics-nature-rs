@@ -139,7 +139,9 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             } else {
                 ctx.pool[[i, s]] -= self.get_delta(ctx.gen, rng, ctx.pool[[i, s]] - ctx.func.lb(s));
             }
-            ctx.fitness(i);
+            ctx.pool_f[i] = ctx
+                .func
+                .fitness(ctx.pool.slice(s![i, ..]).as_slice().unwrap());
         }
         ctx.find_best();
     }

@@ -79,7 +79,11 @@ pub trait Bounded: Sync + Send {
 ///
 /// This trait is designed as immutable and there should only has shared data.
 pub trait ObjFunc: Bounded {
-    /// Representation of the fitness value.
+    /// Representation of the fitness value
+    ///
+    /// # See Also
+    ///
+    /// [`Product`] provides a field for a final result.
     type Fitness: Fitness;
 
     /// Return fitness, the smaller value represents a good result.
@@ -122,33 +126,4 @@ pub trait ObjFunc: Bounded {
     /// the searching. The "adaptive function" can be set in
     /// [`SolverBuilder::callback()`] method.
     fn fitness(&self, xs: &[f64]) -> Self::Fitness;
-}
-
-/// A trait same as [`ObjFunc`] but returns a "product" and then evaluates it.
-///
-/// This is a higher level interface than [`ObjFunc`], it will auto-implement
-/// for this trait.
-///
-/// The objective function `f: X -> Y` crosses two areas, domain, and codomain,
-/// where the "product" type is the codomain before yield fitness value.
-pub trait ObjFactory: Bounded {
-    /// "Product" type.
-    type Product;
-    /// Representation of the evaluation.
-    type Eval: Fitness;
-
-    /// Return a product of the problem.
-    fn produce(&self, xs: &[f64]) -> Self::Product;
-
-    /// This function same as [`ObjFunc::fitness()`] function but receive the
-    /// product type.
-    fn evaluate(&self, product: Self::Product) -> Self::Eval;
-}
-
-impl<F: ObjFactory> ObjFunc for F {
-    type Fitness = <Self as ObjFactory>::Eval;
-
-    fn fitness(&self, xs: &[f64]) -> Self::Fitness {
-        self.evaluate(self.produce(xs))
-    }
 }
