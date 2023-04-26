@@ -65,7 +65,7 @@ impl<F: ObjFunc> Solver<F> {
         Fit: Fitness,
         F: ObjFunc<Fitness = Product<P, Fit>>,
     {
-        &self.ctx.best_f.product
+        self.ctx.best_f.as_result()
     }
 
     /// Unwrap and get the result of the objective function.
@@ -74,7 +74,7 @@ impl<F: ObjFunc> Solver<F> {
         Fit: Fitness,
         F: ObjFunc<Fitness = Product<P, Fit>>,
     {
-        self.ctx.best_f.product
+        self.ctx.best_f.into_result()
     }
 
     /// Seed of the random number generator.

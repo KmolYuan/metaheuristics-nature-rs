@@ -87,32 +87,36 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
-        let (f, v) = iter
+        if let Some((f, xs)) = iter
             .zip(pool.axis_iter_mut(Axis(0)))
             .zip(best_past.axis_iter_mut(Axis(0)))
             .zip(&mut best_past_f)
             .zip(rng.stream(ctx.pop_num()))
-            .map(|((((f, mut v), mut past), past_f), rng)| {
+            .filter_map(|((((f, mut xs), mut past), past_f), rng)| {
                 let alpha = rng.ub(self.cognition);
                 let beta = rng.ub(self.social);
                 for s in 0..ctx.dim() {
-                    let var = self.velocity * v[s]
-                        + alpha * (past[s] - v[s])
-                        + beta * (ctx.best[s] - v[s]);
-                    v[s] = ctx.clamp(s, var);
+                    let var = self.velocity * xs[s]
+                        + alpha * (past[s] - xs[s])
+                        + beta * (ctx.best[s] - xs[s]);
+                    xs[s] = ctx.clamp(s, var);
                 }
-                *f = ctx.func.fitness(v.as_slice().unwrap());
+                *f = ctx.func.fitness(xs.as_slice().unwrap());
                 if *f < *past_f {
                     *past_f = f.clone();
-                    past.assign(&v);
+                    past_f.mark_not_best();
+                    past.assign(&xs);
                 }
-                (f, v)
+                (*f < ctx.best_f).then_some((f, xs))
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-            .unwrap();
-        ctx.set_best_from(f.clone(), &v);
-        ctx.pool_f = fitness;
+        {
+            ctx.best.assign(&xs);
+            ctx.best_f = f.clone();
+        }
         ctx.pool = pool;
+        ctx.pool_f = fitness;
+        ctx.prune_fitness();
         self.best_past = best_past;
         self.best_past_f = best_past_f;
     }

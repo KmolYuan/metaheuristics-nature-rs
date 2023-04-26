@@ -44,13 +44,13 @@ where
     let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default(), TestObj)
         .seed(0)
-        .task(|ctx| ctx.best_f.fitness - OFFSET < 1e-20)
+        .task(|ctx| ctx.best_f.fitness() - OFFSET < 1e-20)
         .callback(|ctx| report.push(ctx.best_f.clone()))
         .solve()
         .unwrap();
     assert!(!report.is_empty());
     assert_eq!(*s.as_result(), OFFSET);
-    assert_eq!(s.best_fitness().fitness, *s.as_result());
+    assert_eq!(s.best_fitness().fitness(), *s.as_result());
     s
 }
 

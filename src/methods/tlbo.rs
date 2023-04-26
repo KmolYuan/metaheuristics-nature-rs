@@ -35,9 +35,10 @@ impl Method {
         if f_new < ctx.pool_f[i] {
             ctx.pool.slice_mut(s![i, ..]).assign(student);
             ctx.pool_f[i] = f_new.clone();
-        }
-        if f_new < ctx.best_f {
-            ctx.set_best(i);
+            if f_new < ctx.best_f {
+                ctx.best_f = f_new;
+                ctx.best.assign(student);
+            }
         }
     }
 

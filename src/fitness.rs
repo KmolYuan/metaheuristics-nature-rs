@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
 ///
 /// Usually, we can use numeric [`f64`] / [`f32`] type as the return value.
@@ -15,7 +17,7 @@
 /// comparison.
 ///
 /// ```
-/// use metaheuristics_nature::{Bounded, ObjFunc};
+/// use metaheuristics_nature::{Bounded, Fitness, ObjFunc};
 /// use std::cmp::Ordering;
 ///
 /// struct MyFunc;
@@ -42,6 +44,8 @@
 ///     }
 /// }
 ///
+/// impl Fitness for MarkerFitness {}
+///
 /// impl ObjFunc for MyFunc {
 ///     type Fitness = MarkerFitness;
 ///
@@ -54,24 +58,47 @@
 /// # See Also
 ///
 /// [`Product`] provides a field for a final result.
-pub trait Fitness: Sync + Send + Default + Clone + PartialOrd {}
-impl<T> Fitness for T where T: Sync + Send + Default + Clone + PartialOrd {}
+pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + 'static {
+    /// Mark the value to non-best.
+    fn mark_not_best(&mut self) {}
+}
+
+impl<T> Fitness for T where T: num_traits::Float + Sync + Send + Default + PartialOrd + 'static {}
 
 /// A [`Fitness`] type carrying final results.
 ///
 /// You can use [`Solver::result()`](crate::Solver) to access product field.
 #[derive(Default, Clone)]
 pub struct Product<P, F: Fitness> {
-    /// Product
-    pub product: P,
-    /// Fitness
-    pub fitness: F,
+    fitness: F,
+    product: Option<Box<P>>,
 }
 
 impl<P, F: Fitness> Product<P, F> {
     /// Create a product.
-    pub fn new(product: P, fitness: F) -> Self {
-        Self { product, fitness }
+    pub fn new(fitness: F, product: P) -> Self {
+        Self { fitness, product: Some(Box::new(product)) }
+    }
+
+    /// Get the fitness value.
+    pub fn fitness(&self) -> F {
+        self.fitness.clone()
+    }
+
+    /// Get the reference to the final result.
+    pub fn as_result(&self) -> &P {
+        self.product.as_ref().unwrap()
+    }
+
+    /// Consume and get the final result.
+    pub fn into_result(self) -> P {
+        *self.product.unwrap()
+    }
+
+    /// Get the fitness value and the final result.
+    pub fn into_inner(self) -> (F, P) {
+        let Self { fitness, product } = self;
+        (fitness, *product.unwrap())
     }
 }
 
@@ -84,5 +111,11 @@ impl<P, F: Fitness> PartialEq for Product<P, F> {
 impl<P, F: Fitness> PartialOrd for Product<P, F> {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         self.fitness.partial_cmp(&other.fitness)
+    }
+}
+
+impl<P: Default + Clone + Sync + Send + 'static, F: Fitness> Fitness for Product<P, F> {
+    fn mark_not_best(&mut self) {
+        self.product.take();
     }
 }

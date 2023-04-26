@@ -59,10 +59,10 @@ impl<F: ObjFunc> Ctx<F> {
     /// Get the result of the objective function.
     pub fn as_result<P, Fit>(&self) -> &P
     where
-        Fit: Fitness,
+        Fit: Fitness + 'static,
         F: ObjFunc<Fitness = Product<P, Fit>>,
     {
-        &self.best_f.product
+        self.best_f.as_result()
     }
 
     pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
@@ -71,32 +71,31 @@ impl<F: ObjFunc> Ctx<F> {
         let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
-        let (f, v) = iter
+        let (f, xs) = iter
             .zip(pool.axis_iter(Axis(0)))
-            .map(|(f, v)| {
-                *f = self.func.fitness(v.to_slice().unwrap());
-                (f.clone(), v)
+            .map(|(f, xs)| {
+                *f = self.func.fitness(xs.to_slice().unwrap());
+                (f, xs)
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        self.set_best_from(f, v);
+        self.set_best_from(f.clone(), &xs);
         self.pool = pool;
         self.pool_f = fitness;
     }
 
-    /// Set the index to best.
-    pub fn set_best(&mut self, i: usize) {
-        self.best_f = self.pool_f[i].clone();
-        self.best.assign(&self.pool.slice(s![i, ..]));
+    /// Prune the pool fitness object to reduce memory in some cases.
+    pub fn prune_fitness(&mut self) {
+        self.pool_f.iter_mut().for_each(|f| f.mark_not_best());
     }
 
     /// Set the fitness and variables to best.
-    pub fn set_best_from<'a, A>(&mut self, f: F::Fitness, xs: A)
+    pub fn set_best_from<S>(&mut self, f: F::Fitness, xs: &ArrayBase<S, Ix1>)
     where
-        A: AsArray<'a, f64>,
+        S: ndarray::Data<Elem = f64>,
     {
         self.best_f = f;
-        self.best.assign(&xs.into());
+        self.best.assign(xs);
     }
 
     /// Assign the index from best.
@@ -125,15 +124,17 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     fn find_best_inner(&mut self, force: bool) {
-        let (i, f) = self
+        let (f, xs) = self
             .pool_f
             .iter()
-            .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .zip(self.pool.axis_iter(Axis(0)))
+            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        if force || f < &self.best_f {
-            self.set_best(i);
+        if force || *f < self.best_f {
+            self.best_f = f.clone();
+            self.best.assign(&xs);
         }
+        self.prune_fitness();
     }
 }
 
