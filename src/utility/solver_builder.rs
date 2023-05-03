@@ -93,7 +93,7 @@ where
     ///
     /// # See Also
     ///
-    /// [`Self::pool_and_fitness()`], [`uniform_pool()`], [`gaussian_pool()`].
+    /// [`Self::pool_and_fitness()`], [`uniform_pool()`], [`gaussian_pool()`]
     pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F>
     where
         'a: 'b,
@@ -110,7 +110,7 @@ where
     ///
     /// # See Also
     ///
-    /// [`Self::pool()`], [`Self::pool_and_fitness()`].
+    /// [`Self::pool()`], [`Self::pool_and_fitness()`]
     pub fn pool_and_fitness(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
         Self { pool: Pool::ReadyMade { pool, fitness }, ..self }
     }
@@ -119,7 +119,7 @@ where
     ///
     /// # See Also
     ///
-    /// [`Self::pool()`], [`Self::pool_and_fitness()`].
+    /// [`Self::pool()`], [`Self::pool_and_fitness()`]
     pub fn pool_and_fitness_sorted(self, pool: Array2<f64>, fitness: Vec<F::Fitness>) -> Self {
         Self { pool: Pool::Sorted { pool, fitness }, ..self }
     }
@@ -182,7 +182,9 @@ where
     ///
     /// This function can control the thread number to one.
     ///
-    /// See also [`crate::rayon::single_thread()`].
+    /// # See Also
+    ///
+    /// [`crate::rayon::single_thread()`]
     #[cfg(feature = "rayon")]
     pub fn solve_single_thread(self, when: bool) -> Result<Solver<F>, ndarray::ShapeError>
     where

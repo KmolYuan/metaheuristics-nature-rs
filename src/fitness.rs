@@ -63,7 +63,8 @@ pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + 'static {
     fn mark_not_best(&mut self) {}
 }
 
-impl<T> Fitness for T where T: num_traits::Float + Sync + Send + Default + PartialOrd + 'static {}
+/// [`Fitness`] just implemented for the float number by default.
+impl<T> Fitness for T where T: num_traits::Float + Sync + Send + Default + 'static {}
 
 /// A [`Fitness`] type carrying final results.
 ///
