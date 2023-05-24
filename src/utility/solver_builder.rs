@@ -26,22 +26,18 @@ enum Pool<'a, F: ObjFunc> {
 ///
 /// This type is created by [`Solver::build()`] method.
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
-pub struct SolverBuilder<'a, S: Setting, F: ObjFunc> {
+pub struct SolverBuilder<'a, F: ObjFunc> {
     func: F,
     pop_num: usize,
     seed: SeedOption,
     regen: bool,
-    setting: S,
+    algorithm: Box<dyn Algorithm<F>>,
     pool: Pool<'a, F>,
     task: TaskFunc<'a, F>,
     callback: CallbackFunc<'a, F>,
 }
 
-impl<'a, S, F> SolverBuilder<'a, S, F>
-where
-    S: Setting,
-    F: ObjFunc,
-{
+impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     impl_builders! {
         /// Population number.
         ///
@@ -94,7 +90,7 @@ where
     /// # See Also
     ///
     /// [`Self::pool_and_fitness()`], [`uniform_pool()`], [`gaussian_pool()`]
-    pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, S, F>
+    pub fn pool<'b, C>(self, pool: C) -> SolverBuilder<'b, F>
     where
         'a: 'b,
         C: FnOnce(&Ctx<F>, &Rng) -> Array2<f64> + Send + 'b,
@@ -142,7 +138,7 @@ where
     /// # Default
     ///
     /// By default, the algorithm will iterate 200 generation.
-    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, S, F>
+    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, F>
     where
         'a: 'b,
         C: Fn(&Ctx<F>) -> bool + Send + 'b,
@@ -170,7 +166,7 @@ where
     /// # Default
     ///
     /// By default, this function does nothing.
-    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, S, F>
+    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, F>
     where
         'a: 'b,
         C: FnMut(&mut Ctx<F>) + Send + 'b,
@@ -186,10 +182,7 @@ where
     ///
     /// [`crate::rayon::single_thread()`]
     #[cfg(feature = "rayon")]
-    pub fn solve_single_thread(self, when: bool) -> Result<Solver<F>, ndarray::ShapeError>
-    where
-        S: Send,
-    {
+    pub fn solve_single_thread(self, when: bool) -> Result<Solver<F>, ndarray::ShapeError> {
         crate::rayon::single_thread(when, || self.solve())
     }
 
@@ -208,13 +201,12 @@ where
             pop_num,
             seed,
             regen,
-            setting,
+            mut algorithm,
             pool,
             task,
             mut callback,
         } = self;
         assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
-        let mut method = setting.algorithm();
         let mut ctx = Ctx::new(func, pop_num);
         let rng = Rng::new(seed);
         match pool {
@@ -237,14 +229,14 @@ where
                 ctx.init_pop(pool);
             }
         }
-        method.init(&mut ctx, &rng);
+        algorithm.init(&mut ctx, &rng);
         loop {
             callback(&mut ctx);
             if task(&ctx) {
                 break;
             }
             ctx.gen += 1;
-            method.generation(&mut ctx, &rng);
+            algorithm.generation(&mut ctx, &rng);
             if regen {
                 ctx.pool
                     .axis_iter_mut(Axis(0))
@@ -271,7 +263,7 @@ impl<F: ObjFunc> Solver<F> {
     /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
     /// The default value of each option can be found in their document.
-    pub fn build<S>(setting: S, func: F) -> SolverBuilder<'static, S, F>
+    pub fn build<S>(setting: S, func: F) -> SolverBuilder<'static, F>
     where
         S: Setting,
     {
@@ -280,7 +272,7 @@ impl<F: ObjFunc> Solver<F> {
             pop_num: S::default_pop(),
             seed: SeedOption::None,
             regen: false,
-            setting,
+            algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(|ctx, rng| uniform_pool(ctx, rng))), // dynamic lifetime
             task: Box::new(|ctx| ctx.gen >= 200),
             callback: Box::new(|_| ()),

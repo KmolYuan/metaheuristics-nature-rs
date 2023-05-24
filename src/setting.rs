@@ -5,7 +5,7 @@ use crate::{Algorithm, ObjFunc};
 /// The setting type is actually a builder of the [`Setting::Algorithm`] type.
 pub trait Setting {
     /// Associated algorithm.
-    type Algorithm<F: ObjFunc>: Algorithm<F>;
+    type Algorithm<F: ObjFunc>: Algorithm<F> + 'static;
 
     /// Create the algorithm.
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F>;
