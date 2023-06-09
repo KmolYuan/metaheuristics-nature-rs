@@ -31,7 +31,7 @@ const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 ///
 /// + *c1*: Continue crossover in order until end with probability.
 /// + *c2*: Each variable has independent probability.
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Strategy {
