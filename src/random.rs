@@ -16,6 +16,7 @@ use rand_chacha::ChaCha8Rng;
 pub type Seed = [u8; 32];
 
 /// The seed option.
+#[derive(Copy, Clone)]
 pub enum SeedOption {
     /// Seed from non-crypto u64
     U64(u64),
