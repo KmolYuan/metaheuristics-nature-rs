@@ -50,7 +50,7 @@ impl From<Seed> for SeedOption {
 /// An uniformed random number generator.
 ///
 /// This generator doesn't require mutability,
-/// because the state is saved as atomic values.
+/// because the state is saved in the cell.
 pub struct Rng {
     seed: Seed,
     stream: Cell<u64>,
