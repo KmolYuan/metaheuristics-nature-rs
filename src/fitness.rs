@@ -69,7 +69,7 @@ impl<T> Fitness for T where T: num_traits::Float + Sync + Send + Default + 'stat
 /// A [`Fitness`] type carrying final results.
 ///
 /// You can use [`Solver::result()`](crate::Solver) to access product field.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Product<P, F: Fitness> {
     fitness: F,
     product: Option<Box<P>>,
