@@ -1,7 +1,7 @@
 [package]
 name = "metaheuristics-nature"
 description = "A collection of nature-inspired meta-heuristic algorithms."
-version = "9.2.3"
+version = "9.2.4"
 authors = ["KmolYuan <pyslvs@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -40,6 +40,13 @@ features = ["getrandom", "alloc"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
+
+[lints.rust]
+missing-docs = "warn"
+unsafe-code = "deny"
+
+[workspace.lints.clippy]
+semicolon-if-nothing-returned = "warn"
 
 [package.metadata.docs.rs]
 all-features = true

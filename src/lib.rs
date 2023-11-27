@@ -65,7 +65,6 @@
 //! This crate does the same things on `ndarray` and `rayon`.
 #![cfg_attr(doc_cfg, feature(doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![warn(missing_docs)]
 extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
