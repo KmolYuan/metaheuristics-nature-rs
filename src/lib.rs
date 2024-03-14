@@ -130,6 +130,7 @@ mod fitness;
 mod fx_func;
 pub mod methods;
 mod obj_func;
+pub mod pareto;
 pub mod random;
 mod setting;
 mod solver;
