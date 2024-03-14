@@ -6,6 +6,7 @@
 //!
 //! This method require floating point power function.
 use crate::utility::prelude::*;
+use alloc::vec::Vec;
 use core::iter::zip;
 
 /// Real-coded Genetic Algorithm type.
@@ -91,16 +92,18 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         }
         ctx.pool = pool;
         ctx.pool_f = pool_f;
-        ctx.assign_from_best(rng.ub(ctx.pop_num()));
+        ctx.set_from_best(rng.ub(ctx.pop_num()));
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
             if !rng.maybe(self.cross) {
                 continue;
             }
-            let iter = zip(0..3, rng.stream(3));
+            #[cfg(not(feature = "rayon"))]
+            let iter = 0..3;
             #[cfg(feature = "rayon")]
-            let iter = iter.par_iter_mut();
+            let iter = (0..3).into_par_iter();
             let mut ret = iter
+                .zip(rng.stream(3))
                 .map(|(id, rng)| {
                     let xs = zip(ctx.func.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
                         .map(|(&[min, max], (a, b))| {
@@ -118,8 +121,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 .collect::<Vec<_>>();
             ret.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
             let [(t1_f, t1_x), (t2_f, t2_x)] = [ret.remove(0), ret.remove(0)];
-            ctx.assign_from(i, t1_f, t1_x);
-            ctx.assign_from(i + 1, t2_f, t2_x);
+            ctx.set_from(i, t1_x, t1_f);
+            ctx.set_from(i + 1, t2_x, t2_f);
         }
         // Mutate
         let dim = ctx.dim();

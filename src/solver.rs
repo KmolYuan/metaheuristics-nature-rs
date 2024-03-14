@@ -1,5 +1,6 @@
 use crate::utility::prelude::*;
 pub use crate::utility::{gaussian_pool, uniform_pool, Pool};
+use alloc::vec::Vec;
 
 /// A public API for using optimization methods.
 ///

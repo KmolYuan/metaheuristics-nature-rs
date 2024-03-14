@@ -174,9 +174,10 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
+        #[cfg(not(feature = "rayon"))]
         let iter = pool.iter_mut();
         #[cfg(feature = "rayon")]
-        let iter = iter.into_par_iter();
+        let iter = pool.par_iter_mut();
         if let Some((f, xs)) = iter
             .zip(&mut pool_f)
             .zip(rng.stream(ctx.pop_num()))
@@ -184,7 +185,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 // Generate Vector
                 let formula = self.formula(ctx, &rng);
                 // Recombination
-                let mut tmp = xs.to_owned();
+                let mut tmp = xs.clone();
                 match self.strategy {
                     S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut tmp, formula),
                     S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut tmp, formula),

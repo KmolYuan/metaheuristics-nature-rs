@@ -79,7 +79,7 @@ impl<F: ObjFunc> Ctx<F> {
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        self.set_best_from(f.clone(), xs.clone());
+        self.set_best_from(xs.clone(), f.clone());
         self.pool = pool;
         self.pool_f = fitness;
     }
@@ -90,21 +90,21 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Set the fitness and variables to best.
-    pub fn set_best_from(&mut self, f: F::Fitness, xs: Vec<f64>) {
-        self.best_f = f;
+    pub fn set_best_from(&mut self, xs: Vec<f64>, f: F::Fitness) {
         self.best = xs;
+        self.best_f = f;
     }
 
     /// Assign the index from best.
-    pub fn assign_from_best(&mut self, i: usize) {
-        self.pool_f[i] = self.best_f.clone();
+    pub fn set_from_best(&mut self, i: usize) {
         self.pool[i] = self.best.clone();
+        self.pool_f[i] = self.best_f.clone();
     }
 
     /// Assign the index from source.
-    pub fn assign_from(&mut self, i: usize, f: F::Fitness, xs: Vec<f64>) {
-        self.pool_f[i] = f;
+    pub fn set_from(&mut self, i: usize, xs: Vec<f64>, f: F::Fitness) {
         self.pool[i] = xs;
+        self.pool_f[i] = f;
     }
 
     /// Find the best, and set it globally.

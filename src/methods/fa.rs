@@ -4,6 +4,7 @@
 //!
 //! This method require exponential function.
 use crate::utility::prelude::*;
+use alloc::vec::Vec;
 use core::iter::zip;
 
 /// Firefly Algorithm type.
@@ -97,11 +98,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         // Move fireflies
         let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
-        #[cfg(feature = "rayon")]
-        let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
-        iter.zip(pool.iter_mut())
+        #[cfg(feature = "rayon")]
+        let iter = fitness.par_iter_mut();
+        iter.zip(&mut pool)
             .zip(rng.stream(ctx.pop_num()))
             .enumerate()
             .for_each(|(i, ((fitness, pool), rng))| {

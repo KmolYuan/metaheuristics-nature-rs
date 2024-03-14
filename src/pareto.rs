@@ -1,5 +1,6 @@
 //! Pareto front implementation.
 use crate::random::Rng;
+use alloc::vec::Vec;
 
 /// Trait for dominance comparison.
 ///
