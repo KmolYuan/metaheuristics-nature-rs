@@ -8,6 +8,8 @@ fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
         .ok_or_else(|| ndarray::ShapeError::from_kind(ndarray::ErrorKind::IncompatibleShape))
 }
 
+type PoolFunc<'a> = Box<dyn Fn(usize, RangeInclusive<f64>, &Rng) -> f64 + 'a>;
+
 /// Initial pool generating options.
 ///
 /// Use [`SolverBuilder::init_pool()`] to set this option.
@@ -19,6 +21,12 @@ pub enum Pool<'a, F: ObjFunc> {
         /// Fitness values
         fitness: Vec<F::Fitness>,
     },
+    /// Generate the pool uniformly with a filter function to check the
+    /// validity.
+    ///
+    /// This filter function returns true if the design variables are valid.
+    #[allow(clippy::type_complexity)]
+    UniformBy(Box<dyn Fn(&[f64]) -> bool + 'a>),
     /// Generate the pool with a specific function.
     ///
     /// The function signature is `fn(s, min..max, &rng) -> value`
@@ -39,8 +47,7 @@ pub enum Pool<'a, F: ObjFunc> {
     ///     .solve()
     ///     .unwrap();
     /// ```
-    #[allow(clippy::type_complexity)]
-    Func(Box<dyn Fn(usize, RangeInclusive<f64>, &Rng) -> f64 + 'a>),
+    Func(PoolFunc<'a>),
 }
 
 /// Collect configuration and build the solver.
@@ -179,11 +186,23 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                 ctx.pool_f = fitness;
                 ctx.find_best_force();
             }
-            Pool::Func(f) => {
-                ctx.init_pop(Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-                    ctx.clamp(s, f(s, ctx.func.bound_range(s), &rng))
-                }));
+            Pool::UniformBy(filter) => {
+                let mut pool = Vec::with_capacity(ctx.pop_num());
+                let rand_f = uniform_pool();
+                let pop_num = ctx.pop_num();
+                while pool.len() < pop_num {
+                    let x = (0..ctx.dim())
+                        .map(|s| rand_f(s, ctx.func.bound_range(s), &rng))
+                        .collect::<Vec<_>>();
+                    if filter(&x) {
+                        pool.extend(x);
+                    }
+                }
+                ctx.init_pop(Array2::from_shape_vec(ctx.pool_size(), pool).unwrap());
             }
+            Pool::Func(f) => ctx.init_pop(Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
+                ctx.clamp(s, f(s, ctx.func.bound_range(s), &rng))
+            })),
         }
         algorithm.init(&mut ctx, &rng);
         loop {
@@ -240,8 +259,8 @@ impl<F: ObjFunc> Solver<F> {
 ///
 /// See also [`gaussian_pool()`], [`Pool::Func`],
 /// [`SolverBuilder::init_pool()`].
-pub fn uniform_pool() -> impl Fn(usize, RangeInclusive<f64>, &Rng) -> f64 {
-    move |_, range, rng| rng.range(range)
+pub fn uniform_pool() -> PoolFunc<'static> {
+    Box::new(move |_, range, rng| rng.range(range))
 }
 
 /// A function generates a Gaussian pool.
@@ -253,10 +272,7 @@ pub fn uniform_pool() -> impl Fn(usize, RangeInclusive<f64>, &Rng) -> f64 {
 /// # Panics
 ///
 /// Panic when the lengths of `mean` and `std` are not the same.
-pub fn gaussian_pool<'a>(
-    mean: &'a [f64],
-    std: &'a [f64],
-) -> impl Fn(usize, RangeInclusive<f64>, &Rng) -> f64 + 'a {
+pub fn gaussian_pool<'a>(mean: &'a [f64], std: &'a [f64]) -> PoolFunc<'a> {
     assert_eq!(mean.len(), std.len());
-    move |s, _, rng| rng.normal(mean[s], std[s])
+    Box::new(move |s, _, rng| rng.normal(mean[s], std[s]))
 }
