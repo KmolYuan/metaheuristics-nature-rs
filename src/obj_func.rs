@@ -81,9 +81,7 @@ pub trait Bounded: Sync + Send {
 pub trait ObjFunc: Bounded {
     /// Representation of the fitness value
     ///
-    /// # See Also
-    ///
-    /// [`Product`] provides a field for a final result.
+    /// See also [`Product`].
     type Fitness: Fitness;
 
     /// Return fitness, the smaller value represents a good result.

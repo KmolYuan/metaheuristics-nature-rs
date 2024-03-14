@@ -55,9 +55,7 @@ use alloc::boxed::Box;
 /// }
 /// ```
 ///
-/// # See Also
-///
-/// [`Product`] provides a field for a final result.
+/// See also [`Product`].
 pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + 'static {
     /// Mark the value to non-best.
     fn mark_not_best(&mut self) {}

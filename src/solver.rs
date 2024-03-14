@@ -1,4 +1,5 @@
 use crate::utility::prelude::*;
+pub use crate::utility::{gaussian_pool, uniform_pool, Pool};
 
 /// A public API for using optimization methods.
 ///
@@ -53,19 +54,14 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Get the best parameters.
     ///
-    /// # See Also
-    ///
-    /// + [`Solver::as_best_fitness()`] is for any objective function type `F`.
-    /// + [`Solver::as_result()`] is for the specific [`Product`] type `F`.
+    /// See also [`Solver::as_best_fitness()`], [`Solver::as_result()`].
     pub fn best_parameters(&self) -> &[f64] {
         self.ctx.best.as_slice().unwrap()
     }
 
     /// Get the best fitness.
     ///
-    /// # See Also
-    ///
-    /// [`Solver::as_best_fitness()`] for reference access.
+    /// See also [`Solver::as_best_fitness()`].
     pub fn best_fitness(&self) -> F::Fitness
     where
         F::Fitness: Copy,
@@ -75,18 +71,14 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Get the reference to the best fitness.
     ///
-    /// # See Also
-    ///
-    /// [`Solver::best_fitness()`] for the type `F::Fitness` implemented `Copy`.
+    /// See also [`Solver::best_fitness()`].
     pub fn as_best_fitness(&self) -> &F::Fitness {
         &self.ctx.best_f
     }
 
     /// Get the result of the objective function.
     ///
-    /// # See Also
-    ///
-    /// [`Solver::into_result()`], [`Solver::into_err_result()`]
+    /// See also [`Solver::into_result()`], [`Solver::into_err_result()`].
     pub fn as_result<P, Fit>(&self) -> &P
     where
         Fit: Fitness,
@@ -97,9 +89,7 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Unwrap and get the final result.
     ///
-    /// # See Also
-    ///
-    /// [`Solver::as_result()`], [`Solver::into_err_result()`]
+    /// See also [`Solver::as_result()`], [`Solver::into_err_result()`].
     pub fn into_result<P, Fit>(self) -> P
     where
         Fit: Fitness,
@@ -110,9 +100,7 @@ impl<F: ObjFunc> Solver<F> {
 
     /// Unwrap and get the final error and result.
     ///
-    /// # See Also
-    ///
-    /// [`Solver::as_result()`], [`Solver::into_result()`]
+    /// See also [`Solver::as_result()`], [`Solver::into_result()`].
     pub fn into_err_result<P, Fit>(self) -> (Fit, P)
     where
         Fit: Fitness,
