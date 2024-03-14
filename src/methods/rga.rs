@@ -6,7 +6,7 @@
 //!
 //! This method require floating point power function.
 use crate::utility::prelude::*;
-use alloc::vec::Vec;
+use core::iter::zip;
 
 /// Real-coded Genetic Algorithm type.
 pub type Method = Rga;
@@ -81,16 +81,14 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         // Select
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
-        pool.axis_iter_mut(Axis(0))
-            .zip(pool_f.iter_mut())
-            .for_each(|(mut selected, f)| {
-                let [a, b] = rng.array(0..ctx.pop_num());
-                let i = if ctx.pool_f[a] < ctx.pool_f[b] { a } else { b };
-                if rng.maybe(self.win) {
-                    *f = ctx.pool_f[i].clone();
-                    selected.assign(&ctx.pool.slice(s![i, ..]));
-                }
-            });
+        for (xs, f) in zip(&mut pool, &mut pool_f) {
+            let [a, b] = rng.array(0..ctx.pop_num());
+            let i = if ctx.pool_f[a] < ctx.pool_f[b] { a } else { b };
+            if rng.maybe(self.win) {
+                *xs = ctx.pool[i].clone();
+                *f = ctx.pool_f[i].clone();
+            }
+        }
         ctx.pool = pool;
         ctx.pool_f = pool_f;
         ctx.assign_from_best(rng.ub(ctx.pop_num()));
@@ -99,49 +97,43 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             if !rng.maybe(self.cross) {
                 continue;
             }
-            enum Id {
-                I1,
-                I2,
-                I3,
-            }
+            let iter = zip(0..3, rng.stream(3));
             #[cfg(feature = "rayon")]
-            let iter = [Id::I1, Id::I2, Id::I3].into_par_iter();
-            #[cfg(not(feature = "rayon"))]
-            let iter = [Id::I1, Id::I2, Id::I3].into_iter();
-            let mut v = iter
-                .zip(rng.stream(3))
+            let iter = iter.par_iter_mut();
+            let mut ret = iter
                 .map(|(id, rng)| {
-                    let mut xs = Array1::zeros(ctx.dim());
-                    for s in 0..ctx.dim() {
-                        let v = match id {
-                            Id::I1 => 0.5 * (ctx.pool[[i, s]] + ctx.pool[[i + 1, s]]),
-                            Id::I2 => 1.5 * ctx.pool[[i, s]] - 0.5 * ctx.pool[[i + 1, s]],
-                            Id::I3 => -0.5 * ctx.pool[[i, s]] + 1.5 * ctx.pool[[i + 1, s]],
-                        };
-                        xs[s] = rng.clamp(v, ctx.func.bound_range(s));
-                    }
-                    let f = ctx.func.fitness(xs.as_slice().unwrap());
+                    let xs = zip(ctx.func.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
+                        .map(|(&[min, max], (a, b))| {
+                            let v = match id {
+                                0 => 0.5 * (a + b),
+                                1 => 1.5 * a - 0.5 * b,
+                                _ => -0.5 * a + 1.5 * b,
+                            };
+                            rng.clamp(v, min..=max)
+                        })
+                        .collect::<Vec<_>>();
+                    let f = ctx.func.fitness(&xs);
                     (f, xs)
                 })
                 .collect::<Vec<_>>();
-            v.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
-            ctx.assign_from(i, v[0].0.clone(), &v[0].1);
-            ctx.assign_from(i + 1, v[1].0.clone(), &v[1].1);
+            ret.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+            let [(t1_f, t1_x), (t2_f, t2_x)] = [ret.remove(0), ret.remove(0)];
+            ctx.assign_from(i, t1_f, t1_x);
+            ctx.assign_from(i + 1, t2_f, t2_x);
         }
         // Mutate
-        for i in 0..ctx.pop_num() {
+        let dim = ctx.dim();
+        for (xs, f) in zip(&mut ctx.pool, &mut ctx.pool_f) {
             if !rng.maybe(self.mutate) {
                 continue;
             }
-            let s = rng.ub(ctx.dim());
+            let s = rng.ub(dim);
             if rng.maybe(0.5) {
-                ctx.pool[[i, s]] += self.get_delta(ctx.gen, rng, ctx.func.ub(s) - ctx.pool[[i, s]]);
+                xs[s] += self.get_delta(ctx.gen, rng, ctx.func.ub(s) - xs[s]);
             } else {
-                ctx.pool[[i, s]] -= self.get_delta(ctx.gen, rng, ctx.pool[[i, s]] - ctx.func.lb(s));
+                xs[s] -= self.get_delta(ctx.gen, rng, xs[s] - ctx.func.lb(s));
             }
-            ctx.pool_f[i] = ctx
-                .func
-                .fitness(ctx.pool.slice(s![i, ..]).as_slice().unwrap());
+            *f = ctx.func.fitness(xs);
         }
         ctx.find_best();
     }

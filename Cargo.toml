@@ -13,7 +13,6 @@ categories = ["algorithms", "no-std"]
 [features]
 default = ["std"]
 std = [
-    "ndarray/std",
     "num-traits/std",
     "rand/std",
     "rand_chacha/std",
@@ -21,14 +20,13 @@ std = [
     "serde?/std",
 ]
 clap = ["std", "dep:clap"]
-rayon = ["std", "dep:rayon", "ndarray/rayon"]
+rayon = ["std", "dep:rayon"]
 serde = ["dep:serde"]
 
 [dependencies]
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 rand_chacha = { version = "0.3", default-features = false }
 rand_distr = { version = "0.4", default-features = false }
-ndarray = { version = "0.15", default-features = false }
 clap = { version = "4", features = ["derive"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }

@@ -51,7 +51,7 @@ impl Setting for Pso {
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method {
             pso: self,
-            best_past: Array2::zeros((1, 1)),
+            best_past: Vec::new(),
             best_past_f: Vec::new(),
         }
     }
@@ -60,7 +60,7 @@ impl Setting for Pso {
 /// Particle Swarm Optimization type.
 pub struct Method<F: Fitness> {
     pso: Pso,
-    best_past: Array2<f64>,
+    best_past: Vec<Vec<f64>>,
     best_past_f: Vec<F>,
 }
 
@@ -88,11 +88,11 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
         if let Some((f, xs)) = iter
-            .zip(pool.axis_iter_mut(Axis(0)))
-            .zip(best_past.axis_iter_mut(Axis(0)))
+            .zip(&mut pool)
+            .zip(&mut best_past)
             .zip(&mut best_past_f)
             .zip(rng.stream(ctx.pop_num()))
-            .filter_map(|((((f, mut xs), mut past), past_f), rng)| {
+            .filter_map(|((((f, xs), past), past_f), rng)| {
                 let alpha = rng.ub(self.cognition);
                 let beta = rng.ub(self.social);
                 for s in 0..ctx.dim() {
@@ -101,17 +101,17 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                         + beta * (ctx.best[s] - xs[s]);
                     xs[s] = ctx.clamp(s, var);
                 }
-                *f = ctx.func.fitness(xs.as_slice().unwrap());
+                *f = ctx.func.fitness(xs);
                 if *f < *past_f {
                     *past_f = f.clone();
                     past_f.mark_not_best();
-                    past.assign(&xs);
+                    *past = xs.clone();
                 }
                 (*f < ctx.best_f).then_some((f, xs))
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
         {
-            ctx.best.assign(&xs);
+            ctx.best = xs.clone();
             ctx.best_f = f.clone();
         }
         ctx.pool = pool;

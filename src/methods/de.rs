@@ -7,7 +7,7 @@ use alloc::boxed::Box;
 
 /// Differential Evolution type.
 pub type Method = De;
-type Func<F> = Box<dyn Fn(&Ctx<F>, &Array1<f64>, usize) -> f64>;
+type Func<F> = Box<dyn Fn(&Ctx<F>, &[f64], usize) -> f64>;
 
 const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 
@@ -115,40 +115,40 @@ impl Method {
         match self.strategy {
             S1 | S6 => {
                 let [v0, v1] = rng.array(0..ctx.pop_num());
-                Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[[v0, s]] - ctx.pool[[v1, s]]))
+                Box::new(move |ctx, _, s| ctx.best[s] + f * (ctx.pool[v0][s] - ctx.pool[v1][s]))
             }
             S2 | S7 => Box::new({
                 let [v0, v1, v2] = rng.array(0..ctx.pop_num());
-                move |ctx, _, s| ctx.pool[[v0, s]] + f * (ctx.pool[[v1, s]] - ctx.pool[[v2, s]])
+                move |ctx, _, s| ctx.pool[v0][s] + f * (ctx.pool[v1][s] - ctx.pool[v2][s])
             }),
             S3 | S8 => Box::new({
                 let [v0, v1] = rng.array(0..ctx.pop_num());
                 move |ctx, tmp, s| {
-                    tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[[v0, s]] - ctx.pool[[v1, s]])
+                    tmp[s] + f * (ctx.best[s] - tmp[s] + ctx.pool[v0][s] - ctx.pool[v1][s])
                 }
             }),
             S4 | S9 => Box::new({
                 let [v0, v1, v2, v3] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.best[s]
-                        + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
-                            - ctx.pool[[v2, s]]
-                            - ctx.pool[[v3, s]])
+                        + f * (ctx.pool[v0][s] + ctx.pool[v1][s]
+                            - ctx.pool[v2][s]
+                            - ctx.pool[v3][s])
                 }
             }),
             S5 | S10 => Box::new({
                 let [v0, v1, v2, v3, v4] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
-                    ctx.pool[[v4, s]]
-                        + f * (ctx.pool[[v0, s]] + ctx.pool[[v1, s]]
-                            - ctx.pool[[v2, s]]
-                            - ctx.pool[[v3, s]])
+                    ctx.pool[v4][s]
+                        + f * (ctx.pool[v0][s] + ctx.pool[v1][s]
+                            - ctx.pool[v2][s]
+                            - ctx.pool[v3][s])
                 }
             }),
         }
     }
 
-    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
@@ -160,7 +160,7 @@ impl Method {
             .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.func.bound_range(s)))
     }
 
-    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut Array1<f64>, formula: Func<F>)
+    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
@@ -174,13 +174,13 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
-        let iter = pool.axis_iter_mut(Axis(0));
+        let iter = pool.iter_mut();
         #[cfg(feature = "rayon")]
         let iter = iter.into_par_iter();
         if let Some((f, xs)) = iter
             .zip(&mut pool_f)
             .zip(rng.stream(ctx.pop_num()))
-            .filter_map(|((mut xs, f), rng)| {
+            .filter_map(|((xs, f), rng)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &rng);
                 // Recombination
@@ -189,9 +189,9 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                     S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut tmp, formula),
                     S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut tmp, formula),
                 }
-                let tmp_f = ctx.func.fitness(tmp.as_slice().unwrap());
+                let tmp_f = ctx.func.fitness(&tmp);
                 if tmp_f < *f {
-                    xs.assign(&tmp);
+                    *xs = tmp;
                     *f = tmp_f;
                     (*f < ctx.best_f).then_some((f, xs))
                 } else {
@@ -200,7 +200,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
         {
-            ctx.best.assign(&xs);
+            ctx.best = xs.clone();
             ctx.best_f = f.clone();
         }
         ctx.pool = pool;

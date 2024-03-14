@@ -4,6 +4,7 @@
 //!
 //! This method require exponential function.
 use crate::utility::prelude::*;
+use core::iter::zip;
 
 /// Firefly Algorithm type.
 pub type Method = Fa;
@@ -68,24 +69,26 @@ impl Method {
         rng: &Rng,
         i: usize,
         j: usize,
-    ) -> (Array1<f64>, F::Fitness) {
+    ) -> (Vec<f64>, F::Fitness) {
         let (i, j) = if ctx.pool_f[i] > ctx.pool_f[j] {
             (i, j)
         } else {
             (j, i)
         };
-        let mut v = Array1::zeros(ctx.dim());
-        let r = (&ctx.pool.slice(s![i, ..]) - &ctx.pool.slice(s![j, ..]))
-            .mapv(|v| v * v)
-            .sum();
+        let r = zip(&ctx.pool[i], &ctx.pool[j])
+            .map(|(a, b)| a - b)
+            .map(|v| v * v)
+            .sum::<f64>();
         let beta = self.beta_min * (-self.gamma * r).exp();
-        for s in 0..ctx.dim() {
-            let step = self.alpha * ctx.func.bound_width(s) * rng.range(-0.5..0.5);
-            let surround = ctx.pool[[i, s]] + beta * (ctx.pool[[j, s]] - ctx.pool[[i, s]]);
-            v[s] = ctx.clamp(s, surround + step);
-        }
-        let f = ctx.func.fitness(v.as_slice().unwrap());
-        (v, f)
+        let xs = zip(ctx.func.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
+            .map(|(&[min, max], (a, b))| {
+                let step = self.alpha * (max - min) * rng.range(-0.5..0.5);
+                let surround = a + beta * (b - a);
+                (surround + step).clamp(min, max)
+            })
+            .collect::<Vec<_>>();
+        let f = ctx.func.fitness(&xs);
+        (xs, f)
     }
 }
 
@@ -98,15 +101,15 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
-        iter.zip(pool.axis_iter_mut(Axis(0)))
+        iter.zip(pool.iter_mut())
             .zip(rng.stream(ctx.pop_num()))
             .enumerate()
-            .for_each(|(i, ((fitness, mut pool), rng))| {
+            .for_each(|(i, ((fitness, pool), rng))| {
                 for j in i + 1..ctx.pop_num() {
                     let (v, f) = self.move_firefly(ctx, &rng, i, j);
                     if f < *fitness {
                         *fitness = f;
-                        pool.assign(&v);
+                        *pool = v;
                     }
                 }
             });

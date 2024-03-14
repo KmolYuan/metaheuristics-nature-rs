@@ -79,14 +79,13 @@ impl Rng {
     ///
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&self, n: usize) -> Vec<Self> {
-        let n = n as u64;
         let stream = self.stream.get().wrapping_add(1);
         let word_pos = self.word_pos.get();
-        self.stream.set(stream.wrapping_add(n));
+        self.stream.set(stream.wrapping_add(n as u64));
         (0..n)
             .map(|i| Self {
                 seed: self.seed,
-                stream: Cell::new(stream.wrapping_add(i)),
+                stream: Cell::new(stream.wrapping_add(i as u64)),
                 word_pos: Cell::new(word_pos),
             })
             .collect()
@@ -200,7 +199,7 @@ impl Rng {
             .filter(|e| !pre.contains(e))
             .collect::<Vec<_>>();
         self.shuffle(&mut candi);
-        curr.iter_mut().zip(candi).for_each(|(a, b)| *a = b);
+        core::iter::zip(curr, candi).for_each(|(a, b)| *a = b);
         v
     }
 }

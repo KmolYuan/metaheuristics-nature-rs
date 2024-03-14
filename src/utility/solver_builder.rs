@@ -3,11 +3,6 @@ use std::ops::RangeInclusive;
 use crate::utility::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-fn assert_shape(b: bool) -> Result<(), ndarray::ShapeError> {
-    b.then_some(())
-        .ok_or_else(|| ndarray::ShapeError::from_kind(ndarray::ErrorKind::IncompatibleShape))
-}
-
 type PoolFunc<'a> = Box<dyn Fn(usize, RangeInclusive<f64>, &Rng) -> f64 + 'a>;
 
 /// Initial pool generating options.
@@ -17,7 +12,7 @@ pub enum Pool<'a, F: ObjFunc> {
     /// A ready-made pool and its fitness values.
     Ready {
         /// Pool
-        pool: Array2<f64>,
+        pool: Vec<Vec<f64>>,
         /// Fitness values
         fitness: Vec<F::Fitness>,
     },
@@ -44,8 +39,7 @@ pub enum Pool<'a, F: ObjFunc> {
     /// let s = Solver::build(Rga::default(), MyFunc::new())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .init_pool(pool)
-    ///     .solve()
-    ///     .unwrap();
+    ///     .solve();
     /// ```
     Func(PoolFunc<'a>),
 }
@@ -59,7 +53,6 @@ pub struct SolverBuilder<'a, F: ObjFunc> {
     func: F,
     pop_num: usize,
     seed: SeedOption,
-    regen: bool,
     algorithm: Box<dyn Algorithm<F>>,
     pool: Pool<'a, F>,
     task: Box<dyn Fn(&Ctx<F>) -> bool + Send + 'a>,
@@ -74,13 +67,6 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         ///
         /// If not changed by the algorithm setting, the default number is 200.
         fn pop_num(usize)
-
-        /// Regenerate the invalid individuals per generation. May spent more time.
-        ///
-        /// # Default
-        ///
-        /// By default, this function is disabled.
-        fn regen(bool)
     }
 
     /// Set the random seed to get a determined result.
@@ -113,8 +99,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     ///
     /// let s = Solver::build(Rga::default(), MyFunc::new())
     ///     .task(|ctx| ctx.gen == 20)
-    ///     .solve()
-    ///     .unwrap();
+    ///     .solve();
     /// ```
     ///
     /// # Default
@@ -141,8 +126,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// let s = Solver::build(Rga::default(), MyFunc::new())
     /// #   .task(|ctx| ctx.gen == 1)
     ///     .callback(|ctx| gen = ctx.gen)
-    ///     .solve()
-    ///     .unwrap();
+    ///     .solve();
     /// ```
     ///
     /// # Default
@@ -160,31 +144,32 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     ///
     /// Generation `ctx.gen` is start from 1, initialized at 0.
     ///
-    /// # Error
+    /// # Panics
     ///
-    /// This function will be `Ok` and returns result when the `ctx.pool` and
-    /// `ctx.fitness` initialized successfully; `Err` when the boundary check
-    /// fails.
-    pub fn solve(self) -> Result<Solver<F>, ndarray::ShapeError> {
+    /// Panics when the boundary check failed.
+    pub fn solve(self) -> Solver<F> {
         let Self {
             func,
             pop_num,
             seed,
-            regen,
             mut algorithm,
             pool,
             task,
             mut callback,
         } = self;
-        assert_shape(func.bound().iter().all(|[lb, ub]| lb <= ub))?;
+        assert!(
+            func.bound().iter().all(|[lb, ub]| lb <= ub),
+            "Lower bound should be less than upper bound"
+        );
         let mut ctx = Ctx::new(func, pop_num);
         let rng = Rng::new(seed);
         match pool {
             Pool::Ready { pool, fitness } => {
-                assert_shape(pool.shape() == ctx.pool_size())?;
+                assert!(pool.len() == ctx.pop_num(), "Pool size mismatched");
+                assert!(pool[0].len() == ctx.dim(), "Pool dimension mismatched");
                 ctx.pool = pool;
                 ctx.pool_f = fitness;
-                ctx.find_best_force();
+                ctx.find_best_override();
             }
             Pool::UniformBy(filter) => {
                 let mut pool = Vec::with_capacity(ctx.pop_num());
@@ -195,14 +180,21 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                         .map(|s| rand_f(s, ctx.func.bound_range(s), &rng))
                         .collect::<Vec<_>>();
                     if filter(&x) {
-                        pool.extend(x);
+                        pool.push(x);
                     }
                 }
-                ctx.init_pop(Array2::from_shape_vec(ctx.pool_size(), pool).unwrap());
+                ctx.init_pop(pool);
             }
-            Pool::Func(f) => ctx.init_pop(Array2::from_shape_fn(ctx.pool_size(), |(_, s)| {
-                ctx.clamp(s, f(s, ctx.func.bound_range(s), &rng))
-            })),
+            Pool::Func(f) => {
+                let pool = (0..ctx.pop_num())
+                    .map(|_| {
+                        (0..ctx.dim())
+                            .map(|s| f(s, ctx.func.bound_range(s), &rng))
+                            .collect::<Vec<_>>()
+                    })
+                    .collect();
+                ctx.init_pop(pool)
+            }
         }
         algorithm.init(&mut ctx, &rng);
         loop {
@@ -212,20 +204,8 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
             }
             ctx.gen += 1;
             algorithm.generation(&mut ctx, &rng);
-            if regen {
-                ctx.pool
-                    .axis_iter_mut(Axis(0))
-                    .zip(ctx.pool_f.iter_mut())
-                    .filter(|(_, f)| f.partial_cmp(f).is_none())
-                    .for_each(|(mut xs, f)| {
-                        xs.iter_mut()
-                            .enumerate()
-                            .for_each(|(s, x)| *x = rng.range(ctx.func.bound_range(s)));
-                        *f = ctx.func.fitness(xs.as_slice().unwrap());
-                    });
-            }
         }
-        Ok(Solver::new(ctx, rng.seed()))
+        Solver::new(ctx, rng.seed())
     }
 }
 
@@ -246,7 +226,6 @@ impl<F: ObjFunc> Solver<F> {
             func,
             pop_num: S::default_pop(),
             seed: SeedOption::None,
-            regen: false,
             algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(uniform_pool())),
             task: Box::new(|ctx| ctx.gen >= 200),

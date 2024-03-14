@@ -46,8 +46,7 @@ where
         .seed(0)
         .task(|ctx| ctx.best_f.fitness() - OFFSET < 1e-20)
         .callback(|ctx| report.push(ctx.best_f.clone()))
-        .solve()
-        .unwrap();
+        .solve();
     assert!(!report.is_empty());
     assert_eq!(*s.as_result(), OFFSET);
     assert_eq!(s.as_best_fitness().fitness(), *s.as_result());

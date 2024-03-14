@@ -9,11 +9,11 @@ use alloc::{vec, vec::Vec};
 #[non_exhaustive]
 pub struct Ctx<F: ObjFunc> {
     /// The best variables
-    pub best: Array1<f64>,
+    pub best: Vec<f64>,
     /// Best fitness
     pub best_f: F::Fitness,
     /// Current variables of all individuals
-    pub pool: Array2<f64>,
+    pub pool: Vec<Vec<f64>>,
     /// Current fitness values of all individuals
     pub pool_f: Vec<F::Fitness>,
     /// Generation
@@ -26,9 +26,9 @@ impl<F: ObjFunc> Ctx<F> {
     pub(crate) fn new(func: F, pop_num: usize) -> Self {
         let dim = func.bound().len();
         Self {
-            best: Array1::zeros(dim),
+            best: vec![0.; dim],
             best_f: Default::default(),
-            pool: Array2::zeros((pop_num, dim)),
+            pool: vec![vec![0.; dim]; pop_num],
             pool_f: vec![Default::default(); pop_num],
             gen: 0,
             func,
@@ -65,21 +65,21 @@ impl<F: ObjFunc> Ctx<F> {
         self.best_f.as_result()
     }
 
-    pub(crate) fn init_pop(&mut self, pool: Array2<f64>) {
+    pub(crate) fn init_pop(&mut self, pool: Vec<Vec<f64>>) {
         let mut fitness = self.pool_f.clone();
         #[cfg(feature = "rayon")]
         let iter = fitness.par_iter_mut();
         #[cfg(not(feature = "rayon"))]
         let iter = fitness.iter_mut();
         let (f, xs) = iter
-            .zip(pool.axis_iter(Axis(0)))
+            .zip(&pool)
             .map(|(f, xs)| {
-                *f = self.func.fitness(xs.to_slice().unwrap());
+                *f = self.func.fitness(xs);
                 (f, xs)
             })
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        self.set_best_from(f.clone(), &xs);
+        self.set_best_from(f.clone(), xs.clone());
         self.pool = pool;
         self.pool_f = fitness;
     }
@@ -90,27 +90,21 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Set the fitness and variables to best.
-    pub fn set_best_from<S>(&mut self, f: F::Fitness, xs: &ArrayBase<S, Ix1>)
-    where
-        S: ndarray::Data<Elem = f64>,
-    {
+    pub fn set_best_from(&mut self, f: F::Fitness, xs: Vec<f64>) {
         self.best_f = f;
-        self.best.assign(xs);
+        self.best = xs;
     }
 
     /// Assign the index from best.
     pub fn assign_from_best(&mut self, i: usize) {
         self.pool_f[i] = self.best_f.clone();
-        self.pool.slice_mut(s![i, ..]).assign(&self.best);
+        self.pool[i] = self.best.clone();
     }
 
     /// Assign the index from source.
-    pub fn assign_from<'a, A>(&mut self, i: usize, f: F::Fitness, xs: A)
-    where
-        A: AsArray<'a, f64>,
-    {
+    pub fn assign_from(&mut self, i: usize, f: F::Fitness, xs: Vec<f64>) {
         self.pool_f[i] = f;
-        self.pool.slice_mut(s![i, ..]).assign(&xs.into());
+        self.pool[i] = xs;
     }
 
     /// Find the best, and set it globally.
@@ -118,21 +112,18 @@ impl<F: ObjFunc> Ctx<F> {
         self.find_best_inner(false);
     }
 
-    /// Find the best and force override it.
-    pub fn find_best_force(&mut self) {
+    /// Find the best and override it.
+    pub fn find_best_override(&mut self) {
         self.find_best_inner(true);
     }
 
-    fn find_best_inner(&mut self, force: bool) {
-        let (f, xs) = self
-            .pool_f
-            .iter()
-            .zip(self.pool.axis_iter(Axis(0)))
+    fn find_best_inner(&mut self, overrided: bool) {
+        let (f, xs) = core::iter::zip(&self.pool_f, &self.pool)
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        if force || *f < self.best_f {
+        if overrided || *f < self.best_f {
             self.best_f = f.clone();
-            self.best.assign(&xs);
+            self.best = xs.clone();
         }
         self.prune_fitness();
     }

@@ -4,6 +4,7 @@
 //!
 //! This method require round function.
 use crate::utility::prelude::*;
+use core::iter::zip;
 
 /// Teaching Learning Based Optimization type.
 pub type Method = Tlbo;
@@ -30,45 +31,38 @@ impl Setting for Tlbo {
 }
 
 impl Method {
-    fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &Array1<f64>) {
-        let f_new = ctx.func.fitness(student.as_slice().unwrap());
+    fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: &[f64]) {
+        let f_new = ctx.func.fitness(student);
         if f_new < ctx.pool_f[i] {
-            ctx.pool.slice_mut(s![i, ..]).assign(student);
+            ctx.pool[i] = student.to_vec();
             ctx.pool_f[i] = f_new.clone();
             if f_new < ctx.best_f {
                 ctx.best_f = f_new;
-                ctx.best.assign(student);
+                ctx.best = student.to_vec();
             }
         }
     }
 
-    fn teaching<F: ObjFunc>(
-        &mut self,
-        ctx: &mut Ctx<F>,
-        rng: &Rng,
-        i: usize,
-        student: &mut Array1<f64>,
-    ) {
+    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &Rng, i: usize, student: &mut [f64]) {
         let tf = rng.range(1f64..2.).round();
-        for s in 0..ctx.dim() {
+        for (s, (&[min, max], (student, (base, best)))) in zip(
+            ctx.bound(),
+            zip(student.iter_mut(), zip(&ctx.pool[i], &ctx.best)),
+        )
+        .enumerate()
+        {
             let mut mean = 0.;
             for j in 0..ctx.pop_num() {
-                mean += ctx.pool[[j, s]];
+                mean += ctx.pool[j][s];
             }
             mean /= ctx.dim() as f64;
-            let v = ctx.pool[[i, s]] + rng.range(1.0..ctx.dim() as f64) * (ctx.best[s] - tf * mean);
-            student[s] = ctx.clamp(s, v);
+            let v = base + rng.range(1.0..ctx.dim() as f64) * (best - tf * mean);
+            *student = v.clamp(min, max);
         }
         Self::register(ctx, i, student);
     }
 
-    fn learning<F: ObjFunc>(
-        &mut self,
-        ctx: &mut Ctx<F>,
-        rng: &Rng,
-        i: usize,
-        student: &mut Array1<f64>,
-    ) {
+    fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &Rng, i: usize, student: &mut [f64]) {
         let j = {
             let j = rng.ub(ctx.pop_num() - 1);
             if j >= i {
@@ -77,14 +71,17 @@ impl Method {
                 j
             }
         };
-        for s in 0..ctx.dim() {
+        for (&[min, max], (student, (a, b))) in zip(
+            ctx.bound(),
+            zip(student.iter_mut(), zip(&ctx.pool[i], &ctx.pool[j])),
+        ) {
             let diff = if ctx.pool_f[j] < ctx.pool_f[i] {
-                ctx.pool[[i, s]] - ctx.pool[[j, s]]
+                a - b
             } else {
-                ctx.pool[[j, s]] - ctx.pool[[i, s]]
+                b - a
             };
-            let v = ctx.pool[[i, s]] + rng.range(1.0..ctx.dim() as f64) * diff;
-            student[s] = ctx.clamp(s, v);
+            let v = a + rng.range(1.0..ctx.dim() as f64) * diff;
+            *student = v.clamp(min, max);
         }
         Self::register(ctx, i, student);
     }
@@ -93,7 +90,7 @@ impl Method {
 impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         for i in 0..ctx.pop_num() {
-            let mut student = Array1::zeros(ctx.dim());
+            let mut student = vec![0.; ctx.dim()];
             self.teaching(ctx, rng, i, &mut student);
             self.learning(ctx, rng, i, &mut student);
         }

@@ -11,7 +11,7 @@ pub use crate::utility::{gaussian_pool, uniform_pool, Pool};
 ///
 /// The builder of this type can infer the algorithm by [`Setting::Algorithm`].
 ///
-/// Please use `Solver::build()` method to start a task.
+/// Please use [`Solver::build()`] method to start a task.
 ///
 /// ```
 /// use metaheuristics_nature::{Rga, Solver};
@@ -23,8 +23,7 @@ pub use crate::utility::{gaussian_pool, uniform_pool, Pool};
 /// let s = Solver::build(Rga::default(), MyFunc::new())
 ///     .task(|ctx| ctx.gen == 20)
 ///     .callback(|ctx| report.push(ctx.best_f.clone()))
-///     .solve()
-///     .unwrap();
+///     .solve();
 /// // Get the result from objective function
 /// let ans = s.as_result();
 /// // Get the optimized XY value of your function
@@ -56,7 +55,7 @@ impl<F: ObjFunc> Solver<F> {
     ///
     /// See also [`Solver::as_best_fitness()`], [`Solver::as_result()`].
     pub fn best_parameters(&self) -> &[f64] {
-        self.ctx.best.as_slice().unwrap()
+        &self.ctx.best
     }
 
     /// Get the best fitness.
@@ -115,7 +114,7 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Get the pool from the last status.
-    pub fn pool(&self) -> ArrayView2<f64> {
-        self.ctx.pool.view()
+    pub fn pool(&self) -> &[Vec<f64>] {
+        &self.ctx.pool
     }
 }

@@ -136,11 +136,6 @@ mod setting;
 mod solver;
 pub mod tests;
 pub mod utility;
-/// The re-export of the crate `ndarray`.
-pub mod ndarray {
-    #[doc(no_inline)]
-    pub use ndarray::*;
-}
 /// The re-export of the crate `rand` and its related crates.
 pub mod rand {
     #[doc(no_inline)]
