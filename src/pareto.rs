@@ -4,10 +4,17 @@ use alloc::vec::Vec;
 
 /// Trait for dominance comparison.
 ///
+/// By default, the trait is implemented for types that implement `PartialOrd`,
+/// which means that `a <= b` is equivalent to `a.is_dominated(b)` for using
+/// single objective.
+///
 /// # Example
 ///
+/// If your type has multiple objectives, you can use the [`Pareto`] container
+/// and implement [`Dominance::eval()`] to decide the final fitness value.
+///
 /// ```
-/// use metaheuristics_nature::pareto::Dominance;
+/// use metaheuristics_nature::pareto::{Dominance, Pareto};
 ///
 /// struct MyObject {
 ///     cost: f64,
@@ -15,32 +22,33 @@ use alloc::vec::Vec;
 /// }
 ///
 /// impl Dominance for MyObject {
+///     type Best = Pareto<Self>;
 ///     fn is_dominated(&self, rhs: &Self) -> bool {
 ///         self.cost <= rhs.cost && self.weight <= rhs.weight
+///     }
+///     fn eval(&self) -> impl PartialOrd + 'static {
+///         self.cost.max(self.weight)
 ///     }
 /// }
 /// ```
 pub trait Dominance {
+    /// The best element container.
+    type Best: Best<Item = Self>;
     /// Check if `self` dominates `rhs`.
     fn is_dominated(&self, rhs: &Self) -> bool;
     /// Evaluate the final fitness value.
-    fn eval(&self) -> f64;
+    ///
+    /// Used in [`Best::update()`] and [`Best::result()`].
+    fn eval(&self) -> impl PartialOrd + 'static;
 }
 
-impl Dominance for f64 {
+impl<T: PartialOrd + Clone + 'static> Dominance for T {
+    type Best = SingleBest<T>;
     fn is_dominated(&self, rhs: &Self) -> bool {
         self <= rhs
     }
-    fn eval(&self) -> f64 {
-        *self
-    }
-}
-impl Dominance for f32 {
-    fn is_dominated(&self, rhs: &Self) -> bool {
-        self <= rhs
-    }
-    fn eval(&self) -> f64 {
-        *self as f64
+    fn eval(&self) -> impl PartialOrd + 'static {
+        self.clone()
     }
 }
 
@@ -87,6 +95,8 @@ pub trait Best {
     fn update(&mut self, xs: Vec<f64>, fit: Self::Item);
     /// Sample a random best element.
     fn sample(&self, rng: &Rng) -> Option<(&[f64], &Self::Item)>;
+    /// Get the final best element.
+    fn result(&self) -> Option<(&[f64], &Self::Item)>;
 }
 
 impl<T: Dominance> Best for SingleBest<T> {
@@ -105,6 +115,10 @@ impl<T: Dominance> Best for SingleBest<T> {
     }
 
     fn sample(&self, _rng: &Rng) -> Option<(&[f64], &Self::Item)> {
+        self.result()
+    }
+
+    fn result(&self) -> Option<(&[f64], &Self::Item)> {
         self.xs.as_deref().zip(self.fit.as_ref())
     }
 }
@@ -140,5 +154,12 @@ impl<T: Dominance> Best for Pareto<T> {
     fn sample(&self, rng: &Rng) -> Option<(&[f64], &Self::Item)> {
         let i = rng.range(0..self.xs.len());
         Some((self.xs.get(i)?, self.fit.get(i)?))
+    }
+
+    fn result(&self) -> Option<(&[f64], &Self::Item)> {
+        core::iter::zip(&self.xs, &self.fit)
+            .map(|(xs, fit)| (xs, fit, fit.eval()))
+            .min_by(|(.., a), (.., b)| a.partial_cmp(b).unwrap())
+            .map(|(xs, fit, _)| (xs.as_slice(), fit))
     }
 }
