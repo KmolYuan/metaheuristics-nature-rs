@@ -3,7 +3,7 @@
 //! <https://en.wikipedia.org/wiki/Firefly_algorithm>
 //!
 //! This method require exponential function.
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
 

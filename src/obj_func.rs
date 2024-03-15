@@ -1,4 +1,4 @@
-use crate::utility::prelude::*;
+use crate::prelude::*;
 
 /// A problem is well bounded.
 ///

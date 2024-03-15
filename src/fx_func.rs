@@ -1,4 +1,4 @@
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::boxed::Box;
 
 /// A quick interface help to create objective function from a callable object.

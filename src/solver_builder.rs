@@ -1,9 +1,7 @@
-use std::ops::RangeInclusive;
-
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-type PoolFunc<'a> = Box<dyn Fn(usize, RangeInclusive<f64>, &Rng) -> f64 + 'a>;
+type PoolFunc<'a> = Box<dyn Fn(usize, core::ops::RangeInclusive<f64>, &Rng) -> f64 + 'a>;
 
 /// Initial pool generating options.
 ///

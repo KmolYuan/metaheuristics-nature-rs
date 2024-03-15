@@ -5,7 +5,7 @@
 //! <https://en.wikipedia.org/wiki/Genetic_algorithm>
 //!
 //! This method require floating point power function.
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
 

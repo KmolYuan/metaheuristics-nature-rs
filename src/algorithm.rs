@@ -1,4 +1,4 @@
-use crate::utility::prelude::*;
+use crate::prelude::*;
 
 /// The methods of the meta-heuristic algorithms.
 ///
@@ -10,7 +10,7 @@ use crate::utility::prelude::*;
 /// type is used to store the additional data if any.
 ///
 /// ```
-/// use metaheuristics_nature::utility::prelude::*;
+/// use metaheuristics_nature::prelude::*;
 ///
 /// /// A setting with fields.
 /// #[derive(Default)]

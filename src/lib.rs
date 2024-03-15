@@ -20,7 +20,7 @@
 //!
 //! All provided methods are listed in the module [`methods`].
 //!
-//! For making your owned method, please see [`utility::prelude`].
+//! For making your owned method, please see [`prelude`].
 //!
 //! # Objective Function
 //!
@@ -70,7 +70,8 @@ extern crate alloc;
 extern crate core as std;
 
 pub use self::{
-    algorithm::*, fitness::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*,
+    algorithm::*, ctx::*, fitness::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*,
+    solver_builder::*,
 };
 
 /// A tool macro used to generate multiple builder functions (methods).
@@ -125,7 +126,23 @@ macro_rules! impl_builders {
     )+};
 }
 
+/// A prelude module for algorithm implementation.
+///
+/// This module includes all items of this crate, some hidden types,
+/// and external items from "ndarray" and "rayon" (if `rayon` feature enabled).
+pub mod prelude {
+    pub use super::*;
+    pub use crate::random::*;
+
+    #[cfg(feature = "rayon")]
+    #[doc(no_inline)]
+    pub use crate::rayon::prelude::*;
+    #[cfg(not(feature = "std"))]
+    pub use num_traits::Float as _;
+}
+
 mod algorithm;
+mod ctx;
 mod fitness;
 mod fx_func;
 pub mod methods;
@@ -134,8 +151,8 @@ pub mod pareto;
 pub mod random;
 mod setting;
 mod solver;
+mod solver_builder;
 pub mod tests;
-pub mod utility;
 /// The re-export of the crate `rand` and its related crates.
 pub mod rand {
     #[doc(no_inline)]

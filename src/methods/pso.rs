@@ -1,7 +1,7 @@
 //! # Particle Swarm Optimization
 //!
 //! <https://en.wikipedia.org/wiki/Particle_swarm_optimization>
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::vec::Vec;
 
 const DEF: Pso = Pso { cognition: 2.05, social: 2.05, velocity: 1.3 };

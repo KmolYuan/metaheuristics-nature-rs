@@ -2,7 +2,7 @@
 //!
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
-use crate::utility::prelude::*;
+use crate::prelude::*;
 use alloc::boxed::Box;
 
 /// Differential Evolution type.
