@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use alloc::boxed::Box;
 
 /// The return value of the objective function ([`ObjFunc`](crate::ObjFunc)).
@@ -56,17 +57,72 @@ use alloc::boxed::Box;
 /// ```
 ///
 /// See also [`Product`].
-pub trait Fitness: Sync + Send + Default + Clone + PartialOrd + 'static {
+pub trait Fitness: MaybeParallel + Clone + PartialOrd + 'static {
     /// Mark the value to non-best.
     fn mark_not_best(&mut self) {}
 }
 
 /// [`Fitness`] just implemented for the float number by default.
-impl<T> Fitness for T where T: num_traits::Float + Sync + Send + Default + 'static {}
+impl<T> Fitness for T where T: num_traits::Float + MaybeParallel + 'static {}
+
+/// Trait for dominance comparison.
+///
+/// By default, the trait is implemented for types that implement `PartialOrd`,
+/// which means that `a <= b` is equivalent to `a.is_dominated(b)` for using
+/// single objective.
+///
+/// # Example
+///
+/// If your type has multiple objectives, you can use the [`pareto::Pareto`]
+/// container and implement [`Dominance::eval()`] to decide the final fitness
+/// value.
+///
+/// ```
+/// use metaheuristics_nature::{pareto::Pareto, Dominance};
+///
+/// #[derive(Clone)]
+/// struct MyObject {
+///     cost: f64,
+///     weight: f64,
+/// }
+///
+/// impl Dominance for MyObject {
+///     type Best = Pareto<Self>;
+///     fn is_dominated(&self, rhs: &Self) -> bool {
+///         self.cost <= rhs.cost && self.weight <= rhs.weight
+///     }
+///     fn eval(&self) -> impl PartialOrd + 'static {
+///         self.cost.max(self.weight)
+///     }
+/// }
+/// ```
+pub trait Dominance: Clone {
+    /// The best element container.
+    type Best: pareto::Best<Item = Self>;
+    /// Check if `self` dominates `rhs`.
+    fn is_dominated(&self, rhs: &Self) -> bool;
+    /// Evaluate the final fitness value.
+    ///
+    /// Used in [`pareto::Best::update()`] and [`pareto::Best::result()`].
+    fn eval(&self) -> impl PartialOrd + 'static;
+    // /// TODO: Mark the value to non-best.
+    // fn mark_not_best(&mut self) {}
+}
+
+impl<T: PartialOrd + Clone + 'static> Dominance for T {
+    type Best = pareto::SingleBest<T>;
+    fn is_dominated(&self, rhs: &Self) -> bool {
+        self <= rhs
+    }
+    fn eval(&self) -> impl PartialOrd + 'static {
+        self.clone()
+    }
+}
 
 /// A [`Fitness`] type carrying final results.
 ///
-/// You can use [`Solver::result()`](crate::Solver) to access product field.
+/// You can use [`Solver::as_result()`]/[`Solver::into_result()`] to access
+/// product field.
 #[derive(Default, Clone, Debug)]
 pub struct Product<P, F: Fitness> {
     fitness: F,
@@ -113,7 +169,7 @@ impl<P, F: Fitness> PartialOrd for Product<P, F> {
     }
 }
 
-impl<P: Default + Clone + Sync + Send + 'static, F: Fitness> Fitness for Product<P, F> {
+impl<P: MaybeParallel + Clone + 'static, F: Fitness> Fitness for Product<P, F> {
     fn mark_not_best(&mut self) {
         self.product.take();
     }

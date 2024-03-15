@@ -54,7 +54,7 @@ use crate::prelude::*;
 /// type automatically. All you have to do is implement the "initialization"
 /// method and "generation" method, which are corresponded to the
 /// [`Algorithm::init()`] and [`Algorithm::generation()`] respectively.
-pub trait Algorithm<F: ObjFunc>: Send {
+pub trait Algorithm<F: ObjFunc>: MaybeParallel {
     /// Initialization implementation.
     ///
     /// The information of the [`Ctx`] can be obtained or modified at this phase

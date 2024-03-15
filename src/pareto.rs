@@ -1,58 +1,7 @@
 //! Pareto front implementation.
-use crate::random::Rng;
+use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
-
-/// Trait for dominance comparison.
-///
-/// By default, the trait is implemented for types that implement `PartialOrd`,
-/// which means that `a <= b` is equivalent to `a.is_dominated(b)` for using
-/// single objective.
-///
-/// # Example
-///
-/// If your type has multiple objectives, you can use the [`Pareto`] container
-/// and implement [`Dominance::eval()`] to decide the final fitness value.
-///
-/// ```
-/// use metaheuristics_nature::pareto::{Dominance, Pareto};
-///
-/// #[derive(Clone)]
-/// struct MyObject {
-///     cost: f64,
-///     weight: f64,
-/// }
-///
-/// impl Dominance for MyObject {
-///     type Best = Pareto<Self>;
-///     fn is_dominated(&self, rhs: &Self) -> bool {
-///         self.cost <= rhs.cost && self.weight <= rhs.weight
-///     }
-///     fn eval(&self) -> impl PartialOrd + 'static {
-///         self.cost.max(self.weight)
-///     }
-/// }
-/// ```
-pub trait Dominance: Clone {
-    /// The best element container.
-    type Best: Best<Item = Self>;
-    /// Check if `self` dominates `rhs`.
-    fn is_dominated(&self, rhs: &Self) -> bool;
-    /// Evaluate the final fitness value.
-    ///
-    /// Used in [`Best::update()`] and [`Best::result()`].
-    fn eval(&self) -> impl PartialOrd + 'static;
-}
-
-impl<T: PartialOrd + Clone + 'static> Dominance for T {
-    type Best = SingleBest<T>;
-    fn is_dominated(&self, rhs: &Self) -> bool {
-        self <= rhs
-    }
-    fn eval(&self) -> impl PartialOrd + 'static {
-        self.clone()
-    }
-}
 
 /// Single best element container.
 #[derive(Debug, Default)]

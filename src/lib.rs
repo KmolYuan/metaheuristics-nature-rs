@@ -192,3 +192,15 @@ pub mod rayon {
             .install(f)
     }
 }
+
+/// A marker trait for parallel computation.
+#[cfg(not(feature = "rayon"))]
+pub trait MaybeParallel {}
+#[cfg(not(feature = "rayon"))]
+impl<T> MaybeParallel for T {}
+
+/// A marker trait for parallel computation.
+#[cfg(feature = "rayon")]
+pub trait MaybeParallel: Sync + Send {}
+#[cfg(feature = "rayon")]
+impl<T: Sync + Send> MaybeParallel for T {}

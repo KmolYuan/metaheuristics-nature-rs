@@ -1,7 +1,6 @@
 //! Random number generator module.
 use alloc::vec::Vec;
 use core::{cell::Cell, ops::RangeBounds};
-use num_traits::{Float, Zero};
 use rand::{
     distributions::{
         uniform::{SampleRange, SampleUniform},
@@ -139,10 +138,10 @@ impl Rng {
     #[inline]
     pub fn ub<U>(&self, ub: U) -> U
     where
-        U: Zero + SampleUniform,
+        U: Default + SampleUniform,
         core::ops::Range<U>: SampleRange<U>,
     {
-        self.range(U::zero()..ub)
+        self.range(U::default()..ub)
     }
 
     /// Generate a random value by range.
@@ -163,7 +162,7 @@ impl Rng {
     #[inline]
     pub fn normal<F>(&self, mean: F, std: F) -> F
     where
-        F: Float,
+        F: num_traits::Float,
         rand_distr::StandardNormal: Distribution<F>,
     {
         self.sample(rand_distr::Normal::new(mean, std).unwrap())
@@ -178,10 +177,10 @@ impl Rng {
     /// Generate a random array with no-repeat values.
     pub fn array<A, C, const N: usize>(&self, candi: C) -> [A; N]
     where
-        A: Zero + Copy + PartialEq + SampleUniform,
+        A: Default + Copy + PartialEq + SampleUniform,
         C: IntoIterator<Item = A>,
     {
-        self.array_by([A::zero(); N], 0, candi)
+        self.array_by([A::default(); N], 0, candi)
     }
 
     /// Fill a mutable slice with no-repeat values.
