@@ -7,7 +7,6 @@ use rand::{
         uniform::{SampleRange, SampleUniform},
         Distribution,
     },
-    seq::SliceRandom as _,
     Rng as _, SeedableRng as _,
 };
 use rand_chacha::ChaCha8Rng;
@@ -172,6 +171,7 @@ impl Rng {
 
     /// Shuffle a slice.
     pub fn shuffle<A>(&self, s: &mut [A]) {
+        use rand::seq::SliceRandom as _;
         self.gen(|r| s.shuffle(r));
     }
 

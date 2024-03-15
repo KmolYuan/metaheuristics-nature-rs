@@ -1,6 +1,7 @@
 //! Pareto front implementation.
 use crate::random::Rng;
 use alloc::vec::Vec;
+use core::iter::zip;
 
 /// Trait for dominance comparison.
 ///
@@ -16,6 +17,7 @@ use alloc::vec::Vec;
 /// ```
 /// use metaheuristics_nature::pareto::{Dominance, Pareto};
 ///
+/// #[derive(Clone)]
 /// struct MyObject {
 ///     cost: f64,
 ///     weight: f64,
@@ -31,7 +33,7 @@ use alloc::vec::Vec;
 ///     }
 /// }
 /// ```
-pub trait Dominance {
+pub trait Dominance: Clone {
     /// The best element container.
     type Best: Best<Item = Self>;
     /// Check if `self` dominates `rhs`.
@@ -92,7 +94,11 @@ pub trait Best {
     /// The type of the best element
     type Item: Dominance;
     /// Update the best element.
-    fn update(&mut self, xs: Vec<f64>, fit: Self::Item);
+    fn update(&mut self, xs: &[f64], fit: &Self::Item);
+    /// Update the best elements from a batch.
+    fn update_all(&mut self, xs: &[Vec<f64>], fit: &[&Self::Item]) {
+        zip(xs, fit).for_each(|(xs, fit)| self.update(xs, fit));
+    }
     /// Sample a random best element.
     fn sample(&self, rng: &Rng) -> Option<(&[f64], &Self::Item)>;
     /// Get the final best element.
@@ -102,15 +108,15 @@ pub trait Best {
 impl<T: Dominance> Best for SingleBest<T> {
     type Item = T;
 
-    fn update(&mut self, xs: Vec<f64>, fit: Self::Item) {
+    fn update(&mut self, xs: &[f64], fit: &Self::Item) {
         if let (Some(best), Some(best_f)) = (&mut self.xs, &mut self.fit) {
             if fit.is_dominated(best_f) {
-                *best = xs;
-                *best_f = fit;
+                *best = xs.to_vec();
+                *best_f = fit.clone();
             }
         } else {
-            self.xs = Some(xs);
-            self.fit = Some(fit);
+            self.xs = Some(xs.to_vec());
+            self.fit = Some(fit.clone());
         }
     }
 
@@ -126,7 +132,7 @@ impl<T: Dominance> Best for SingleBest<T> {
 impl<T: Dominance> Best for Pareto<T> {
     type Item = T;
 
-    fn update(&mut self, xs: Vec<f64>, fit: Self::Item) {
+    fn update(&mut self, xs: &[f64], fit: &Self::Item) {
         let mut is_dominated = false;
         // Remove dominated solutions
         for i in 0..self.xs.len() {
@@ -137,12 +143,13 @@ impl<T: Dominance> Best for Pareto<T> {
                 self.fit.swap_remove(i);
             }
         }
+        // Add the new solution
         if is_dominated {
-            self.xs.push(xs);
-            self.fit.push(fit);
+            self.xs.push(xs.to_vec());
+            self.fit.push(fit.clone());
         }
+        // Prune the solution set
         if self.xs.len() > self.limit {
-            // Remove the oldest solution
             let (i, _) = (self.fit.iter().map(T::eval).enumerate())
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .unwrap();
@@ -157,7 +164,7 @@ impl<T: Dominance> Best for Pareto<T> {
     }
 
     fn result(&self) -> Option<(&[f64], &Self::Item)> {
-        core::iter::zip(&self.xs, &self.fit)
+        zip(&self.xs, &self.fit)
             .map(|(xs, fit)| (xs, fit, fit.eval()))
             .min_by(|(.., a), (.., b)| a.partial_cmp(b).unwrap())
             .map(|(xs, fit, _)| (xs.as_slice(), fit))

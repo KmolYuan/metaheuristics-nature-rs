@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use alloc::vec::Vec;
+use core::iter::zip;
 
 /// A basic context type of the algorithms.
 ///
@@ -23,17 +24,13 @@ pub struct Ctx<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Ctx<F> {
-    pub(crate) fn from_parts(func: F, pool: Vec<Vec<f64>>, pool_f: Vec<F::Fitness>) -> Self {
-        let mut ctx = Self {
-            best: Vec::new(),
-            best_f: Default::default(),
-            pool,
-            pool_f,
-            gen: 0,
-            func,
-        };
-        ctx.find_best_override();
-        ctx
+    pub(crate) fn from_parts(func: F, pool: Vec<Vec<f64>>, mut pool_f: Vec<F::Fitness>) -> Self {
+        let (best_f, best) = zip(&pool_f, &pool)
+            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+            .map(|(f, xs)| (f.clone(), xs.clone()))
+            .unwrap();
+        pool_f.iter_mut().for_each(|f| f.mark_not_best());
+        Self { best, best_f, pool, pool_f, gen: 0, func }
     }
 
     pub(crate) fn from_pool(func: F, pool: Vec<Vec<f64>>) -> Self {
@@ -94,19 +91,10 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Find the best, and set it globally.
     pub fn find_best(&mut self) {
-        self.find_best_inner(false);
-    }
-
-    /// Find the best and override it.
-    pub fn find_best_override(&mut self) {
-        self.find_best_inner(true);
-    }
-
-    fn find_best_inner(&mut self, overrided: bool) {
-        let (f, xs) = core::iter::zip(&self.pool_f, &self.pool)
+        let (f, xs) = zip(&self.pool_f, &self.pool)
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
             .unwrap();
-        if overrided || *f < self.best_f {
+        if *f < self.best_f {
             self.best_f = f.clone();
             self.best = xs.clone();
         }
@@ -116,7 +104,6 @@ impl<F: ObjFunc> Ctx<F> {
 
 impl<F: ObjFunc> core::ops::Deref for Ctx<F> {
     type Target = F;
-
     fn deref(&self) -> &Self::Target {
         &self.func
     }
