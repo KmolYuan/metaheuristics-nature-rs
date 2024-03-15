@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 
 /// A basic context type of the algorithms.
 ///
@@ -23,16 +23,26 @@ pub struct Ctx<F: ObjFunc> {
 }
 
 impl<F: ObjFunc> Ctx<F> {
-    pub(crate) fn new(func: F, pop_num: usize) -> Self {
-        let dim = func.bound().len();
-        Self {
-            best: vec![0.; dim],
+    pub(crate) fn from_parts(func: F, pool: Vec<Vec<f64>>, pool_f: Vec<F::Fitness>) -> Self {
+        let mut ctx = Self {
+            best: Vec::new(),
             best_f: Default::default(),
-            pool: vec![vec![0.; dim]; pop_num],
-            pool_f: vec![Default::default(); pop_num],
+            pool,
+            pool_f,
             gen: 0,
             func,
-        }
+        };
+        ctx.find_best_override();
+        ctx
+    }
+
+    pub(crate) fn from_pool(func: F, pool: Vec<Vec<f64>>) -> Self {
+        #[cfg(not(feature = "rayon"))]
+        let iter = pool.iter();
+        #[cfg(feature = "rayon")]
+        let iter = pool.par_iter();
+        let pool_f = iter.map(|xs| func.fitness(xs)).collect();
+        Self::from_parts(func, pool, pool_f)
     }
 
     /// Get population number.
@@ -65,34 +75,9 @@ impl<F: ObjFunc> Ctx<F> {
         self.best_f.as_result()
     }
 
-    pub(crate) fn init_pop(&mut self, pool: Vec<Vec<f64>>) {
-        let mut fitness = self.pool_f.clone();
-        #[cfg(feature = "rayon")]
-        let iter = fitness.par_iter_mut();
-        #[cfg(not(feature = "rayon"))]
-        let iter = fitness.iter_mut();
-        let (f, xs) = iter
-            .zip(&pool)
-            .map(|(f, xs)| {
-                *f = self.func.fitness(xs);
-                (f, xs)
-            })
-            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-            .unwrap();
-        self.set_best_from(xs.clone(), f.clone());
-        self.pool = pool;
-        self.pool_f = fitness;
-    }
-
     /// Prune the pool fitness object to reduce memory in some cases.
     pub fn prune_fitness(&mut self) {
         self.pool_f.iter_mut().for_each(|f| f.mark_not_best());
-    }
-
-    /// Set the fitness and variables to best.
-    pub fn set_best_from(&mut self, xs: Vec<f64>, f: F::Fitness) {
-        self.best = xs;
-        self.best_f = f;
     }
 
     /// Assign the index from best.

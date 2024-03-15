@@ -12,7 +12,7 @@ pub enum Pool<'a, F: ObjFunc> {
         /// Pool
         pool: Vec<Vec<f64>>,
         /// Fitness values
-        fitness: Vec<F::Fitness>,
+        pool_f: Vec<F::Fitness>,
     },
     /// Generate the pool uniformly with a filter function to check the
     /// validity.
@@ -159,41 +159,40 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
             func.bound().iter().all(|[lb, ub]| lb <= ub),
             "Lower bound should be less than upper bound"
         );
-        let mut ctx = Ctx::new(func, pop_num);
         let rng = Rng::new(seed);
-        match pool {
-            Pool::Ready { pool, fitness } => {
-                assert!(pool.len() == ctx.pop_num(), "Pool size mismatched");
-                assert!(pool[0].len() == ctx.dim(), "Pool dimension mismatched");
-                ctx.pool = pool;
-                ctx.pool_f = fitness;
-                ctx.find_best_override();
+        let mut ctx = match pool {
+            Pool::Ready { pool, pool_f } => {
+                let dim = func.bound().len();
+                assert!(pool.len() == pop_num, "Pool size mismatched");
+                assert!(pool[0].len() == dim, "Pool dimension mismatched");
+                Ctx::from_parts(func, pool, pool_f)
             }
             Pool::UniformBy(filter) => {
-                let mut pool = Vec::with_capacity(ctx.pop_num());
+                let dim = func.bound().len();
+                let mut pool = Vec::with_capacity(pop_num);
                 let rand_f = uniform_pool();
-                let pop_num = ctx.pop_num();
                 while pool.len() < pop_num {
-                    let x = (0..ctx.dim())
-                        .map(|s| rand_f(s, ctx.func.bound_range(s), &rng))
+                    let x = (0..dim)
+                        .map(|s| rand_f(s, func.bound_range(s), &rng))
                         .collect::<Vec<_>>();
                     if filter(&x) {
                         pool.push(x);
                     }
                 }
-                ctx.init_pop(pool);
+                Ctx::from_pool(func, pool)
             }
             Pool::Func(f) => {
-                let pool = (0..ctx.pop_num())
+                let dim = func.bound().len();
+                let pool = (0..pop_num)
                     .map(|_| {
-                        (0..ctx.dim())
-                            .map(|s| f(s, ctx.func.bound_range(s), &rng))
+                        (0..dim)
+                            .map(|s| f(s, func.bound_range(s), &rng))
                             .collect::<Vec<_>>()
                     })
                     .collect();
-                ctx.init_pop(pool)
+                Ctx::from_pool(func, pool)
             }
-        }
+        };
         algorithm.init(&mut ctx, &rng);
         loop {
             callback(&mut ctx);
