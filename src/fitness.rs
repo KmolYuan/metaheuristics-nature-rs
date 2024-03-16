@@ -45,7 +45,7 @@ pub trait Fitness: Clone + 'static {
     fn is_dominated(&self, rhs: &Self) -> bool;
     /// Evaluate the final fitness value.
     ///
-    /// Used in [`Best::update()`] and [`Best::result()`].
+    /// Used in [`Best::update()`] and [`Best::as_result()`].
     fn eval(&self) -> Self::Eval;
     /// Mark the value to non-best, used to drop the non-best results.
     fn mark_not_best(&mut self) {}
@@ -64,8 +64,8 @@ impl<T: PartialOrd + Clone + 'static> Fitness for T {
 
 /// A [`Fitness`] type carrying final results.
 ///
-/// You can use [`Solver::as_result()`]/[`Solver::into_result()`] to access
-/// product field.
+/// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
+/// [`Solver::as_best_eval()`] to access product field.
 #[derive(Default, Clone, Debug)]
 pub struct Product<F: Fitness, P> {
     fit: F,
