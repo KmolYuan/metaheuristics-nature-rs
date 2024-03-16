@@ -84,7 +84,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let mut pool_f = ctx.pool_f.clone();
         for (xs, f) in zip(&mut pool, &mut pool_f) {
             let [a, b] = rng.array(0..ctx.pop_num());
-            let i = if ctx.pool_f[a] < ctx.pool_f[b] { a } else { b };
+            let i = if ctx.pool_f[a].is_dominated(&ctx.pool_f[b]) {
+                a
+            } else {
+                b
+            };
             if rng.maybe(self.win) {
                 *xs = ctx.pool[i].clone();
                 *f = ctx.pool_f[i].clone();
@@ -92,7 +96,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         }
         ctx.pool = pool;
         ctx.pool_f = pool_f;
-        ctx.set_from_best(rng.ub(ctx.pop_num()));
+        {
+            let i = rng.ub(ctx.pop_num());
+            let (xs, f) = ctx.best.sample(rng);
+            ctx.set_from(i, xs.to_vec(), f.clone());
+        }
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
             if !rng.maybe(self.cross) {
@@ -105,7 +113,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             let mut ret = iter
                 .zip(rng.stream(3))
                 .map(|(id, rng)| {
-                    let xs = zip(ctx.func.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
+                    let xs = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
                         .map(|(&[min, max], (a, b))| {
                             let v = match id {
                                 0 => 0.5 * (a + b),
@@ -115,11 +123,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                             rng.clamp(v, min..=max)
                         })
                         .collect::<Vec<_>>();
-                    let f = ctx.func.fitness(&xs);
+                    let f = ctx.fitness(&xs);
                     (f, xs)
                 })
                 .collect::<Vec<_>>();
-            ret.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+            ret.sort_unstable_by(|(a, _), (b, _)| a.eval().partial_cmp(&b.eval()).unwrap());
             let [(t1_f, t1_x), (t2_f, t2_x)] = [ret.remove(0), ret.remove(0)];
             ctx.set_from(i, t1_x, t1_f);
             ctx.set_from(i + 1, t2_x, t2_f);

@@ -10,7 +10,14 @@ pub trait Bounded: Sync + Send {
     /// This function should be cheap.
     fn bound(&self) -> &[[f64; 2]];
 
+    /// Get the number of variables (dimension) of the problem.
+    #[inline]
+    fn dim(&self) -> usize {
+        self.bound().len()
+    }
+
     /// Get the upper bound and the lower bound values.
+    #[inline]
     fn bound_of(&self, s: usize) -> [f64; 2] {
         self.bound()[s]
     }
@@ -31,14 +38,12 @@ pub trait Bounded: Sync + Send {
 
     /// Get the lower bound.
     #[inline]
-    #[must_use = "the bound value should be used"]
     fn lb(&self, s: usize) -> f64 {
         self.bound_of(s)[0]
     }
 
     /// Get the upper bound.
     #[inline]
-    #[must_use = "the bound value should be used"]
     fn ub(&self, s: usize) -> f64 {
         self.bound_of(s)[1]
     }

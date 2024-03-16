@@ -132,7 +132,7 @@ macro_rules! impl_builders {
 /// and external items from "ndarray" and "rayon" (if `rayon` feature enabled).
 pub mod prelude {
     pub use super::*;
-    pub use crate::random::*;
+    pub use crate::{pareto::*, random::*};
 
     #[cfg(feature = "rayon")]
     #[doc(no_inline)]

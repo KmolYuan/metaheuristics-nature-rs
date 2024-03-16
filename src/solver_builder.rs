@@ -50,6 +50,7 @@ pub enum Pool<'a, F: ObjFunc> {
 pub struct SolverBuilder<'a, F: ObjFunc> {
     func: F,
     pop_num: usize,
+    pareto_limit: usize,
     seed: SeedOption,
     algorithm: Box<dyn Algorithm<F>>,
     pool: Pool<'a, F>,
@@ -65,6 +66,31 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         ///
         /// If not changed by the algorithm setting, the default number is 200.
         fn pop_num(usize)
+
+    }
+
+    /// Pareto front limit.
+    ///
+    /// It is not working for single-objective optimization.
+    ///
+    /// ```
+    /// use metaheuristics_nature::{Rga, Solver};
+    /// # use metaheuristics_nature::tests::TestMO as MyFunc;
+    ///
+    /// let s = Solver::build(Rga::default(), MyFunc::new())
+    ///     .task(|ctx| ctx.gen == 20)
+    ///     .pareto_limit(10)
+    ///     .solve();
+    /// ```
+    ///
+    /// # Default
+    ///
+    /// If not changed by the algorithm setting, the default number is 20.
+    pub fn pareto_limit(self, pareto_limit: usize) -> Self
+    where
+        F::Fitness: Fitness<Best<F::Fitness> = Pareto<F::Fitness>>,
+    {
+        Self { pareto_limit, ..self }
     }
 
     /// Set the random seed to get a determined result.
@@ -149,6 +175,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         let Self {
             func,
             pop_num,
+            pareto_limit,
             seed,
             mut algorithm,
             pool,
@@ -162,13 +189,14 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         let rng = Rng::new(seed);
         let mut ctx = match pool {
             Pool::Ready { pool, pool_f } => {
-                let dim = func.bound().len();
+                let dim = func.dim();
                 assert!(pool.len() == pop_num, "Pool size mismatched");
                 assert!(pool[0].len() == dim, "Pool dimension mismatched");
-                Ctx::from_parts(func, pool, pool_f)
+                let best = Best::from_limit(pareto_limit);
+                Ctx::from_parts(func, best, pool, pool_f)
             }
             Pool::UniformBy(filter) => {
-                let dim = func.bound().len();
+                let dim = func.dim();
                 let mut pool = Vec::with_capacity(pop_num);
                 let rand_f = uniform_pool();
                 while pool.len() < pop_num {
@@ -179,10 +207,11 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                         pool.push(x);
                     }
                 }
-                Ctx::from_pool(func, pool)
+                let best = Best::from_limit(pareto_limit);
+                Ctx::from_pool(func, best, pool)
             }
             Pool::Func(f) => {
-                let dim = func.bound().len();
+                let dim = func.dim();
                 let pool = (0..pop_num)
                     .map(|_| {
                         (0..dim)
@@ -190,7 +219,8 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                             .collect::<Vec<_>>()
                     })
                     .collect();
-                Ctx::from_pool(func, pool)
+                let best = Best::from_limit(pareto_limit);
+                Ctx::from_pool(func, best, pool)
             }
         };
         algorithm.init(&mut ctx, &rng);
@@ -222,6 +252,7 @@ impl<F: ObjFunc> Solver<F> {
         SolverBuilder {
             func,
             pop_num: S::default_pop(),
+            pareto_limit: 20,
             seed: SeedOption::None,
             algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(uniform_pool())),

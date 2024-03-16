@@ -4,58 +4,74 @@ use alloc::vec::Vec;
 use core::iter::zip;
 
 /// Single best element container.
-#[derive(Debug, Default)]
-pub struct SingleBest<T: Dominance> {
+#[derive(Debug)]
+pub struct SingleBest<T: Fitness> {
     xs: Option<Vec<f64>>,
     fit: Option<T>,
 }
 
+impl<T: Fitness> SingleBest<T> {
+    /// Get the final best element.
+    pub fn current_eval(&self) -> <T as Fitness>::Eval {
+        Best::current_eval(self)
+    }
+}
+
 /// Pareto front container.
 #[derive(Debug)]
-pub struct Pareto<T: Dominance> {
+pub struct Pareto<T: Fitness> {
     xs: Vec<Vec<f64>>,
     fit: Vec<T>,
     limit: usize,
 }
 
-impl<T: Dominance> Default for Pareto<T> {
-    fn default() -> Self {
-        Self::new(10)
-    }
-}
-
-impl<T: Dominance> Pareto<T> {
-    /// Create a new Pareto front container.
-    pub const fn new(limit: usize) -> Self {
-        Self { xs: Vec::new(), fit: Vec::new(), limit }
-    }
-
-    /// Set the limit of the Pareto front.
-    ///
-    /// This method will not change the solution set until the next update.
-    pub fn set_limit(&mut self, limit: usize) {
-        self.limit = limit;
+impl<T: Fitness> Pareto<T> {
+    /// Get the final best element.
+    pub fn current_eval(&self) -> <T as Fitness>::Eval {
+        Best::current_eval(self)
     }
 }
 
 /// A trait for best element container.
 pub trait Best {
     /// The type of the best element
-    type Item: Dominance;
+    type Item: Fitness;
+    /// Create a new best element container.
+    fn from_limit(limit: usize) -> Self;
     /// Update the best element.
     fn update(&mut self, xs: &[f64], fit: &Self::Item);
     /// Update the best elements from a batch.
-    fn update_all(&mut self, xs: &[Vec<f64>], fit: &[&Self::Item]) {
-        zip(xs, fit).for_each(|(xs, fit)| self.update(xs, fit));
+    fn update_all(&mut self, pool: &[Vec<f64>], pool_f: &[Self::Item]) {
+        zip(pool, pool_f).for_each(|(xs, fit)| self.update(xs, fit));
     }
     /// Sample a random best element.
-    fn sample(&self, rng: &Rng) -> Option<(&[f64], &Self::Item)>;
+    fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item);
+    /// Sample a random design variables.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the best element is not available.
+    fn sample_xs(&self, rng: &Rng) -> &[f64] {
+        self.sample(rng).0
+    }
     /// Get the final best element.
-    fn result(&self) -> Option<(&[f64], &Self::Item)>;
+    fn as_result(&self) -> (&[f64], &Self::Item);
+    /// Get the final best fitness value.
+    fn as_result_fit(&self) -> &Self::Item {
+        self.as_result().1
+    }
+    /// Get the final best evaluation value.
+    fn current_eval(&self) -> <Self::Item as Fitness>::Eval {
+        self.as_result_fit().eval()
+    }
 }
 
-impl<T: Dominance> Best for SingleBest<T> {
+impl<T: Fitness> Best for SingleBest<T> {
     type Item = T;
+
+    fn from_limit(_limit: usize) -> Self {
+        Self { xs: None, fit: None }
+    }
 
     fn update(&mut self, xs: &[f64], fit: &Self::Item) {
         if let (Some(best), Some(best_f)) = (&mut self.xs, &mut self.fit) {
@@ -69,20 +85,29 @@ impl<T: Dominance> Best for SingleBest<T> {
         }
     }
 
-    fn sample(&self, _rng: &Rng) -> Option<(&[f64], &Self::Item)> {
-        self.result()
+    fn sample(&self, _rng: &Rng) -> (&[f64], &Self::Item) {
+        self.as_result()
     }
 
-    fn result(&self) -> Option<(&[f64], &Self::Item)> {
-        self.xs.as_deref().zip(self.fit.as_ref())
+    fn as_result(&self) -> (&[f64], &Self::Item) {
+        match (&self.xs, &self.fit) {
+            (Some(xs), Some(fit)) => (xs, fit),
+            _ => panic!("No best element available"),
+        }
     }
 }
 
-impl<T: Dominance> Best for Pareto<T> {
+impl<T: Fitness> Best for Pareto<T> {
     type Item = T;
 
+    fn from_limit(limit: usize) -> Self {
+        let xs = Vec::with_capacity(limit);
+        let fit = Vec::with_capacity(limit);
+        Self { xs, fit, limit }
+    }
+
     fn update(&mut self, xs: &[f64], fit: &Self::Item) {
-        let mut is_dominated = false;
+        let mut is_dominated = self.xs.is_empty();
         // Remove dominated solutions
         for i in 0..self.xs.len() {
             let dominated = fit.is_dominated(&self.fit[i]);
@@ -107,15 +132,18 @@ impl<T: Dominance> Best for Pareto<T> {
         }
     }
 
-    fn sample(&self, rng: &Rng) -> Option<(&[f64], &Self::Item)> {
+    fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item) {
         let i = rng.range(0..self.xs.len());
-        Some((self.xs.get(i)?, self.fit.get(i)?))
+        (&self.xs[i], &self.fit[i])
     }
 
-    fn result(&self) -> Option<(&[f64], &Self::Item)> {
-        zip(&self.xs, &self.fit)
+    fn as_result(&self) -> (&[f64], &Self::Item) {
+        match zip(&self.xs, &self.fit)
             .map(|(xs, fit)| (xs, fit, fit.eval()))
             .min_by(|(.., a), (.., b)| a.partial_cmp(b).unwrap())
-            .map(|(xs, fit, _)| (xs.as_slice(), fit))
+        {
+            Some((xs, fit, _)) => (xs, fit),
+            None => panic!("No best element available"),
+        }
     }
 }

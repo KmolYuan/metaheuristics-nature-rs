@@ -33,19 +33,17 @@ impl Setting for Tlbo {
 
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: Vec<f64>) {
-        let f_new = ctx.func.fitness(&student);
-        if f_new < ctx.pool_f[i] {
+        let f_new = ctx.fitness(&student);
+        if f_new.is_dominated(&ctx.pool_f[i]) {
             ctx.set_from(i, student, f_new);
-            if ctx.pool_f[i] < ctx.best_f {
-                ctx.best = ctx.pool[i].clone();
-                ctx.best_f = ctx.pool_f[i].clone();
-            }
+            ctx.best.update(&ctx.pool[i], &ctx.pool_f[i]);
         }
     }
 
     fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &Rng, i: usize) {
         let tf = rng.range(1f64..2.).round();
-        let student = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.best))
+        let best = ctx.best.sample_xs(rng);
+        let student = zip(ctx.bound(), zip(&ctx.pool[i], best))
             .enumerate()
             .map(|(s, (&[min, max], (base, best)))| {
                 let mut mean = 0.;
@@ -71,7 +69,7 @@ impl Method {
         };
         let student = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
             .map(|(&[min, max], (a, b))| {
-                let diff = if ctx.pool_f[j] < ctx.pool_f[i] {
+                let diff = if ctx.pool_f[j].is_dominated(&ctx.pool_f[i]) {
                     a - b
                 } else {
                     b - a

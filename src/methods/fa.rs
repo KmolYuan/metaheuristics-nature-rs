@@ -71,7 +71,7 @@ impl Method {
         i: usize,
         j: usize,
     ) -> (Vec<f64>, F::Fitness) {
-        let (i, j) = if ctx.pool_f[i] > ctx.pool_f[j] {
+        let (i, j) = if ctx.pool_f[j].is_dominated(&ctx.pool_f[i]) {
             (i, j)
         } else {
             (j, i)
@@ -81,14 +81,14 @@ impl Method {
             .map(|v| v * v)
             .sum::<f64>();
         let beta = self.beta_min * (-self.gamma * r).exp();
-        let xs = zip(ctx.func.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
+        let xs = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
             .map(|(&[min, max], (a, b))| {
                 let step = self.alpha * (max - min) * rng.range(-0.5..0.5);
                 let surround = a + beta * (b - a);
                 (surround + step).clamp(min, max)
             })
             .collect::<Vec<_>>();
-        let f = ctx.func.fitness(&xs);
+        let f = ctx.fitness(&xs);
         (xs, f)
     }
 }
@@ -108,7 +108,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             .for_each(|(i, ((fitness, pool), rng))| {
                 for j in i + 1..ctx.pop_num() {
                     let (v, f) = self.move_firefly(ctx, &rng, i, j);
-                    if f < *fitness {
+                    if f.is_dominated(fitness) {
                         *fitness = f;
                         *pool = v;
                     }

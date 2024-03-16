@@ -22,13 +22,13 @@ use alloc::vec::Vec;
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default(), MyFunc::new())
 ///     .task(|ctx| ctx.gen == 20)
-///     .callback(|ctx| report.push(ctx.best_f.clone()))
+///     .callback(|ctx| report.push(ctx.best.current_eval()))
 ///     .solve();
-/// // Get the result from objective function
-/// let ans = s.as_result();
 /// // Get the optimized XY value of your function
-/// let xs = s.best_parameters();
-/// let (err, ans) = s.into_err_result();
+/// let (xs, fit) = s.as_best();
+/// // If `fit` is a `Product` type
+/// let err = fit.fitness();
+/// let result = fit.as_result();
 /// // Get the history reports
 /// let y2 = &report[2];
 /// ```
@@ -51,61 +51,32 @@ impl<F: ObjFunc> Solver<F> {
         &self.ctx.func
     }
 
-    /// Get the best parameters.
+    /// Get the reference of the best set.
     ///
-    /// See also [`Solver::as_best_fitness()`], [`Solver::as_result()`].
-    pub fn best_parameters(&self) -> &[f64] {
+    /// Use [`Solver::as_best()`] to get the best parameters and the fitness
+    /// value directly.
+    pub fn as_best_set(&self) -> &BestCon<F::Fitness> {
         &self.ctx.best
     }
 
-    /// Get the best fitness.
-    ///
-    /// See also [`Solver::as_best_fitness()`].
-    pub fn best_fitness(&self) -> F::Fitness
-    where
-        F::Fitness: Copy,
-    {
-        self.ctx.best_f
+    /// Get the reference of the best parameters and the fitness value.
+    pub fn as_best(&self) -> (&[f64], &F::Fitness) {
+        self.ctx.best.as_result()
     }
 
-    /// Get the reference to the best fitness.
-    ///
-    /// See also [`Solver::best_fitness()`].
-    pub fn as_best_fitness(&self) -> &F::Fitness {
-        &self.ctx.best_f
+    /// Get the reference of the best fitness value.
+    pub fn as_best_xs(&self) -> &[f64] {
+        self.as_best().0
     }
 
-    /// Get the result of the objective function.
-    ///
-    /// See also [`Solver::into_result()`], [`Solver::into_err_result()`].
-    pub fn as_result<P, Fit>(&self) -> &P
-    where
-        Fit: Fitness,
-        F: ObjFunc<Fitness = Product<P, Fit>>,
-    {
-        self.ctx.best_f.as_result()
+    /// Get the reference of the best fitness value.
+    pub fn as_best_fit(&self) -> &F::Fitness {
+        self.as_best().1
     }
 
-    /// Unwrap and get the final result.
-    ///
-    /// See also [`Solver::as_result()`], [`Solver::into_err_result()`].
-    pub fn into_result<P, Fit>(self) -> P
-    where
-        Fit: Fitness,
-        F: ObjFunc<Fitness = Product<P, Fit>>,
-    {
-        self.ctx.best_f.into_result()
-    }
-
-    /// Unwrap and get the final error and result.
-    ///
-    /// See also [`Solver::as_result()`], [`Solver::into_result()`].
-    pub fn into_err_result<P, Fit>(self) -> (Fit, P)
-    where
-        Fit: Fitness,
-        F: ObjFunc<Fitness = Product<P, Fit>>,
-    {
-        self.ctx.best_f.into_inner()
+    /// Get the final best fitness value.
+    pub fn as_best_eval(&self) -> <F::Fitness as Fitness>::Eval {
+        self.as_best_fit().eval()
     }
 
     /// Seed of the random number generator.
