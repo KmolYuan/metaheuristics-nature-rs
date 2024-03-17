@@ -33,7 +33,7 @@ impl<T: Fitness> Pareto<T> {
 }
 
 /// A trait for best element container.
-pub trait Best {
+pub trait Best: MaybeParallel {
     /// The type of the best element
     type Item: Fitness;
     /// Create a new best element container.

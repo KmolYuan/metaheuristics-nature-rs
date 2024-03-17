@@ -79,40 +79,47 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     }
 
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
-        let mut fitness = ctx.pool_f.clone();
-        let mut pool = ctx.pool.clone();
-        let mut best_past = self.best_past.clone();
-        let mut best_past_f = self.best_past_f.clone();
+        let rng = rng.stream(ctx.pop_num());
+        let cognition = self.cognition;
+        let social = self.social;
+        let velocity = self.velocity;
         #[cfg(not(feature = "rayon"))]
-        let iter = fitness.iter_mut();
+        let iter = rng.into_iter();
         #[cfg(feature = "rayon")]
-        let iter = fitness.par_iter_mut();
-        iter.zip(&mut pool)
-            .zip(&mut best_past)
-            .zip(&mut best_past_f)
-            .zip(rng.stream(ctx.pop_num()))
-            .for_each(|((((f, xs), past), past_f), rng)| {
-                let alpha = rng.ub(self.cognition);
-                let beta = rng.ub(self.social);
+        let iter = rng.into_par_iter();
+        let iter = iter
+            .zip(&mut ctx.pool)
+            .zip(&mut ctx.pool_f)
+            .zip(&mut self.best_past)
+            .zip(&mut self.best_past_f)
+            .filter_map(|((((rng, xs), f), past), past_f)| {
+                let alpha = rng.ub(cognition);
+                let beta = rng.ub(social);
                 let best = ctx.best.sample_xs(&rng);
-                for s in 0..ctx.dim() {
-                    let var = self.velocity * xs[s]
-                        + alpha * (past[s] - xs[s])
-                        + beta * (best[s] - xs[s]);
-                    xs[s] = ctx.clamp(s, var);
+                for s in 0..ctx.func.dim() {
+                    let var =
+                        velocity * xs[s] + alpha * (past[s] - xs[s]) + beta * (best[s] - xs[s]);
+                    xs[s] = ctx.func.clamp(s, var);
                 }
-                *f = ctx.fitness(xs);
+                *f = ctx.func.fitness(xs);
                 if f.is_dominated(&*past_f) {
                     *past_f = f.clone();
                     past_f.mark_not_best();
                     *past = xs.clone();
+                    Some((xs, f))
+                } else {
+                    None
                 }
-                ctx.best.update(xs, f);
             });
-        ctx.pool = pool;
-        ctx.pool_f = fitness;
+        #[cfg(not(feature = "rayon"))]
+        let (xs, f) = iter
+            .reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
+            .unwrap();
+        #[cfg(feature = "rayon")]
+        let (xs, f) = iter
+            .reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
+            .unwrap();
+        ctx.best.update(xs, f);
         ctx.prune_fitness();
-        self.best_past = best_past;
-        self.best_past_f = best_past_f;
     }
 }

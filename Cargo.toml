@@ -11,7 +11,7 @@ keywords = ["metaheuristic", "algorithm", "optimization"]
 categories = ["algorithms", "no-std"]
 
 [features]
-default = ["std"]
+default = ["std", "rayon"]
 std = [
     "num-traits/std",
     "rand/std",

@@ -34,7 +34,7 @@ use alloc::boxed::Box;
 ///     }
 /// }
 /// ```
-pub trait Fitness: Clone + 'static {
+pub trait Fitness: MaybeParallel + Clone + 'static {
     /// The best element container.
     /// + Use [`SingleBest`] for single objective.
     /// + Use [`Pareto`] for multi-objective.
@@ -51,7 +51,7 @@ pub trait Fitness: Clone + 'static {
     fn mark_not_best(&mut self) {}
 }
 
-impl<T: PartialOrd + Clone + 'static> Fitness for T {
+impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
     type Best<A: Fitness> = SingleBest<A>;
     type Eval = Self;
     fn is_dominated(&self, rhs: &Self) -> bool {

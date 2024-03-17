@@ -177,13 +177,15 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut pool = ctx.pool.clone();
         let mut pool_f = ctx.pool_f.clone();
+        let rng = rng.stream(ctx.pop_num());
         #[cfg(not(feature = "rayon"))]
-        let iter = pool.iter_mut();
+        let iter = rng.into_iter();
         #[cfg(feature = "rayon")]
-        let iter = pool.par_iter_mut();
-        iter.zip(&mut pool_f)
-            .zip(rng.stream(ctx.pop_num()))
-            .for_each(|((xs, f), rng)| {
+        let iter = rng.into_par_iter();
+        let iter = iter
+            .zip(&mut pool)
+            .zip(&mut pool_f)
+            .filter_map(|((rng, xs), f)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &rng);
                 // Recombination
@@ -196,9 +198,20 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 if tmp_f.is_dominated(f) {
                     *xs = tmp;
                     *f = tmp_f;
-                    ctx.best.update(xs, f);
+                    Some((xs, f))
+                } else {
+                    None
                 }
             });
+        #[cfg(not(feature = "rayon"))]
+        let (xs, f) = iter
+            .reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
+            .unwrap();
+        #[cfg(feature = "rayon")]
+        let (xs, f) = iter
+            .reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
+            .unwrap();
+        ctx.best.update(xs, f);
         ctx.pool = pool;
         ctx.pool_f = pool_f;
         ctx.prune_fitness();
