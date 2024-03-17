@@ -125,9 +125,7 @@ impl Method {
             S3 | S8 => Box::new({
                 let [v0, v1] = rng.array(0..ctx.pop_num());
                 let best = ctx.best.sample_xs(rng).to_vec();
-                move |ctx, tmp, s| {
-                    tmp[s] + f * (best[s] - tmp[s] + ctx.pool[v0][s] - ctx.pool[v1][s])
-                }
+                move |ctx, xs, s| xs[s] + f * (best[s] - xs[s] + ctx.pool[v0][s] - ctx.pool[v1][s])
             }),
             S4 | S9 => Box::new({
                 let [v0, v1, v2, v3] = rng.array(0..ctx.pop_num());
@@ -151,7 +149,7 @@ impl Method {
         }
     }
 
-    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut [f64], formula: Func<F>)
+    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, xs: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
@@ -160,16 +158,16 @@ impl Method {
             .skip(rng.ub(ctx.dim()))
             .take(ctx.dim())
             .take_while(|_| rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.bound_range(s)))
+            .for_each(|s| xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s)))
     }
 
-    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, tmp: &mut [f64], formula: Func<F>)
+    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, xs: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
         (0..ctx.dim())
             .filter(|_| rng.maybe(self.cross))
-            .for_each(|s| tmp[s] = rng.clamp(formula(ctx, tmp, s), ctx.bound_range(s)))
+            .for_each(|s| xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s)))
     }
 }
 
