@@ -67,19 +67,22 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
 /// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
 /// [`Solver::get_best_eval()`] to access product field.
 #[derive(Default, Clone, Debug)]
-pub struct Product<F: Fitness, P> {
+pub struct Product<F, P> {
     fit: F,
     product: Option<Box<P>>,
 }
 
-impl<P, F: Fitness> Product<F, P> {
+impl<P, F> Product<F, P> {
     /// Create a product.
     pub fn new(fit: F, product: P) -> Self {
         Self { fit, product: Some(Box::new(product)) }
     }
 
     /// Get the fitness value.
-    pub fn fitness(&self) -> F {
+    pub fn fitness(&self) -> F
+    where
+        F: Clone,
+    {
         self.fit.clone()
     }
 
