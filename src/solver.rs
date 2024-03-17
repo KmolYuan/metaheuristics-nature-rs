@@ -22,7 +22,7 @@ use alloc::vec::Vec;
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default(), MyFunc::new())
 ///     .task(|ctx| ctx.gen == 20)
-///     .callback(|ctx| report.push(ctx.best.current_eval()))
+///     .callback(|ctx| report.push(ctx.best.get_eval()))
 ///     .solve();
 /// // Get the optimized XY value of your function
 /// let (xs, fit) = s.as_best();
@@ -75,8 +75,26 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Get the final best fitness value.
-    pub fn as_best_eval(&self) -> <F::Fitness as Fitness>::Eval {
+    pub fn get_best_eval(&self) -> <F::Fitness as Fitness>::Eval {
         self.as_best_fit().eval()
+    }
+
+    /// Get the final best element.
+    pub fn into_result<P, Fit: Fitness>(self) -> P
+    where
+        F: ObjFunc<Fitness = Product<Fit, P>>,
+        P: MaybeParallel + Clone + 'static,
+    {
+        self.ctx.best.into_result_fit().into_result()
+    }
+
+    /// Get the fitness value and the final result.
+    pub fn into_err_result<P, Fit: Fitness>(self) -> (Fit, P)
+    where
+        F: ObjFunc<Fitness = Product<Fit, P>>,
+        P: MaybeParallel + Clone + 'static,
+    {
+        self.ctx.best.into_result_fit().into_err_result()
     }
 
     /// Seed of the random number generator.

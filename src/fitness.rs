@@ -65,7 +65,7 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
 /// A [`Fitness`] type carrying final results.
 ///
 /// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
-/// [`Solver::as_best_eval()`] to access product field.
+/// [`Solver::get_best_eval()`] to access product field.
 #[derive(Default, Clone, Debug)]
 pub struct Product<F: Fitness, P> {
     fit: F,
@@ -94,7 +94,7 @@ impl<P, F: Fitness> Product<F, P> {
     }
 
     /// Get the fitness value and the final result.
-    pub fn into_inner(self) -> (F, P) {
+    pub fn into_err_result(self) -> (F, P) {
         let Self { fit, product } = self;
         (fit, *product.unwrap())
     }

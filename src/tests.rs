@@ -81,10 +81,10 @@ where
     let s = Solver::build(S::default(), TestObj)
         .seed(0)
         .task(|ctx| ctx.best.as_result_fit().eval() - OFFSET < 1e-20)
-        .callback(|ctx| report.push(ctx.best.current_eval()))
+        .callback(|ctx| report.push(ctx.best.get_eval()))
         .solve();
     assert!(!report.is_empty());
-    assert_eq!(s.as_best_eval(), OFFSET);
+    assert_eq!(s.get_best_eval(), OFFSET);
     s
 }
 

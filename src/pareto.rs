@@ -12,8 +12,8 @@ pub struct SingleBest<T: Fitness> {
 
 impl<T: Fitness> SingleBest<T> {
     /// Get the final best element.
-    pub fn current_eval(&self) -> <T as Fitness>::Eval {
-        Best::current_eval(self)
+    pub fn get_eval(&self) -> <T as Fitness>::Eval {
+        Best::get_eval(self)
     }
 }
 
@@ -27,8 +27,8 @@ pub struct Pareto<T: Fitness> {
 
 impl<T: Fitness> Pareto<T> {
     /// Get the final best element.
-    pub fn current_eval(&self) -> <T as Fitness>::Eval {
-        Best::current_eval(self)
+    pub fn get_eval(&self) -> <T as Fitness>::Eval {
+        Best::get_eval(self)
     }
 }
 
@@ -60,8 +60,12 @@ pub trait Best: MaybeParallel {
     fn as_result_fit(&self) -> &Self::Item {
         self.as_result().1
     }
+    /// Convert the best element into the target item.
+    ///
+    /// See also [`Best::as_result_fit()`] for getting its reference.
+    fn into_result_fit(self) -> Self::Item;
     /// Get the final best evaluation value.
-    fn current_eval(&self) -> <Self::Item as Fitness>::Eval {
+    fn get_eval(&self) -> <Self::Item as Fitness>::Eval {
         self.as_result_fit().eval()
     }
 }
@@ -94,6 +98,10 @@ impl<T: Fitness> Best for SingleBest<T> {
             (Some(xs), Some(fit)) => (xs, fit),
             _ => panic!("No best element available"),
         }
+    }
+
+    fn into_result_fit(self) -> Self::Item {
+        self.fit.unwrap()
     }
 }
 
@@ -143,6 +151,16 @@ impl<T: Fitness> Best for Pareto<T> {
             .min_by(|(.., a), (.., b)| a.partial_cmp(b).unwrap())
         {
             Some((xs, fit, _)) => (xs, fit),
+            None => panic!("No best element available"),
+        }
+    }
+
+    fn into_result_fit(self) -> Self::Item {
+        match (self.fit.into_iter())
+            .map(|fit| (fit.eval(), fit))
+            .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+        {
+            Some((_, fit)) => fit,
             None => panic!("No best element available"),
         }
     }
