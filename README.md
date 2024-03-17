@@ -12,6 +12,7 @@ This crate implemented following algorithms:
 + Particle Swarm Optimization (PSO)
 + Firefly Algorithm (FA)
 + Teaching-Learning Based Optimization (TLBO)
++ Support Pareto front for Multi-Objective Optimization (MOO)
 
 Each algorithm gives same API and default parameters to help you test different implementation. For example, you can
 test another algorithm by simply replacing `Rga` to `De`.
