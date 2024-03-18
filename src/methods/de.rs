@@ -202,14 +202,12 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 }
             });
         #[cfg(not(feature = "rayon"))]
-        let (xs, f) = iter
-            .reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
-            .unwrap();
+        let local_best = iter.reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
         #[cfg(feature = "rayon")]
-        let (xs, f) = iter
-            .reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b })
-            .unwrap();
-        ctx.best.update(xs, f);
+        let local_best = iter.reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
+        if let Some((xs, f)) = local_best {
+            ctx.best.update(xs, f);
+        }
         ctx.pool = pool;
         ctx.pool_f = pool_f;
         ctx.prune_fitness();

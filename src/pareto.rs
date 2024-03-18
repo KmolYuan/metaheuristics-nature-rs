@@ -30,6 +30,16 @@ impl<T: Fitness> Pareto<T> {
     pub fn get_eval(&self) -> <T as Fitness>::Eval {
         Best::get_eval(self)
     }
+
+    /// Get the number of best elements.
+    pub fn len(&self) -> usize {
+        self.xs.len()
+    }
+
+    /// Check if the best elements are empty.
+    pub fn is_empty(&self) -> bool {
+        self.xs.is_empty()
+    }
 }
 
 /// A trait for best element container.
