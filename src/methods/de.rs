@@ -110,7 +110,7 @@ impl Setting for De {
 }
 
 impl Method {
-    fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, rng: &Rng) -> Func<F> {
+    fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, rng: &mut Rng) -> Func<F> {
         let f = self.f;
         match self.strategy {
             S1 | S6 => {
@@ -149,30 +149,36 @@ impl Method {
         }
     }
 
-    fn c1<F>(&self, ctx: &Ctx<F>, rng: &Rng, xs: &mut [f64], formula: Func<F>)
+    fn c1<F>(&self, ctx: &Ctx<F>, rng: &mut Rng, xs: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
-        (0..ctx.dim())
+        for s in (0..ctx.dim())
             .cycle()
             .skip(rng.ub(ctx.dim()))
             .take(ctx.dim())
-            .take_while(|_| rng.maybe(self.cross))
-            .for_each(|s| xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s)))
+        {
+            if !rng.maybe(self.cross) {
+                break;
+            }
+            xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s));
+        }
     }
 
-    fn c2<F>(&self, ctx: &Ctx<F>, rng: &Rng, xs: &mut [f64], formula: Func<F>)
+    fn c2<F>(&self, ctx: &Ctx<F>, rng: &mut Rng, xs: &mut [f64], formula: Func<F>)
     where
         F: ObjFunc,
     {
-        (0..ctx.dim())
-            .filter(|_| rng.maybe(self.cross))
-            .for_each(|s| xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s)))
+        for s in 0..ctx.dim() {
+            if rng.maybe(self.cross) {
+                xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s));
+            }
+        }
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
         let mut pool = ctx.pool.clone();
         let mut pool_y = ctx.pool_y.clone();
         let rng = rng.stream(ctx.pop_num());
@@ -183,14 +189,14 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let iter = iter
             .zip(&mut pool)
             .zip(&mut pool_y)
-            .filter_map(|((rng, xs), ys)| {
+            .filter_map(|((mut rng, xs), ys)| {
                 // Generate Vector
-                let formula = self.formula(ctx, &rng);
+                let formula = self.formula(ctx, &mut rng);
                 // Recombination
                 let mut xs_try = xs.clone();
                 match self.strategy {
-                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut xs_try, formula),
-                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut xs_try, formula),
+                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut rng, &mut xs_try, formula),
+                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut rng, &mut xs_try, formula),
                 }
                 let ys_try = ctx.fitness(&xs_try);
                 if ys_try.is_dominated(ys) {

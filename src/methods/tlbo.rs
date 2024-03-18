@@ -40,7 +40,7 @@ impl Method {
         }
     }
 
-    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &Rng, i: usize) {
+    fn teaching<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng, i: usize) {
         let tf = rng.range(1f64..2.).round();
         let best = ctx.best.sample_xs(rng);
         let student = zip(ctx.bound(), zip(&ctx.pool[i], best))
@@ -58,7 +58,7 @@ impl Method {
         Self::register(ctx, i, student);
     }
 
-    fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &Rng, i: usize) {
+    fn learning<F: ObjFunc>(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng, i: usize) {
         let j = {
             let j = rng.ub(ctx.pop_num() - 1);
             if j >= i {
@@ -82,7 +82,7 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
         for i in 0..ctx.pop_num() {
             self.teaching(ctx, rng, i);
             self.learning(ctx, rng, i);

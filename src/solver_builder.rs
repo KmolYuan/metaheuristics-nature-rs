@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-type PoolFunc<'a> = Box<dyn Fn(usize, core::ops::RangeInclusive<f64>, &Rng) -> f64 + 'a>;
+type PoolFunc<'a> = Box<dyn Fn(usize, core::ops::RangeInclusive<f64>, &mut Rng) -> f64 + 'a>;
 
 /// Initial pool generating options.
 ///
@@ -35,7 +35,8 @@ pub enum Pool<'a, F: ObjFunc> {
     ///
     /// let pool = Pool::Func(Box::new(gaussian_pool(&[0.; 4], &[1.; 4])));
     /// let s = Solver::build(Rga::default(), MyFunc::new())
-    /// #   .task(|ctx| ctx.gen == 1)
+    ///     .seed(0)
+    ///     .task(|ctx| ctx.gen == 20)
     ///     .init_pool(pool)
     ///     .solve();
     /// ```
@@ -51,7 +52,7 @@ pub struct SolverBuilder<'a, F: ObjFunc> {
     func: F,
     pop_num: usize,
     pareto_limit: usize,
-    seed: SeedOption,
+    seed: SeedOpt,
     algorithm: Box<dyn Algorithm<F>>,
     pool: Pool<'a, F>,
     task: Box<dyn Fn(&Ctx<F>) -> bool + Send + 'a>,
@@ -78,6 +79,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// # use metaheuristics_nature::tests::TestMO as MyFunc;
     ///
     /// let s = Solver::build(Rga::default(), MyFunc::new())
+    ///     .seed(0)
     ///     .task(|ctx| ctx.gen == 20)
     ///     .pareto_limit(10)
     ///     .solve();
@@ -98,7 +100,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// # Default
     ///
     /// By default, the random seed is auto-decided.
-    pub fn seed(self, seed: impl Into<SeedOption>) -> Self {
+    pub fn seed(self, seed: impl Into<SeedOpt>) -> Self {
         Self { seed: seed.into(), ..self }
     }
 
@@ -122,6 +124,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
     /// let s = Solver::build(Rga::default(), MyFunc::new())
+    ///     .seed(0)
     ///     .task(|ctx| ctx.gen == 20)
     ///     .solve();
     /// ```
@@ -146,10 +149,11 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// use metaheuristics_nature::{Rga, Solver};
     /// # use metaheuristics_nature::tests::TestObj as MyFunc;
     ///
-    /// let mut gen = 0;
+    /// let mut report = Vec::with_capacity(20);
     /// let s = Solver::build(Rga::default(), MyFunc::new())
-    /// #   .task(|ctx| ctx.gen == 1)
-    ///     .callback(|ctx| gen = ctx.gen)
+    ///     .seed(0)
+    ///     .task(|ctx| ctx.gen == 20)
+    ///     .callback(|ctx| report.push(ctx.best.get_eval()))
     ///     .solve();
     /// ```
     ///
@@ -186,7 +190,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
             func.bound().iter().all(|[lb, ub]| lb <= ub),
             "Lower bound should be less than upper bound"
         );
-        let rng = Rng::new(seed);
+        let mut rng = Rng::new(seed);
         let mut ctx = match pool {
             Pool::Ready { pool, pool_y } => {
                 let dim = func.dim();
@@ -201,7 +205,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                 let rand_f = uniform_pool();
                 while pool.len() < pop_num {
                     let x = (0..dim)
-                        .map(|s| rand_f(s, func.bound_range(s), &rng))
+                        .map(|s| rand_f(s, func.bound_range(s), &mut rng))
                         .collect::<Vec<_>>();
                     if filter(&x) {
                         pool.push(x);
@@ -215,7 +219,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                 let pool = (0..pop_num)
                     .map(|_| {
                         (0..dim)
-                            .map(|s| f(s, func.bound_range(s), &rng))
+                            .map(|s| f(s, func.bound_range(s), &mut rng))
                             .collect::<Vec<_>>()
                     })
                     .collect();
@@ -223,14 +227,14 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                 Ctx::from_pool(func, best, pool)
             }
         };
-        algorithm.init(&mut ctx, &rng);
+        algorithm.init(&mut ctx, &mut rng);
         loop {
             callback(&mut ctx);
             if task(&ctx) {
                 break;
             }
             ctx.gen += 1;
-            algorithm.generation(&mut ctx, &rng);
+            algorithm.generation(&mut ctx, &mut rng);
         }
         Solver::new(ctx, rng.seed())
     }
@@ -253,7 +257,7 @@ impl<F: ObjFunc> Solver<F> {
             func,
             pop_num: S::default_pop(),
             pareto_limit: 20,
-            seed: SeedOption::None,
+            seed: SeedOpt::None,
             algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(uniform_pool())),
             task: Box::new(|ctx| ctx.gen >= 200),

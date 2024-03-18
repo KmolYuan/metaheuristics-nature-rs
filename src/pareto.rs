@@ -55,13 +55,13 @@ pub trait Best: MaybeParallel {
         zip(pool, pool_y).for_each(|(xs, ys)| self.update(xs, ys));
     }
     /// Sample a random best element.
-    fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item);
+    fn sample(&self, rng: &mut Rng) -> (&[f64], &Self::Item);
     /// Sample a random design variables.
     ///
     /// # Panics
     ///
     /// Panics if the best element is not available.
-    fn sample_xs(&self, rng: &Rng) -> &[f64] {
+    fn sample_xs(&self, rng: &mut Rng) -> &[f64] {
         self.sample(rng).0
     }
     /// Get the final best element.
@@ -99,7 +99,7 @@ impl<T: Fitness> Best for SingleBest<T> {
         }
     }
 
-    fn sample(&self, _rng: &Rng) -> (&[f64], &Self::Item) {
+    fn sample(&self, _rng: &mut Rng) -> (&[f64], &Self::Item) {
         self.as_result()
     }
 
@@ -140,12 +140,12 @@ impl<T: Fitness> Best for Pareto<T> {
             let (i, _) = (self.ys.iter().map(T::eval).enumerate())
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .unwrap();
-            self.xs.remove(i);
-            self.ys.remove(i);
+            self.xs.swap_remove(i);
+            self.ys.swap_remove(i);
         }
     }
 
-    fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item) {
+    fn sample(&self, rng: &mut Rng) -> (&[f64], &Self::Item) {
         let i = rng.range(0..self.xs.len());
         (&self.xs[i], &self.ys[i])
     }

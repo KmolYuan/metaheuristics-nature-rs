@@ -71,14 +71,14 @@ impl Setting for Rga {
 }
 
 impl Method {
-    fn get_delta(&self, gen: u64, rng: &Rng, y: f64) -> f64 {
+    fn get_delta(&self, gen: u64, rng: &mut Rng, y: f64) -> f64 {
         let r = if gen < 100 { gen as f64 / 100. } else { 1. };
         rng.rand() * y * (1. - r).powf(self.delta)
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
         // Select
         let mut pool = ctx.pool.clone();
         let mut pool_y = ctx.pool_y.clone();
@@ -112,7 +112,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             let iter = (0..3).into_par_iter();
             let mut ret = iter
                 .zip(rng.stream(3))
-                .map(|(id, rng)| {
+                .map(|(id, mut rng)| {
                     let xs = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
                         .map(|(&[min, max], (a, b))| {
                             let v = match id {

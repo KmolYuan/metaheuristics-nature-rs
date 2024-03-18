@@ -1,6 +1,5 @@
 //! Random number generator module.
 use alloc::vec::Vec;
-use core::{cell::Cell, ops::RangeBounds};
 use rand::{
     distributions::{
         uniform::{SampleRange, SampleUniform},
@@ -15,7 +14,7 @@ pub type Seed = [u8; 32];
 
 /// The seed option.
 #[derive(Copy, Clone)]
-pub enum SeedOption {
+pub enum SeedOpt {
     /// Seed from non-crypto u64
     U64(u64),
     /// Crypto seed series
@@ -24,7 +23,7 @@ pub enum SeedOption {
     None,
 }
 
-impl From<Option<u64>> for SeedOption {
+impl From<Option<u64>> for SeedOpt {
     fn from(opt: Option<u64>) -> Self {
         match opt {
             Some(seed) => Self::U64(seed),
@@ -33,58 +32,53 @@ impl From<Option<u64>> for SeedOption {
     }
 }
 
-impl From<u64> for SeedOption {
+impl From<u64> for SeedOpt {
     fn from(seed: u64) -> Self {
         Self::U64(seed)
     }
 }
 
-impl From<Seed> for SeedOption {
+impl From<Seed> for SeedOpt {
     fn from(seed: Seed) -> Self {
         Self::Seed(seed)
     }
 }
 
 /// An uniformed random number generator.
-///
-/// This generator doesn't require mutability,
-/// because the state is saved in the cell.
+#[derive(Clone)]
 pub struct Rng {
-    seed: Seed,
-    stream: Cell<u64>,
-    word_pos: Cell<u128>,
+    rng: ChaCha8Rng,
 }
 
 impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
-    pub fn new(seed: SeedOption) -> Self {
-        let seed = match seed {
-            SeedOption::Seed(seed) => seed,
-            SeedOption::U64(seed) => ChaCha8Rng::seed_from_u64(seed).get_seed(),
-            SeedOption::None => ChaCha8Rng::from_entropy().get_seed(),
+    pub fn new(seed: SeedOpt) -> Self {
+        let rng = match seed {
+            SeedOpt::Seed(seed) => ChaCha8Rng::from_seed(seed),
+            SeedOpt::U64(seed) => ChaCha8Rng::seed_from_u64(seed),
+            SeedOpt::None => ChaCha8Rng::from_entropy(),
         };
-        Self { seed, stream: Cell::new(0), word_pos: Cell::new(0) }
+        Self { rng }
     }
 
     /// Seed of this generator.
     #[inline]
     pub fn seed(&self) -> Seed {
-        self.seed
+        self.rng.get_seed()
     }
 
     /// Stream for parallel threading.
     ///
     /// Use the iterators `.zip()` method to fork this RNG set.
-    pub fn stream(&self, n: usize) -> Vec<Self> {
-        let stream = self.stream.get().wrapping_add(1);
-        let word_pos = self.word_pos.get();
-        self.stream.set(stream.wrapping_add(n as u64));
+    pub fn stream(&mut self, n: usize) -> Vec<Self> {
+        let stream = self.rng.get_stream();
+        self.rng.set_stream(stream.wrapping_add(n as u64));
         (0..n)
-            .map(|i| Self {
-                seed: self.seed,
-                stream: Cell::new(stream.wrapping_add(i as u64)),
-                word_pos: Cell::new(word_pos),
+            .map(|i| {
+                let mut rng = self.clone();
+                rng.rng.set_stream(stream.wrapping_add(i as u64));
+                rng
             })
             .collect()
     }
@@ -92,51 +86,46 @@ impl Rng {
     /// Low-level access to the RNG type.
     ///
     /// Please import necessary traits first.
-    pub fn gen<R>(&self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
-        let mut rng = ChaCha8Rng::from_seed(self.seed);
-        rng.set_stream(self.stream.get());
-        rng.set_word_pos(self.word_pos.get());
-        let r = f(&mut rng);
-        self.word_pos.set(rng.get_word_pos());
-        r
+    pub fn gen<R>(&mut self, f: impl FnOnce(&mut ChaCha8Rng) -> R) -> R {
+        f(&mut self.rng)
     }
 
     /// Generate a classic random value between `0..1` (exclusive range).
     #[inline]
-    pub fn rand(&self) -> f64 {
+    pub fn rand(&mut self) -> f64 {
         self.ub(1.)
     }
 
     /// Generate a random boolean by positive (`true`) factor.
     #[inline]
-    pub fn maybe(&self, p: f64) -> bool {
-        self.gen(|r| r.gen_bool(p))
+    pub fn maybe(&mut self, p: f64) -> bool {
+        self.rng.gen_bool(p)
     }
 
     /// Generate a random value by range.
     #[inline]
-    pub fn range<T, R>(&self, range: R) -> T
+    pub fn range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
         R: SampleRange<T>,
     {
-        self.gen(|r| r.gen_range(range))
+        self.rng.gen_range(range)
     }
 
     /// Sample from a distribution.
     #[inline]
-    pub fn sample<T, D>(&self, distr: D) -> T
+    pub fn sample<T, D>(&mut self, distr: D) -> T
     where
         D: Distribution<T>,
     {
-        self.gen(|r| r.sample(distr))
+        self.rng.sample(distr)
     }
 
     /// Generate a random value by upper bound (exclusive range).
     ///
     /// The lower bound is zero.
     #[inline]
-    pub fn ub<U>(&self, ub: U) -> U
+    pub fn ub<U>(&mut self, ub: U) -> U
     where
         U: Default + SampleUniform,
         core::ops::Range<U>: SampleRange<U>,
@@ -146,10 +135,10 @@ impl Rng {
 
     /// Generate a random value by range.
     #[inline]
-    pub fn clamp<T, R>(&self, v: T, range: R) -> T
+    pub fn clamp<T, R>(&mut self, v: T, range: R) -> T
     where
         T: SampleUniform + PartialOrd,
-        R: SampleRange<T> + RangeBounds<T>,
+        R: SampleRange<T> + core::ops::RangeBounds<T>,
     {
         if range.contains(&v) {
             v
@@ -160,7 +149,7 @@ impl Rng {
 
     /// Sample with Gaussian distribution.
     #[inline]
-    pub fn normal<F>(&self, mean: F, std: F) -> F
+    pub fn normal<F>(&mut self, mean: F, std: F) -> F
     where
         F: num_traits::Float,
         rand_distr::StandardNormal: Distribution<F>,
@@ -169,13 +158,12 @@ impl Rng {
     }
 
     /// Shuffle a slice.
-    pub fn shuffle<A>(&self, s: &mut [A]) {
-        use rand::seq::SliceRandom as _;
-        self.gen(|r| s.shuffle(r));
+    pub fn shuffle<S: rand::seq::SliceRandom + ?Sized>(&mut self, s: &mut S) {
+        s.shuffle(&mut self.rng)
     }
 
     /// Generate a random array with no-repeat values.
-    pub fn array<A, C, const N: usize>(&self, candi: C) -> [A; N]
+    pub fn array<A, C, const N: usize>(&mut self, candi: C) -> [A; N]
     where
         A: Default + Copy + PartialEq + SampleUniform,
         C: IntoIterator<Item = A>,
@@ -186,7 +174,7 @@ impl Rng {
     /// Fill a mutable slice with no-repeat values.
     ///
     /// The start position of the vector can be set.
-    pub fn array_by<A, V, C>(&self, mut v: V, start: usize, candi: C) -> V
+    pub fn array_by<A, V, C>(&mut self, mut v: V, start: usize, candi: C) -> V
     where
         A: PartialEq + SampleUniform,
         V: AsMut<[A]>,
@@ -197,7 +185,7 @@ impl Rng {
             .into_iter()
             .filter(|e| !pre.contains(e))
             .collect::<Vec<_>>();
-        self.shuffle(&mut candi);
+        self.shuffle(candi.as_mut_slice());
         core::iter::zip(curr, candi).for_each(|(a, b)| *a = b);
         v
     }

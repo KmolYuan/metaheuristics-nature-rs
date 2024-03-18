@@ -121,3 +121,34 @@ fn rga() {
 fn tlbo() {
     assert_xs!(test::<Tlbo>());
 }
+
+#[cfg(feature = "rayon")]
+#[test]
+fn test_rng() {
+    let mut rng1 = Rng::new(SeedOpt::U64(0));
+    rng1.stream(30);
+    let mut rng2 = rng1.clone();
+    let non_parallel = rng1
+        .stream(100)
+        .into_iter()
+        .filter_map(|mut rng| {
+            if rng.maybe(0.8) && rng.maybe(0.5) && rng.maybe(0.3) {
+                Some(rng.rand())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    let parallel = rng2
+        .stream(100)
+        .into_par_iter()
+        .filter_map(|mut rng| {
+            if rng.maybe(0.8) && rng.maybe(0.5) && rng.maybe(0.3) {
+                Some(rng.rand())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(non_parallel, parallel);
+}

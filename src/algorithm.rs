@@ -44,7 +44,7 @@ use crate::prelude::*;
 /// pub struct Method;
 ///
 /// impl<F: ObjFunc> Algorithm<F> for Method {
-///     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+///     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
 ///         /* implement the method */
 ///     }
 /// }
@@ -63,8 +63,8 @@ pub trait Algorithm<F: ObjFunc>: MaybeParallel {
     /// The default behavior is do nothing.
     #[inline]
     #[allow(unused_variables)]
-    fn init(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {}
+    fn init(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {}
 
     /// Processing implementation of each generation.
-    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng);
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng);
 }

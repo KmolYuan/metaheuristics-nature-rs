@@ -9,6 +9,7 @@ use alloc::boxed::Box;
 /// let bound = [[-50., 50.]; 4];
 /// let f = Fx::new(&bound, |[a, b, c, d]| a * a + 8. * b * b + c * c + d * d);
 /// let s = Solver::build(Rga::default(), f)
+///     .seed(0)
 ///     .task(|ctx| ctx.gen == 20)
 ///     .solve();
 /// ```

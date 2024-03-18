@@ -67,7 +67,7 @@ impl Method {
     fn move_firefly<F: ObjFunc>(
         &self,
         ctx: &Ctx<F>,
-        rng: &Rng,
+        rng: &mut Rng,
         i: usize,
         j: usize,
     ) -> (Vec<f64>, F::Ys) {
@@ -94,7 +94,7 @@ impl Method {
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
-    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
         // Move fireflies
         let mut pool = ctx.pool.clone();
         let mut pool_y = ctx.pool_y.clone();
@@ -106,9 +106,9 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         iter.zip(&mut pool)
             .zip(&mut pool_y)
             .enumerate()
-            .for_each(|(i, ((rng, xs), ys))| {
+            .for_each(|(i, ((mut rng, xs), ys))| {
                 for j in i + 1..ctx.pop_num() {
-                    let (xs_new, ys_new) = self.move_firefly(ctx, &rng, i, j);
+                    let (xs_new, ys_new) = self.move_firefly(ctx, &mut rng, i, j);
                     if ys_new.is_dominated(ys) {
                         *xs = xs_new;
                         *ys = ys_new;

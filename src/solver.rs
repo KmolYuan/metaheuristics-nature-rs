@@ -21,6 +21,7 @@ use alloc::vec::Vec;
 ///
 /// // Build and run the solver
 /// let s = Solver::build(Rga::default(), MyFunc::new())
+///     .seed(0)
 ///     .task(|ctx| ctx.gen == 20)
 ///     .callback(|ctx| report.push(ctx.best.get_eval()))
 ///     .solve();
