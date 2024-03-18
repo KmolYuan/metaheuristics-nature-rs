@@ -12,7 +12,7 @@ pub enum Pool<'a, F: ObjFunc> {
         /// Pool
         pool: Vec<Vec<f64>>,
         /// Fitness values
-        pool_f: Vec<F::Fitness>,
+        pool_y: Vec<F::Fitness>,
     },
     /// Generate the pool uniformly with a filter function to check the
     /// validity.
@@ -188,12 +188,12 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         );
         let rng = Rng::new(seed);
         let mut ctx = match pool {
-            Pool::Ready { pool, pool_f } => {
+            Pool::Ready { pool, pool_y } => {
                 let dim = func.dim();
                 assert!(pool.len() == pop_num, "Pool size mismatched");
                 assert!(pool[0].len() == dim, "Pool dimension mismatched");
                 let best = Best::from_limit(pareto_limit);
-                Ctx::from_parts(func, best, pool, pool_f)
+                Ctx::from_parts(func, best, pool, pool_y)
             }
             Pool::UniformBy(filter) => {
                 let dim = func.dim();

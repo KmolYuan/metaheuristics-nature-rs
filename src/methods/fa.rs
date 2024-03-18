@@ -71,7 +71,7 @@ impl Method {
         i: usize,
         j: usize,
     ) -> (Vec<f64>, F::Fitness) {
-        let (i, j) = if ctx.pool_f[j].is_dominated(&ctx.pool_f[i]) {
+        let (i, j) = if ctx.pool_y[j].is_dominated(&ctx.pool_y[i]) {
             (i, j)
         } else {
             (j, i)
@@ -88,34 +88,35 @@ impl Method {
                 (surround + step).clamp(min, max)
             })
             .collect::<Vec<_>>();
-        let f = ctx.fitness(&xs);
-        (xs, f)
+        let ys = ctx.fitness(&xs);
+        (xs, ys)
     }
 }
 
 impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         // Move fireflies
-        let mut fitness = ctx.pool_f.clone();
         let mut pool = ctx.pool.clone();
+        let mut pool_y = ctx.pool_y.clone();
+        let rng = rng.stream(ctx.pop_num());
         #[cfg(not(feature = "rayon"))]
-        let iter = fitness.iter_mut();
+        let iter = rng.into_iter();
         #[cfg(feature = "rayon")]
-        let iter = fitness.par_iter_mut();
+        let iter = rng.into_par_iter();
         iter.zip(&mut pool)
-            .zip(rng.stream(ctx.pop_num()))
+            .zip(&mut pool_y)
             .enumerate()
-            .for_each(|(i, ((fitness, pool), rng))| {
+            .for_each(|(i, ((rng, xs), ys))| {
                 for j in i + 1..ctx.pop_num() {
-                    let (v, f) = self.move_firefly(ctx, &rng, i, j);
-                    if f.is_dominated(fitness) {
-                        *fitness = f;
-                        *pool = v;
+                    let (xs_new, ys_new) = self.move_firefly(ctx, &rng, i, j);
+                    if ys_new.is_dominated(ys) {
+                        *xs = xs_new;
+                        *ys = ys_new;
                     }
                 }
             });
-        ctx.pool_f = fitness;
         ctx.pool = pool;
+        ctx.pool_y = pool_y;
         self.alpha *= 0.95;
         ctx.find_best();
     }

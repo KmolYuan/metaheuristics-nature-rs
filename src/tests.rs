@@ -67,8 +67,8 @@ impl ObjFunc for TestMO {
     type Fitness = Product<TestMOFit, ()>;
 
     fn fitness(&self, xs: &[f64]) -> Self::Fitness {
-        let fit = TestMOFit { cost: xs[0] * xs[0], weight: xs[1] * xs[1] };
-        Product::new(fit, ())
+        let ys = TestMOFit { cost: xs[0] * xs[0], weight: xs[1] * xs[1] };
+        Product::new(ys, ())
     }
 }
 

@@ -68,6 +68,8 @@
 extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+#[cfg(feature = "rayon")]
+pub use rayon;
 
 pub use self::{
     algorithm::*, ctx::*, fitness::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*,
@@ -161,36 +163,6 @@ pub mod rand {
     pub use rand_chacha::*;
     #[doc(no_inline)]
     pub use rand_distr::*;
-}
-/// The re-export of the crate `rayon`.
-#[cfg(feature = "rayon")]
-pub mod rayon {
-    #[doc(no_inline)]
-    pub use rayon::*;
-
-    /// Single thread scope.
-    ///
-    /// ```
-    /// use metaheuristics_nature::rayon::single_thread;
-    ///
-    /// # let is_single = true;
-    /// single_thread(is_single, || { /* Do the job */ });
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// Panic if initialization failed.
-    pub fn single_thread<F, R>(when: bool, f: F) -> R
-    where
-        F: FnOnce() -> R + Send,
-        R: Send,
-    {
-        ThreadPoolBuilder::new()
-            .num_threads(if when { 1 } else { current_num_threads() })
-            .build()
-            .unwrap()
-            .install(f)
-    }
 }
 
 /// A marker trait for parallel computation.

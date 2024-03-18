@@ -7,7 +7,7 @@ use core::iter::zip;
 #[derive(Debug)]
 pub struct SingleBest<T: Fitness> {
     xs: Option<Vec<f64>>,
-    fit: Option<T>,
+    ys: Option<T>,
 }
 
 impl<T: Fitness> SingleBest<T> {
@@ -21,7 +21,7 @@ impl<T: Fitness> SingleBest<T> {
 #[derive(Debug)]
 pub struct Pareto<T: Fitness> {
     xs: Vec<Vec<f64>>,
-    fit: Vec<T>,
+    ys: Vec<T>,
     limit: usize,
 }
 
@@ -49,10 +49,10 @@ pub trait Best: MaybeParallel {
     /// Create a new best element container.
     fn from_limit(limit: usize) -> Self;
     /// Update the best element.
-    fn update(&mut self, xs: &[f64], fit: &Self::Item);
+    fn update(&mut self, xs: &[f64], ys: &Self::Item);
     /// Update the best elements from a batch.
-    fn update_all(&mut self, pool: &[Vec<f64>], pool_f: &[Self::Item]) {
-        zip(pool, pool_f).for_each(|(xs, fit)| self.update(xs, fit));
+    fn update_all(&mut self, pool: &[Vec<f64>], pool_y: &[Self::Item]) {
+        zip(pool, pool_y).for_each(|(xs, ys)| self.update(xs, ys));
     }
     /// Sample a random best element.
     fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item);
@@ -84,18 +84,18 @@ impl<T: Fitness> Best for SingleBest<T> {
     type Item = T;
 
     fn from_limit(_limit: usize) -> Self {
-        Self { xs: None, fit: None }
+        Self { xs: None, ys: None }
     }
 
-    fn update(&mut self, xs: &[f64], fit: &Self::Item) {
-        if let (Some(best), Some(best_f)) = (&mut self.xs, &mut self.fit) {
-            if fit.is_dominated(best_f) {
+    fn update(&mut self, xs: &[f64], ys: &Self::Item) {
+        if let (Some(best), Some(best_f)) = (&mut self.xs, &mut self.ys) {
+            if ys.is_dominated(best_f) {
                 *best = xs.to_vec();
-                *best_f = fit.clone();
+                *best_f = ys.clone();
             }
         } else {
             self.xs = Some(xs.to_vec());
-            self.fit = Some(fit.clone());
+            self.ys = Some(ys.clone());
         }
     }
 
@@ -104,14 +104,14 @@ impl<T: Fitness> Best for SingleBest<T> {
     }
 
     fn as_result(&self) -> (&[f64], &Self::Item) {
-        match (&self.xs, &self.fit) {
-            (Some(xs), Some(fit)) => (xs, fit),
+        match (&self.xs, &self.ys) {
+            (Some(xs), Some(ys)) => (xs, ys),
             _ => panic!("No best element available"),
         }
     }
 
     fn into_result_fit(self) -> Self::Item {
-        self.fit.unwrap()
+        self.ys.unwrap()
     }
 }
 
@@ -120,57 +120,52 @@ impl<T: Fitness> Best for Pareto<T> {
 
     fn from_limit(limit: usize) -> Self {
         let xs = Vec::with_capacity(limit);
-        let fit = Vec::with_capacity(limit);
-        Self { xs, fit, limit }
+        let ys = Vec::with_capacity(limit);
+        Self { xs, ys, limit }
     }
 
-    fn update(&mut self, xs: &[f64], fit: &Self::Item) {
-        let mut is_dominated = self.xs.is_empty();
+    fn update(&mut self, xs: &[f64], ys: &Self::Item) {
         // Remove dominated solutions
-        for i in 0..self.xs.len() {
-            let dominated = fit.is_dominated(&self.fit[i]);
-            is_dominated |= dominated;
-            if dominated {
+        for i in (0..self.xs.len()).rev() {
+            if ys.is_dominated(&self.ys[i]) {
                 self.xs.swap_remove(i);
-                self.fit.swap_remove(i);
+                self.ys.swap_remove(i);
             }
         }
         // Add the new solution
-        if is_dominated {
-            self.xs.push(xs.to_vec());
-            self.fit.push(fit.clone());
-        }
+        self.xs.push(xs.to_vec());
+        self.ys.push(ys.clone());
         // Prune the solution set
         if self.xs.len() > self.limit {
-            let (i, _) = (self.fit.iter().map(T::eval).enumerate())
+            let (i, _) = (self.ys.iter().map(T::eval).enumerate())
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .unwrap();
             self.xs.remove(i);
-            self.fit.remove(i);
+            self.ys.remove(i);
         }
     }
 
     fn sample(&self, rng: &Rng) -> (&[f64], &Self::Item) {
         let i = rng.range(0..self.xs.len());
-        (&self.xs[i], &self.fit[i])
+        (&self.xs[i], &self.ys[i])
     }
 
     fn as_result(&self) -> (&[f64], &Self::Item) {
-        match zip(&self.xs, &self.fit)
-            .map(|(xs, fit)| (xs, fit, fit.eval()))
+        match zip(&self.xs, &self.ys)
+            .map(|(xs, ys)| (xs, ys, ys.eval()))
             .min_by(|(.., a), (.., b)| a.partial_cmp(b).unwrap())
         {
-            Some((xs, fit, _)) => (xs, fit),
+            Some((xs, ys, _)) => (xs, ys),
             None => panic!("No best element available"),
         }
     }
 
     fn into_result_fit(self) -> Self::Item {
-        match (self.fit.into_iter())
-            .map(|fit| (fit.eval(), fit))
+        match (self.ys.into_iter())
+            .map(|ys| (ys.eval(), ys))
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
         {
-            Some((_, fit)) => fit,
+            Some((_, ys)) => ys,
             None => panic!("No best element available"),
         }
     }

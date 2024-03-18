@@ -81,25 +81,25 @@ impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         // Select
         let mut pool = ctx.pool.clone();
-        let mut pool_f = ctx.pool_f.clone();
-        for (xs, f) in zip(&mut pool, &mut pool_f) {
+        let mut pool_y = ctx.pool_y.clone();
+        for (xs, ys) in zip(&mut pool, &mut pool_y) {
             let [a, b] = rng.array(0..ctx.pop_num());
-            let i = if ctx.pool_f[a].is_dominated(&ctx.pool_f[b]) {
+            let i = if ctx.pool_y[a].is_dominated(&ctx.pool_y[b]) {
                 a
             } else {
                 b
             };
             if rng.maybe(self.win) {
                 *xs = ctx.pool[i].clone();
-                *f = ctx.pool_f[i].clone();
+                *ys = ctx.pool_y[i].clone();
             }
         }
         ctx.pool = pool;
-        ctx.pool_f = pool_f;
+        ctx.pool_y = pool_y;
         {
             let i = rng.ub(ctx.pop_num());
-            let (xs, f) = ctx.best.sample(rng);
-            ctx.set_from(i, xs.to_vec(), f.clone());
+            let (xs, ys) = ctx.best.sample(rng);
+            ctx.set_from(i, xs.to_vec(), ys.clone());
         }
         // Crossover
         for i in (0..ctx.pop_num() - 1).step_by(2) {
@@ -123,8 +123,8 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                             rng.clamp(v, min..=max)
                         })
                         .collect::<Vec<_>>();
-                    let f = ctx.fitness(&xs);
-                    (f, xs)
+                    let ys = ctx.fitness(&xs);
+                    (ys, xs)
                 })
                 .collect::<Vec<_>>();
             ret.sort_unstable_by(|(a, _), (b, _)| a.eval().partial_cmp(&b.eval()).unwrap());
@@ -134,7 +134,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         }
         // Mutate
         let dim = ctx.dim();
-        for (xs, f) in zip(&mut ctx.pool, &mut ctx.pool_f) {
+        for (xs, ys) in zip(&mut ctx.pool, &mut ctx.pool_y) {
             if !rng.maybe(self.mutate) {
                 continue;
             }
@@ -144,7 +144,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             } else {
                 xs[s] -= self.get_delta(ctx.gen, rng, xs[s] - ctx.func.lb(s));
             }
-            *f = ctx.func.fitness(xs);
+            *ys = ctx.func.fitness(xs);
         }
         ctx.find_best();
     }

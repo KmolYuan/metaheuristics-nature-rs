@@ -49,19 +49,15 @@ impl Setting for Pso {
     type Algorithm<F: ObjFunc> = Method<F::Fitness>;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
-        Method {
-            pso: self,
-            best_past: Vec::new(),
-            best_past_f: Vec::new(),
-        }
+        Method { pso: self, past: Vec::new(), past_y: Vec::new() }
     }
 }
 
 /// Particle Swarm Optimization type.
 pub struct Method<F: Fitness> {
     pso: Pso,
-    best_past: Vec<Vec<f64>>,
-    best_past_f: Vec<F>,
+    past: Vec<Vec<f64>>,
+    past_y: Vec<F>,
 }
 
 impl<F: Fitness> core::ops::Deref for Method<F> {
@@ -74,8 +70,8 @@ impl<F: Fitness> core::ops::Deref for Method<F> {
 
 impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
     fn init(&mut self, ctx: &mut Ctx<F>, _: &Rng) {
-        self.best_past = ctx.pool.clone();
-        self.best_past_f = ctx.pool_f.clone();
+        self.past = ctx.pool.clone();
+        self.past_y = ctx.pool_y.clone();
     }
 
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
@@ -89,10 +85,10 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         let iter = rng.into_par_iter();
         let iter = iter
             .zip(&mut ctx.pool)
-            .zip(&mut ctx.pool_f)
-            .zip(&mut self.best_past)
-            .zip(&mut self.best_past_f)
-            .filter_map(|((((rng, xs), f), past), past_f)| {
+            .zip(&mut ctx.pool_y)
+            .zip(&mut self.past)
+            .zip(&mut self.past_y)
+            .filter_map(|((((rng, xs), ys), past), past_y)| {
                 let alpha = rng.ub(cognition);
                 let beta = rng.ub(social);
                 let best = ctx.best.sample_xs(&rng);
@@ -101,12 +97,12 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                         velocity * xs[s] + alpha * (past[s] - xs[s]) + beta * (best[s] - xs[s]);
                     xs[s] = ctx.func.clamp(s, var);
                 }
-                *f = ctx.func.fitness(xs);
-                if f.is_dominated(&*past_f) {
-                    *past_f = f.clone();
-                    past_f.mark_not_best();
+                *ys = ctx.func.fitness(xs);
+                if ys.is_dominated(&*past_y) {
+                    *past_y = ys.clone();
+                    past_y.mark_not_best();
                     *past = xs.clone();
-                    Some((xs, f))
+                    Some((xs, ys))
                 } else {
                     None
                 }
@@ -115,8 +111,8 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
         let local_best = iter.reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
         #[cfg(feature = "rayon")]
         let local_best = iter.reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        if let Some((xs, f)) = local_best {
-            ctx.best.update(xs, f);
+        if let Some((xs, ys)) = local_best {
+            ctx.best.update(xs, ys);
         }
         ctx.prune_fitness();
     }

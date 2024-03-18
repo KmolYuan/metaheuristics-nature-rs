@@ -25,14 +25,16 @@ let mut report = Vec::with_capacity(20);
 // Build and run the solver
 let s = Solver::build(Rga::default(), MyFunc::new())
     .task(|ctx| ctx.gen == 20)
-    .callback(|ctx| report.push(ctx.best_f))
+    .callback(|ctx| report.push(ctx.best.get_eval()))
     .solve()
     .unwrap();
 // Get the optimized XY value of your function
-let xs = s.best_parameters();
-let y = s.best_fitness();
+let (xs, ys) = s.as_best();
+// If `ys` is a `Product` type
+let err = ys.fitness();
+let result = ys.as_result();
 // Get the history reports
-let y2 = report[2];
+let y2 = &report[2];
 ```
 
 ### What kinds of problems can be solved?

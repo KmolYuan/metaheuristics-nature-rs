@@ -34,9 +34,9 @@ impl Setting for Tlbo {
 impl Method {
     fn register<F: ObjFunc>(ctx: &mut Ctx<F>, i: usize, student: Vec<f64>) {
         let f_new = ctx.fitness(&student);
-        if f_new.is_dominated(&ctx.pool_f[i]) {
+        if f_new.is_dominated(&ctx.pool_y[i]) {
             ctx.set_from(i, student, f_new);
-            ctx.best.update(&ctx.pool[i], &ctx.pool_f[i]);
+            ctx.best.update(&ctx.pool[i], &ctx.pool_y[i]);
         }
     }
 
@@ -69,7 +69,7 @@ impl Method {
         };
         let student = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
             .map(|(&[min, max], (a, b))| {
-                let diff = if ctx.pool_f[j].is_dominated(&ctx.pool_f[i]) {
+                let diff = if ctx.pool_y[j].is_dominated(&ctx.pool_y[i]) {
                     a - b
                 } else {
                     b - a

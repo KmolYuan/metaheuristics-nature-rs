@@ -67,15 +67,15 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
 /// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
 /// [`Solver::get_best_eval()`] to access product field.
 #[derive(Default, Clone, Debug)]
-pub struct Product<F, P> {
-    fit: F,
+pub struct Product<Y, P> {
+    ys: Y,
     product: Option<Box<P>>,
 }
 
 impl<P, F> Product<F, P> {
     /// Create a product.
-    pub fn new(fit: F, product: P) -> Self {
-        Self { fit, product: Some(Box::new(product)) }
+    pub fn new(ys: F, product: P) -> Self {
+        Self { ys, product: Some(Box::new(product)) }
     }
 
     /// Get the fitness value.
@@ -83,7 +83,7 @@ impl<P, F> Product<F, P> {
     where
         F: Clone,
     {
-        self.fit.clone()
+        self.ys.clone()
     }
 
     /// Get the reference to the final result.
@@ -98,8 +98,8 @@ impl<P, F> Product<F, P> {
 
     /// Get the fitness value and the final result.
     pub fn into_err_result(self) -> (F, P) {
-        let Self { fit, product } = self;
-        (fit, *product.unwrap())
+        let Self { ys, product } = self;
+        (ys, *product.unwrap())
     }
 }
 
@@ -111,10 +111,10 @@ where
     type Best<T: Fitness> = F::Best<T>;
     type Eval = F::Eval;
     fn is_dominated(&self, rhs: &Self) -> bool {
-        self.fit.is_dominated(&rhs.fit)
+        self.ys.is_dominated(&rhs.ys)
     }
     fn eval(&self) -> Self::Eval {
-        self.fit.eval()
+        self.ys.eval()
     }
     fn mark_not_best(&mut self) {
         self.product.take();

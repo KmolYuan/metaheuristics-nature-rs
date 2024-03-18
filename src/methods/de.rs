@@ -174,7 +174,7 @@ impl Method {
 impl<F: ObjFunc> Algorithm<F> for Method {
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &Rng) {
         let mut pool = ctx.pool.clone();
-        let mut pool_f = ctx.pool_f.clone();
+        let mut pool_y = ctx.pool_y.clone();
         let rng = rng.stream(ctx.pop_num());
         #[cfg(not(feature = "rayon"))]
         let iter = rng.into_iter();
@@ -182,21 +182,21 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let iter = rng.into_par_iter();
         let iter = iter
             .zip(&mut pool)
-            .zip(&mut pool_f)
-            .filter_map(|((rng, xs), f)| {
+            .zip(&mut pool_y)
+            .filter_map(|((rng, xs), ys)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &rng);
                 // Recombination
-                let mut tmp = xs.clone();
+                let mut xs_try = xs.clone();
                 match self.strategy {
-                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut tmp, formula),
-                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut tmp, formula),
+                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &rng, &mut xs_try, formula),
+                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &rng, &mut xs_try, formula),
                 }
-                let tmp_f = ctx.fitness(&tmp);
-                if tmp_f.is_dominated(f) {
-                    *xs = tmp;
-                    *f = tmp_f;
-                    Some((xs, f))
+                let ys_try = ctx.fitness(&xs_try);
+                if ys_try.is_dominated(ys) {
+                    *xs = xs_try;
+                    *ys = ys_try;
+                    Some((xs, ys))
                 } else {
                     None
                 }
@@ -205,11 +205,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let local_best = iter.reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
         #[cfg(feature = "rayon")]
         let local_best = iter.reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        if let Some((xs, f)) = local_best {
-            ctx.best.update(xs, f);
+        if let Some((xs, ys)) = local_best {
+            ctx.best.update(xs, ys);
         }
         ctx.pool = pool;
-        ctx.pool_f = pool_f;
+        ctx.pool_y = pool_y;
         ctx.prune_fitness();
     }
 }
