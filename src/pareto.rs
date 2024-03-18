@@ -1,4 +1,4 @@
-//! Pareto front implementation.
+//! Single/Multi-objective best containers.
 use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
@@ -17,7 +17,7 @@ impl<T: Fitness> SingleBest<T> {
     }
 }
 
-/// Pareto front container.
+/// Pareto front container for multi-objective optimization.
 #[derive(Debug)]
 pub struct Pareto<T: Fitness> {
     xs: Vec<Vec<f64>>,

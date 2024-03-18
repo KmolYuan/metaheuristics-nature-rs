@@ -70,7 +70,7 @@ impl Method {
         rng: &Rng,
         i: usize,
         j: usize,
-    ) -> (Vec<f64>, F::Fitness) {
+    ) -> (Vec<f64>, F::Ys) {
         let (i, j) = if ctx.pool_y[j].is_dominated(&ctx.pool_y[i]) {
             (i, j)
         } else {

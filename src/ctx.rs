@@ -11,11 +11,11 @@ pub(crate) type BestCon<F> = <F as Fitness>::Best<F>;
 #[non_exhaustive]
 pub struct Ctx<F: ObjFunc> {
     /// Best container
-    pub best: BestCon<F::Fitness>,
+    pub best: BestCon<F::Ys>,
     /// Current variables of all individuals
     pub pool: Vec<Vec<f64>>,
     /// Current fitness values of all individuals
-    pub pool_y: Vec<F::Fitness>,
+    pub pool_y: Vec<F::Ys>,
     /// Generation
     pub gen: u64,
     /// Objective function object
@@ -25,16 +25,16 @@ pub struct Ctx<F: ObjFunc> {
 impl<F: ObjFunc> Ctx<F> {
     pub(crate) fn from_parts(
         func: F,
-        mut best: BestCon<F::Fitness>,
+        mut best: BestCon<F::Ys>,
         pool: Vec<Vec<f64>>,
-        mut pool_y: Vec<F::Fitness>,
+        mut pool_y: Vec<F::Ys>,
     ) -> Self {
         best.update_all(&pool, &pool_y);
         pool_y.iter_mut().for_each(|ys| ys.mark_not_best());
         Self { best, pool, pool_y, gen: 0, func }
     }
 
-    pub(crate) fn from_pool(func: F, best: BestCon<F::Fitness>, pool: Vec<Vec<f64>>) -> Self {
+    pub(crate) fn from_pool(func: F, best: BestCon<F::Ys>, pool: Vec<Vec<f64>>) -> Self {
         #[cfg(not(feature = "rayon"))]
         let iter = pool.iter();
         #[cfg(feature = "rayon")]
@@ -49,12 +49,12 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Get the current best element.
-    pub fn as_best_result(&self) -> (&[f64], &F::Fitness) {
+    pub fn as_best_result(&self) -> (&[f64], &F::Ys) {
         self.best.as_result()
     }
 
     /// Get the current best fitness value.
-    pub fn as_best_fitness(&self) -> &F::Fitness {
+    pub fn as_best_fitness(&self) -> &F::Ys {
         self.best.as_result_fit()
     }
 
@@ -64,7 +64,7 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Assign the index from source.
-    pub fn set_from(&mut self, i: usize, xs: Vec<f64>, ys: F::Fitness) {
+    pub fn set_from(&mut self, i: usize, xs: Vec<f64>, ys: F::Ys) {
         self.pool[i] = xs;
         self.pool_y[i] = ys;
     }

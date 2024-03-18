@@ -12,7 +12,7 @@ pub enum Pool<'a, F: ObjFunc> {
         /// Pool
         pool: Vec<Vec<f64>>,
         /// Fitness values
-        pool_y: Vec<F::Fitness>,
+        pool_y: Vec<F::Ys>,
     },
     /// Generate the pool uniformly with a filter function to check the
     /// validity.
@@ -88,7 +88,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// If not changed by the algorithm setting, the default number is 20.
     pub fn pareto_limit(self, pareto_limit: usize) -> Self
     where
-        F::Fitness: Fitness<Best<F::Fitness> = Pareto<F::Fitness>>,
+        F::Ys: Fitness<Best<F::Ys> = Pareto<F::Ys>>,
     {
         Self { pareto_limit, ..self }
     }

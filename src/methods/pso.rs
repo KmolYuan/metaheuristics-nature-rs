@@ -46,7 +46,7 @@ impl Default for Pso {
 }
 
 impl Setting for Pso {
-    type Algorithm<F: ObjFunc> = Method<F::Fitness>;
+    type Algorithm<F: ObjFunc> = Method<F::Ys>;
 
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method { pso: self, past: Vec::new(), past_y: Vec::new() }
@@ -54,13 +54,13 @@ impl Setting for Pso {
 }
 
 /// Particle Swarm Optimization type.
-pub struct Method<F: Fitness> {
+pub struct Method<Y: Fitness> {
     pso: Pso,
     past: Vec<Vec<f64>>,
-    past_y: Vec<F>,
+    past_y: Vec<Y>,
 }
 
-impl<F: Fitness> core::ops::Deref for Method<F> {
+impl<Y: Fitness> core::ops::Deref for Method<Y> {
     type Target = Pso;
 
     fn deref(&self) -> &Self::Target {
@@ -68,7 +68,7 @@ impl<F: Fitness> core::ops::Deref for Method<F> {
     }
 }
 
-impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
+impl<F: ObjFunc> Algorithm<F> for Method<F::Ys> {
     fn init(&mut self, ctx: &mut Ctx<F>, _: &Rng) {
         self.past = ctx.pool.clone();
         self.past_y = ctx.pool_y.clone();
@@ -99,9 +99,9 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Fitness> {
                 }
                 *ys = ctx.func.fitness(xs);
                 if ys.is_dominated(&*past_y) {
+                    *past = xs.clone();
                     *past_y = ys.clone();
                     past_y.mark_not_best();
-                    *past = xs.clone();
                     Some((xs, ys))
                 } else {
                     None

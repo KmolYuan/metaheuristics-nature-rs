@@ -55,12 +55,12 @@ impl<F: ObjFunc> Solver<F> {
     ///
     /// Use [`Solver::as_best()`] to get the best parameters and the fitness
     /// value directly.
-    pub fn as_best_set(&self) -> &BestCon<F::Fitness> {
+    pub fn as_best_set(&self) -> &BestCon<F::Ys> {
         &self.ctx.best
     }
 
     /// Get the reference of the best parameters and the fitness value.
-    pub fn as_best(&self) -> (&[f64], &F::Fitness) {
+    pub fn as_best(&self) -> (&[f64], &F::Ys) {
         self.ctx.best.as_result()
     }
 
@@ -70,19 +70,19 @@ impl<F: ObjFunc> Solver<F> {
     }
 
     /// Get the reference of the best fitness value.
-    pub fn as_best_fit(&self) -> &F::Fitness {
+    pub fn as_best_fit(&self) -> &F::Ys {
         self.as_best().1
     }
 
     /// Get the final best fitness value.
-    pub fn get_best_eval(&self) -> <F::Fitness as Fitness>::Eval {
+    pub fn get_best_eval(&self) -> <F::Ys as Fitness>::Eval {
         self.as_best_fit().eval()
     }
 
     /// Get the final best element.
     pub fn into_result<P, Fit: Fitness>(self) -> P
     where
-        F: ObjFunc<Fitness = Product<Fit, P>>,
+        F: ObjFunc<Ys = Product<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
         self.ctx.best.into_result_fit().into_result()
@@ -91,7 +91,7 @@ impl<F: ObjFunc> Solver<F> {
     /// Get the fitness value and the final result.
     pub fn into_err_result<P, Fit: Fitness>(self) -> (Fit, P)
     where
-        F: ObjFunc<Fitness = Product<Fit, P>>,
+        F: ObjFunc<Ys = Product<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
         self.ctx.best.into_result_fit().into_err_result()

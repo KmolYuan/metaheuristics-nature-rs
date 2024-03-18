@@ -72,16 +72,16 @@ pub struct Product<Y, P> {
     product: Option<Box<P>>,
 }
 
-impl<P, F> Product<F, P> {
+impl<P, Y> Product<Y, P> {
     /// Create a product.
-    pub fn new(ys: F, product: P) -> Self {
+    pub fn new(ys: Y, product: P) -> Self {
         Self { ys, product: Some(Box::new(product)) }
     }
 
     /// Get the fitness value.
-    pub fn fitness(&self) -> F
+    pub fn fitness(&self) -> Y
     where
-        F: Clone,
+        Y: Clone,
     {
         self.ys.clone()
     }
@@ -97,19 +97,19 @@ impl<P, F> Product<F, P> {
     }
 
     /// Get the fitness value and the final result.
-    pub fn into_err_result(self) -> (F, P) {
+    pub fn into_err_result(self) -> (Y, P) {
         let Self { ys, product } = self;
         (ys, *product.unwrap())
     }
 }
 
-impl<P, F> Fitness for Product<F, P>
+impl<P, Y> Fitness for Product<Y, P>
 where
     P: MaybeParallel + Clone + 'static,
-    F: Fitness,
+    Y: Fitness,
 {
-    type Best<T: Fitness> = F::Best<T>;
-    type Eval = F::Eval;
+    type Best<T: Fitness> = Y::Best<T>;
+    type Eval = Y::Eval;
     fn is_dominated(&self, rhs: &Self) -> bool {
         self.ys.is_dominated(&rhs.ys)
     }

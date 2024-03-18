@@ -70,9 +70,9 @@ pub trait Bounded: Sync + Send {
 /// }
 ///
 /// impl ObjFunc for MyFunc {
-///     type Fitness = f64;
+///     type Ys = f64;
 ///
-///     fn fitness(&self, x: &[f64]) -> Self::Fitness {
+///     fn fitness(&self, x: &[f64]) -> Self::Ys {
 ///         x[0] * x[0] + x[1] * x[1] + x[2] * x[2]
 ///     }
 /// }
@@ -84,10 +84,10 @@ pub trait Bounded: Sync + Send {
 ///
 /// This trait is designed as immutable and there should only has shared data.
 pub trait ObjFunc: Bounded {
-    /// Representation of the fitness value
+    /// Type of the fitness value
     ///
     /// See also [`Product`].
-    type Fitness: Fitness;
+    type Ys: Fitness;
 
     /// Return fitness, the smaller value represents a good result.
     ///
@@ -128,5 +128,5 @@ pub trait ObjFunc: Bounded {
     /// Sometimes a value that adjust with converge states can help to restrict
     /// the searching. The "adaptive function" can be set in
     /// [`SolverBuilder::callback()`] method.
-    fn fitness(&self, xs: &[f64]) -> Self::Fitness;
+    fn fitness(&self, xs: &[f64]) -> Self::Ys;
 }

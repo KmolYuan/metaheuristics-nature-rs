@@ -34,9 +34,9 @@ impl<R: Fitness, const DIM: usize> Bounded for Fx<'_, '_, R, DIM> {
 }
 
 impl<R: Fitness, const DIM: usize> ObjFunc for Fx<'_, '_, R, DIM> {
-    type Fitness = R;
+    type Ys = R;
 
-    fn fitness(&self, xs: &[f64]) -> Self::Fitness {
+    fn fitness(&self, xs: &[f64]) -> Self::Ys {
         (self.func)(xs.try_into().unwrap())
     }
 }
