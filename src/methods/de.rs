@@ -153,11 +153,8 @@ impl Method {
     where
         F: ObjFunc,
     {
-        for s in (0..ctx.dim())
-            .cycle()
-            .skip(rng.ub(ctx.dim()))
-            .take(ctx.dim())
-        {
+        let dim = ctx.dim();
+        for s in (0..dim).cycle().skip(rng.ub(dim)).take(dim) {
             if !rng.maybe(self.cross) {
                 break;
             }

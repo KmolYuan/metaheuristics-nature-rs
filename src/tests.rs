@@ -126,29 +126,19 @@ fn tlbo() {
 #[test]
 fn test_rng() {
     let mut rng1 = Rng::new(SeedOpt::U64(0));
-    rng1.stream(30);
+    rng1.stream(10);
     let mut rng2 = rng1.clone();
-    let non_parallel = rng1
-        .stream(100)
-        .into_iter()
-        .filter_map(|mut rng| {
-            if rng.maybe(0.8) && rng.maybe(0.5) && rng.maybe(0.3) {
-                Some(rng.rand())
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-    let parallel = rng2
-        .stream(100)
-        .into_par_iter()
-        .filter_map(|mut rng| {
-            if rng.maybe(0.8) && rng.maybe(0.5) && rng.maybe(0.3) {
-                Some(rng.rand())
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(non_parallel, parallel);
+    for _ in 0..200 {
+        let non_parallel = rng1
+            .stream(2500)
+            .into_iter()
+            .map(|mut rng| rng.rand())
+            .collect::<Vec<_>>();
+        let parallel = rng2
+            .stream(2500)
+            .into_par_iter()
+            .map(|mut rng| rng.rand())
+            .collect::<Vec<_>>();
+        assert_eq!(non_parallel, parallel);
+    }
 }

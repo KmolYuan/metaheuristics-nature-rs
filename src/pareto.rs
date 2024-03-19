@@ -45,6 +45,24 @@ impl<T: Fitness> Pareto<T> {
     pub fn as_pareto(&self) -> &[T] {
         &self.ys
     }
+
+    fn update_no_limit(&mut self, xs: &[f64], ys: &T) {
+        // Remove dominated solutions
+        let mut has_dominated = false;
+        for i in (0..self.xs.len()).rev() {
+            let ys_curr = &self.ys[i];
+            if ys.is_dominated(ys_curr) {
+                has_dominated = true;
+                self.xs.swap_remove(i);
+                self.ys.swap_remove(i);
+            } else if !has_dominated && ys_curr.is_dominated(ys) {
+                return;
+            }
+        }
+        // Add the new solution
+        self.xs.push(xs.to_vec());
+        self.ys.push(ys.clone());
+    }
 }
 
 impl<Y, P> Pareto<Product<Y, P>>
@@ -141,21 +159,7 @@ impl<T: Fitness> Best for Pareto<T> {
     }
 
     fn update(&mut self, xs: &[f64], ys: &Self::Item) {
-        // Remove dominated solutions
-        let mut has_dominated = false;
-        for i in (0..self.xs.len()).rev() {
-            let ys_curr = &self.ys[i];
-            if ys.is_dominated(ys_curr) {
-                has_dominated = true;
-                self.xs.swap_remove(i);
-                self.ys.swap_remove(i);
-            } else if !has_dominated && ys_curr.is_dominated(ys) {
-                return;
-            }
-        }
-        // Add the new solution
-        self.xs.push(xs.to_vec());
-        self.ys.push(ys.clone());
+        self.update_no_limit(xs, ys);
         // Prune the solution set
         if self.xs.len() > self.limit {
             let (i, _) = (self.ys.iter().map(T::eval).enumerate())
@@ -164,6 +168,18 @@ impl<T: Fitness> Best for Pareto<T> {
             self.xs.swap_remove(i);
             self.ys.swap_remove(i);
         }
+    }
+
+    fn update_all(&mut self, pool: &[Vec<f64>], pool_y: &[Self::Item]) {
+        for (xs, ys) in zip(pool, pool_y) {
+            self.update_no_limit(xs, ys);
+        }
+        // Prune the solution set
+        let mut ind = (0..self.xs.len()).collect::<Vec<_>>();
+        ind.sort_unstable_by(|i, j| self.ys[*i].eval().partial_cmp(&self.ys[*j].eval()).unwrap());
+        ind.truncate(self.limit);
+        self.xs = ind.iter().map(|&i| self.xs[i].clone()).collect();
+        self.ys = ind.iter().map(|&i| self.ys[i].clone()).collect();
     }
 
     fn sample(&self, rng: &mut Rng) -> (&[f64], &Self::Item) {
