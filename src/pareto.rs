@@ -119,8 +119,8 @@ impl<T: Fitness> Best for Pareto<T> {
     type Item = T;
 
     fn from_limit(limit: usize) -> Self {
-        let xs = Vec::with_capacity(limit);
-        let ys = Vec::with_capacity(limit);
+        let xs = Vec::with_capacity(limit + 1);
+        let ys = Vec::with_capacity(limit + 1);
         Self { xs, ys, limit }
     }
 
@@ -151,7 +151,7 @@ impl<T: Fitness> Best for Pareto<T> {
     }
 
     fn sample(&self, rng: &mut Rng) -> (&[f64], &Self::Item) {
-        let i = rng.range(0..self.xs.len());
+        let i = rng.ub(self.xs.len());
         (&self.xs[i], &self.ys[i])
     }
 
