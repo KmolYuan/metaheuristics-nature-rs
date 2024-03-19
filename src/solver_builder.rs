@@ -196,8 +196,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                 let dim = func.dim();
                 assert!(pool.len() == pop_num, "Pool size mismatched");
                 assert!(pool[0].len() == dim, "Pool dimension mismatched");
-                let best = Best::from_limit(pareto_limit);
-                Ctx::from_parts(func, best, pool, pool_y)
+                Ctx::from_parts(func, pareto_limit, pool, pool_y)
             }
             Pool::UniformBy(filter) => {
                 let dim = func.dim();
@@ -211,8 +210,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                         pool.push(x);
                     }
                 }
-                let best = Best::from_limit(pareto_limit);
-                Ctx::from_pool(func, best, pool)
+                Ctx::from_pool(func, pareto_limit, pool)
             }
             Pool::Func(f) => {
                 let dim = func.dim();
@@ -223,8 +221,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                             .collect::<Vec<_>>()
                     })
                     .collect();
-                let best = Best::from_limit(pareto_limit);
-                Ctx::from_pool(func, best, pool)
+                Ctx::from_pool(func, pareto_limit, pool)
             }
         };
         algorithm.init(&mut ctx, &mut rng);

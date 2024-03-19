@@ -25,22 +25,23 @@ pub struct Ctx<F: ObjFunc> {
 impl<F: ObjFunc> Ctx<F> {
     pub(crate) fn from_parts(
         func: F,
-        mut best: BestCon<F::Ys>,
+        limit: usize,
         pool: Vec<Vec<f64>>,
         mut pool_y: Vec<F::Ys>,
     ) -> Self {
+        let mut best = BestCon::<F::Ys>::from_limit(limit);
         best.update_all(&pool, &pool_y);
         pool_y.iter_mut().for_each(|ys| ys.mark_not_best());
         Self { best, pool, pool_y, gen: 0, func }
     }
 
-    pub(crate) fn from_pool(func: F, best: BestCon<F::Ys>, pool: Vec<Vec<f64>>) -> Self {
+    pub(crate) fn from_pool(func: F, limit: usize, pool: Vec<Vec<f64>>) -> Self {
         #[cfg(not(feature = "rayon"))]
         let iter = pool.iter();
         #[cfg(feature = "rayon")]
         let iter = pool.par_iter();
         let pool_y = iter.map(|xs| func.fitness(xs)).collect();
-        Self::from_parts(func, best, pool, pool_y)
+        Self::from_parts(func, limit, pool, pool_y)
     }
 
     /// Get population number.

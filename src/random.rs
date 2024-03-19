@@ -45,7 +45,7 @@ impl From<Seed> for SeedOpt {
 }
 
 /// An uniformed random number generator.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Rng {
     seed: Seed,
     stream: u64,

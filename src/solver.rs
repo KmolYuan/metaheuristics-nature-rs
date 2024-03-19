@@ -26,10 +26,10 @@ use alloc::vec::Vec;
 ///     .callback(|ctx| report.push(ctx.best.get_eval()))
 ///     .solve();
 /// // Get the optimized XY value of your function
-/// let (xs, ys) = s.as_best();
-/// // If `ys` is a `Product` type
-/// let err = ys.fitness();
-/// let result = ys.as_result();
+/// let (xs, p) = s.as_best();
+/// // If `p` is a `Product` type wrapped with the fitness value
+/// let err = p.ys();
+/// let result = p.as_result();
 /// // Get the history reports
 /// let y2 = &report[2];
 /// ```

@@ -40,6 +40,22 @@ impl<T: Fitness> Pareto<T> {
     pub fn is_empty(&self) -> bool {
         self.xs.is_empty()
     }
+
+    /// Get the slice of best fitness values.
+    pub fn as_pareto(&self) -> &[T] {
+        &self.ys
+    }
+}
+
+impl<Y, P> Pareto<Product<Y, P>>
+where
+    P: MaybeParallel + Clone + 'static,
+    Y: Fitness,
+{
+    /// Convert the product into the pareto front.
+    pub fn pareto_from_product(&self) -> Vec<Y> {
+        self.ys.iter().map(|p| p.ys()).collect()
+    }
 }
 
 /// A trait for best element container.

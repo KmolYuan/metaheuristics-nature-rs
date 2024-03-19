@@ -79,7 +79,7 @@ impl<P, Y> Product<Y, P> {
     }
 
     /// Get the fitness value.
-    pub fn fitness(&self) -> Y
+    pub fn ys(&self) -> Y
     where
         Y: Clone,
     {
