@@ -218,7 +218,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
                     .map(|_| {
                         (0..dim)
                             .map(|s| f(s, func.bound_range(s), &mut rng))
-                            .collect::<Vec<_>>()
+                            .collect()
                     })
                     .collect();
                 Ctx::from_pool(func, pareto_limit, pool)
