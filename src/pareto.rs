@@ -126,10 +126,15 @@ impl<T: Fitness> Best for Pareto<T> {
 
     fn update(&mut self, xs: &[f64], ys: &Self::Item) {
         // Remove dominated solutions
+        let mut has_dominated = false;
         for i in (0..self.xs.len()).rev() {
-            if ys.is_dominated(&self.ys[i]) {
+            let ys_curr = &self.ys[i];
+            if ys.is_dominated(ys_curr) {
+                has_dominated = true;
                 self.xs.swap_remove(i);
                 self.ys.swap_remove(i);
+            } else if !has_dominated && ys_curr.is_dominated(ys) {
+                return;
             }
         }
         // Add the new solution
