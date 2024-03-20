@@ -83,37 +83,24 @@ impl<F: ObjFunc> Algorithm<F> for Method<F::Ys> {
         let iter = rng.into_iter();
         #[cfg(feature = "rayon")]
         let iter = rng.into_par_iter();
-        let iter = iter
-            .zip(&mut ctx.pool)
+        iter.zip(&mut ctx.pool)
             .zip(&mut ctx.pool_y)
             .zip(&mut self.past)
             .zip(&mut self.past_y)
-            .filter_map(|((((mut rng, xs), ys), past), past_y)| {
+            .for_each(|((((mut rng, xs), ys), past), past_y)| {
                 let alpha = rng.ub(cognition);
                 let beta = rng.ub(social);
                 let best = ctx.best.sample_xs(&mut rng);
                 for s in 0..ctx.func.dim() {
-                    let var =
-                        velocity * xs[s] + alpha * (past[s] - xs[s]) + beta * (best[s] - xs[s]);
-                    xs[s] = ctx.func.clamp(s, var);
+                    let v = velocity * xs[s] + alpha * (past[s] - xs[s]) + beta * (best[s] - xs[s]);
+                    xs[s] = ctx.func.clamp(s, v);
                 }
                 *ys = ctx.func.fitness(xs);
                 if ys.is_dominated(&*past_y) {
                     *past = xs.clone();
                     *past_y = ys.clone();
-                    past_y.mark_not_best();
-                    Some((xs, ys))
-                } else {
-                    None
                 }
             });
-        #[cfg(not(feature = "rayon"))]
-        let local_best = iter.reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        #[cfg(feature = "rayon")]
-        let local_best = iter.reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        if let Some((xs, ys)) = local_best {
-            ctx.best.update(xs, ys);
-        }
-        ctx.prune_fitness();
+        ctx.find_best();
     }
 }

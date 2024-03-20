@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use alloc::boxed::Box;
+use alloc::sync::Arc;
 
 /// Trait for dominance comparison.
 ///
@@ -47,8 +47,6 @@ pub trait Fitness: MaybeParallel + Clone + 'static {
     ///
     /// Used in [`Best::update()`] and [`Best::as_result()`].
     fn eval(&self) -> Self::Eval;
-    /// Mark the value to non-best, used to drop the non-best results.
-    fn mark_not_best(&mut self) {}
 }
 
 impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
@@ -69,13 +67,13 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
 #[derive(Default, Clone, Debug)]
 pub struct Product<Y, P> {
     ys: Y,
-    product: Option<Box<P>>,
+    product: Arc<P>,
 }
 
 impl<P, Y> Product<Y, P> {
     /// Create a product.
     pub fn new(ys: Y, product: P) -> Self {
-        Self { ys, product: Some(Box::new(product)) }
+        Self { ys, product: Arc::new(product) }
     }
 
     /// Get the fitness value.
@@ -88,18 +86,23 @@ impl<P, Y> Product<Y, P> {
 
     /// Get the reference to the final result.
     pub fn as_result(&self) -> &P {
-        self.product.as_ref().unwrap()
+        self.product.as_ref()
     }
 
     /// Consume and get the final result.
-    pub fn into_result(self) -> P {
-        *self.product.unwrap()
+    pub fn into_result(self) -> P
+    where
+        P: Clone,
+    {
+        Arc::unwrap_or_clone(self.product)
     }
 
     /// Get the fitness value and the final result.
-    pub fn into_err_result(self) -> (Y, P) {
-        let Self { ys, product } = self;
-        (ys, *product.unwrap())
+    pub fn into_err_result(self) -> (Y, P)
+    where
+        P: Clone,
+    {
+        (self.ys, Arc::unwrap_or_clone(self.product))
     }
 }
 
@@ -115,8 +118,5 @@ where
     }
     fn eval(&self) -> Self::Eval {
         self.ys.eval()
-    }
-    fn mark_not_best(&mut self) {
-        self.product.take();
     }
 }

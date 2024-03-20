@@ -47,27 +47,25 @@ impl From<Seed> for SeedOpt {
 /// An uniformed random number generator.
 #[derive(Clone, Debug)]
 pub struct Rng {
-    seed: Seed,
-    stream: u64,
-    word_pos: u128,
+    rng: ChaCha,
 }
 
 impl Rng {
     /// Create generator by a given seed.
     /// If none, create the seed from CPU random function.
     pub fn new(seed: SeedOpt) -> Self {
-        let seed = match seed {
-            SeedOpt::Seed(seed) => seed,
-            SeedOpt::U64(seed) => ChaCha::seed_from_u64(seed).get_seed(),
-            SeedOpt::None => ChaCha::from_entropy().get_seed(),
+        let rng = match seed {
+            SeedOpt::Seed(seed) => ChaCha::from_seed(seed),
+            SeedOpt::U64(seed) => ChaCha::seed_from_u64(seed),
+            SeedOpt::None => ChaCha::from_entropy(),
         };
-        Self { seed, stream: 0, word_pos: 0 }
+        Self { rng }
     }
 
     /// Seed of this generator.
     #[inline]
     pub fn seed(&self) -> Seed {
-        self.seed
+        self.rng.get_seed()
     }
 
     /// Stream for parallel threading.
@@ -75,13 +73,14 @@ impl Rng {
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&mut self, n: usize) -> Vec<Self> {
         // Needs to "run" the RNG to avoid constantly opening new branches
-        _ = self.gen::<u64>();
-        let stream = self.stream.wrapping_add(1);
-        self.stream = stream.wrapping_add(n as u64);
-        (0..n)
+        const JUMP: u128 = 2 << 64;
+        self.rng
+            .set_word_pos(self.rng.get_word_pos().wrapping_add(JUMP));
+        let stream = self.rng.get_stream();
+        (1..=n)
             .map(|i| {
                 let mut rng = self.clone();
-                rng.stream = stream.wrapping_add(i as u64);
+                rng.rng.set_stream(stream.wrapping_add(i as _));
                 rng
             })
             .collect()
@@ -91,12 +90,7 @@ impl Rng {
     ///
     /// Please import necessary traits first.
     pub fn gen_with<R>(&mut self, f: impl FnOnce(&mut ChaCha) -> R) -> R {
-        let mut rng = ChaCha::from_seed(self.seed);
-        rng.set_stream(self.stream);
-        rng.set_word_pos(self.word_pos);
-        let r = f(&mut rng);
-        self.word_pos = rng.get_word_pos();
-        r
+        f(&mut self.rng)
     }
 
     /// Generate a random value by standard distribution.

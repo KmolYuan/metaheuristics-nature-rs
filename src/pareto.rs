@@ -85,7 +85,11 @@ pub trait Best: MaybeParallel {
     /// Update the best element.
     fn update(&mut self, xs: &[f64], ys: &Self::Item);
     /// Update the best elements from a batch.
-    fn update_all(&mut self, pool: &[Vec<f64>], pool_y: &[Self::Item]) {
+    fn update_all<'a, Ix, Iy>(&mut self, pool: Ix, pool_y: Iy)
+    where
+        Ix: IntoIterator<Item = &'a Vec<f64>>,
+        Iy: IntoIterator<Item = &'a Self::Item>,
+    {
         zip(pool, pool_y).for_each(|(xs, ys)| self.update(xs, ys));
     }
     /// Sample a random best element.
@@ -170,16 +174,38 @@ impl<T: Fitness> Best for Pareto<T> {
         }
     }
 
-    fn update_all(&mut self, pool: &[Vec<f64>], pool_y: &[Self::Item]) {
+    fn update_all<'a, Ix, Iy>(&mut self, pool: Ix, pool_y: Iy)
+    where
+        Ix: IntoIterator<Item = &'a Vec<f64>>,
+        Iy: IntoIterator<Item = &'a Self::Item>,
+    {
         for (xs, ys) in zip(pool, pool_y) {
             self.update_no_limit(xs, ys);
+        }
+        if self.xs.len() <= self.limit {
+            return;
         }
         // Prune the solution set
         let mut ind = (0..self.xs.len()).collect::<Vec<_>>();
         ind.sort_unstable_by(|i, j| self.ys[*i].eval().partial_cmp(&self.ys[*j].eval()).unwrap());
-        ind.truncate(self.limit);
-        self.xs = ind.iter().map(|&i| self.xs[i].clone()).collect();
-        self.ys = ind.iter().map(|&i| self.ys[i].clone()).collect();
+        // No copied vector sort
+        for idx in 0..self.xs.len() {
+            if ind[idx] != usize::MAX {
+                let mut curr_idx = idx;
+                loop {
+                    let tar_idx = ind[curr_idx];
+                    ind[curr_idx] = usize::MAX;
+                    if ind[tar_idx] == usize::MAX {
+                        break;
+                    }
+                    self.xs.swap(curr_idx, tar_idx);
+                    self.ys.swap(curr_idx, tar_idx);
+                    curr_idx = tar_idx;
+                }
+            }
+        }
+        self.xs.truncate(self.limit);
+        self.ys.truncate(self.limit);
     }
 
     fn sample(&self, rng: &mut Rng) -> (&[f64], &Self::Item) {

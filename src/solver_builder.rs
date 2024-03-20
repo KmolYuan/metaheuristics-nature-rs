@@ -87,7 +87,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     ///
     /// # Default
     ///
-    /// If not changed by the algorithm setting, the default number is 20.
+    /// If not changed by the algorithm setting, the default is `usize::MAX`.
     pub fn pareto_limit(self, pareto_limit: usize) -> Self
     where
         F::Ys: Fitness<Best<F::Ys> = Pareto<F::Ys>>,
@@ -253,7 +253,7 @@ impl<F: ObjFunc> Solver<F> {
         SolverBuilder {
             func,
             pop_num: S::default_pop(),
-            pareto_limit: 20,
+            pareto_limit: usize::MAX,
             seed: SeedOpt::None,
             algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(uniform_pool())),

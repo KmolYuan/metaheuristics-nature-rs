@@ -3,7 +3,7 @@
 //! <https://en.wikipedia.org/wiki/Differential_evolution>
 use self::Strategy::*;
 use crate::prelude::*;
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 
 /// Differential Evolution type.
 pub type Method = De;
@@ -183,10 +183,10 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let iter = rng.into_iter();
         #[cfg(feature = "rayon")]
         let iter = rng.into_par_iter();
-        let iter = iter
+        let (xs, ys): (Vec<_>, Vec<_>) = iter
             .zip(&mut pool)
             .zip(&mut pool_y)
-            .filter_map(|((mut rng, xs), ys)| {
+            .map(|((mut rng, xs), ys)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &mut rng);
                 // Recombination
@@ -199,20 +199,13 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 if ys_try.is_dominated(ys) {
                     *xs = xs_try;
                     *ys = ys_try;
-                    Some((xs, ys))
-                } else {
-                    None
                 }
-            });
-        #[cfg(not(feature = "rayon"))]
-        let local_best = iter.reduce(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        #[cfg(feature = "rayon")]
-        let local_best = iter.reduce_with(|a, b| if a.1.is_dominated(&*b.1) { a } else { b });
-        if let Some((xs, ys)) = local_best {
-            ctx.best.update(xs, ys);
-        }
+                // Search with the trial individuals
+                (&*xs, &*ys)
+            })
+            .unzip();
+        ctx.best.update_all(xs, ys);
         ctx.pool = pool;
         ctx.pool_y = pool_y;
-        ctx.prune_fitness();
     }
 }

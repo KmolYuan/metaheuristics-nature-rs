@@ -27,11 +27,10 @@ impl<F: ObjFunc> Ctx<F> {
         func: F,
         limit: usize,
         pool: Vec<Vec<f64>>,
-        mut pool_y: Vec<F::Ys>,
+        pool_y: Vec<F::Ys>,
     ) -> Self {
         let mut best = BestCon::<F::Ys>::from_limit(limit);
         best.update_all(&pool, &pool_y);
-        pool_y.iter_mut().for_each(|ys| ys.mark_not_best());
         Self { best, pool, pool_y, gen: 0, func }
     }
 
@@ -46,7 +45,7 @@ impl<F: ObjFunc> Ctx<F> {
 
     /// Get population number.
     pub fn pop_num(&self) -> usize {
-        self.pool_y.len()
+        self.pool.len()
     }
 
     /// Get the current best element.
@@ -59,11 +58,6 @@ impl<F: ObjFunc> Ctx<F> {
         self.best.as_result_fit()
     }
 
-    /// Prune the pool fitness object to reduce memory in some cases.
-    pub fn prune_fitness(&mut self) {
-        self.pool_y.iter_mut().for_each(|ys| ys.mark_not_best());
-    }
-
     /// Assign the index from source.
     pub fn set_from(&mut self, i: usize, xs: Vec<f64>, ys: F::Ys) {
         self.pool[i] = xs;
@@ -73,7 +67,6 @@ impl<F: ObjFunc> Ctx<F> {
     /// Find the best, and set it globally.
     pub fn find_best(&mut self) {
         self.best.update_all(&self.pool, &self.pool_y);
-        self.prune_fitness();
     }
 }
 
