@@ -13,26 +13,7 @@ use alloc::vec::Vec;
 ///
 /// Please use [`Solver::build()`] method to start a task.
 ///
-/// ```
-/// use metaheuristics_nature::{Rga, Solver};
-/// # use metaheuristics_nature::tests::TestObj as MyFunc;
-///
-/// let mut report = Vec::with_capacity(20);
-///
-/// // Build and run the solver
-/// let s = Solver::build(Rga::default(), MyFunc::new())
-///     .seed(0)
-///     .task(|ctx| ctx.gen == 20)
-///     .callback(|ctx| report.push(ctx.best.get_eval()))
-///     .solve();
-/// // Get the optimized XY value of your function
-/// let (xs, p) = s.as_best();
-/// // If `p` is a `Product` type wrapped with the fitness value
-/// let err = p.ys();
-/// let result = p.as_result();
-/// // Get the history reports
-/// let y2 = &report[2];
-/// ```
+/// The settings are defined in the [`SolverBuilder`] type.
 #[must_use = "please call `Solver::best_parameters()` or other methods to get the answer"]
 pub struct Solver<F: ObjFunc> {
     ctx: Ctx<F>,

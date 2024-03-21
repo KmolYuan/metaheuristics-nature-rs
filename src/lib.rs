@@ -1,11 +1,10 @@
-//! A collection of nature-inspired meta-heuristic algorithms.
-//!
+#![doc = include_str!("../README.md")]
 //! # Terminology
 //!
 //! For unifying the terms, in this documentation,
 //!
-//! + "Iteration" is called "generation".
-//! + "Function" that evaluates value is called "objective function".
+//! + "Iteration" is called "generation". (Avoid confusion with iterators)
+//! + "Function" that evaluates the design is called "objective function".
 //! + "Return value" of the objective function is called "fitness".
 //!
 //! # Algorithm

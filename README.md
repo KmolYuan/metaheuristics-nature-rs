@@ -22,17 +22,16 @@ Side functions:
 Each algorithm gives the same API and default parameters to help you test different implementations. For example, you can test another algorithm by replacing `Rga` with `De`.
 
 ```rust
-use metaheuristics_nature::{Rga, Solver};
+use metaheuristics_nature as mh;
 
 let mut report = Vec::with_capacity(20);
 
 // Build and run the solver
-let s = Solver::build(Rga::default(), MyFunc::new())
+let s = mh::Solver::build(mh::Rga::default(), mh::tests::TestObj)
     .seed(0)
     .task(|ctx| ctx.gen == 20)
     .callback(|ctx| report.push(ctx.best.get_eval()))
-    .solve()
-    .unwrap();
+    .solve();
 // Get the optimized XY value of your function
 let (xs, p) = s.as_best();
 // If `p` is a `Product` type wrapped with the fitness value

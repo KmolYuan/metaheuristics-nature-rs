@@ -13,6 +13,8 @@ use rand_chacha::ChaCha20Rng as ChaCha;
 pub type Seed = [u8; 32];
 
 /// The seed option.
+///
+/// Can be converted from `Option<u64>`, `u64`, and [`Seed`].
 #[derive(Copy, Clone)]
 pub enum SeedOpt {
     /// Seed from non-crypto u64
@@ -20,14 +22,14 @@ pub enum SeedOpt {
     /// Crypto seed series
     Seed(Seed),
     /// Auto-decided crypto seed
-    None,
+    Entropy,
 }
 
 impl From<Option<u64>> for SeedOpt {
     fn from(opt: Option<u64>) -> Self {
         match opt {
             Some(seed) => Self::U64(seed),
-            None => Self::None,
+            None => Self::Entropy,
         }
     }
 }
@@ -57,7 +59,7 @@ impl Rng {
         let rng = match seed {
             SeedOpt::Seed(seed) => ChaCha::from_seed(seed),
             SeedOpt::U64(seed) => ChaCha::seed_from_u64(seed),
-            SeedOpt::None => ChaCha::from_entropy(),
+            SeedOpt::Entropy => ChaCha::from_entropy(),
         };
         Self { rng }
     }

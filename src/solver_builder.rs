@@ -46,6 +46,11 @@ pub enum Pool<'a, F: ObjFunc> {
 /// Collect configuration and build the solver.
 ///
 /// This type is created by [`Solver::build()`] method.
+///
+/// + First, setting a fixed seed with [`SolverBuilder::seed()`] method to get a
+///   determined result is highly recommended.
+/// + Next is [`SolverBuilder::task()`] method with a termination condition.
+/// + Finally, call [`SolverBuilder::solve()`] method to start the algorithm.
 #[allow(clippy::type_complexity)]
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
 pub struct SolverBuilder<'a, F: ObjFunc> {
@@ -87,7 +92,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     ///
     /// # Default
     ///
-    /// If not changed by the algorithm setting, the default is `usize::MAX`.
+    /// By default, there is no limit. The limit is set to `usize::MAX`.
     pub fn pareto_limit(self, pareto_limit: usize) -> Self
     where
         F::Ys: Fitness<Best<F::Ys> = Pareto<F::Ys>>,
@@ -95,11 +100,13 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         Self { pareto_limit, ..self }
     }
 
-    /// Set the random seed to get a determined result.
+    /// Set a fixed random seed to get a determined result.
     ///
     /// # Default
     ///
-    /// By default, the random seed is auto-decided.
+    /// By default, the random seed is auto-decided so you cannot reproduce the
+    /// result. Please print the seed via [`Solver::seed()`] method to get the
+    /// seed that used in the algorithm.
     pub fn seed(self, seed: impl Into<SeedOpt>) -> Self {
         Self { seed: seed.into(), ..self }
     }
@@ -240,8 +247,9 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
 impl<F: ObjFunc> Solver<F> {
     /// Start to build a solver. Take a setting and setup the configurations.
     ///
-    /// Please check [`SolverBuilder`] type, it will help you choose your
-    /// configuration.
+    /// The signature is something like `Solver::build(Rga::default(),
+    /// MyFunc::new())`. Please check the [`SolverBuilder`] type, it will help
+    /// you choose your configuration.
     ///
     /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
@@ -254,7 +262,7 @@ impl<F: ObjFunc> Solver<F> {
             func,
             pop_num: S::default_pop(),
             pareto_limit: usize::MAX,
-            seed: SeedOpt::None,
+            seed: SeedOpt::Entropy,
             algorithm: Box::new(setting.algorithm()),
             pool: Pool::Func(Box::new(uniform_pool())),
             task: Box::new(|ctx| ctx.gen >= 200),
