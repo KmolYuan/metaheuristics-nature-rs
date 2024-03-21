@@ -60,11 +60,35 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
     }
 }
 
+/// A [`Fitness`] type carrying a multi-objective [`Fitness`] value. Make it
+/// become a single objective task via using [`Fitness::eval()`].
+///
+/// This wrapper type is overrided [`Fitness::Best`] to [`SingleBest`]. A
+/// multi-objective fitness type can be tested in single mode by setting
+/// [`ObjFunc::Ys`] to `Single<MOFit>`.
+#[derive(Clone, Debug)]
+pub struct Single<Y: Fitness>(pub Y);
+
+impl<Y: Fitness> Fitness for Single<Y>
+where
+    Y::Eval: Fitness,
+{
+    type Best<T: Fitness> = SingleBest<T>;
+    type Eval = Y::Eval;
+    fn is_dominated(&self, rhs: &Self) -> bool {
+        self.eval().is_dominated(&rhs.eval())
+    }
+    #[inline]
+    fn eval(&self) -> Self::Eval {
+        self.0.eval()
+    }
+}
+
 /// A [`Fitness`] type carrying final results.
 ///
 /// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
 /// [`Solver::get_best_eval()`] to access product field.
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Product<Y, P> {
     ys: Y,
     product: Arc<P>,

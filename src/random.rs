@@ -7,7 +7,7 @@ use rand::{
     },
     Rng as _, SeedableRng as _,
 };
-use rand_chacha::ChaCha20Rng as ChaCha;
+use rand_chacha::ChaCha8Rng as ChaCha;
 
 /// The seed type of the ChaCha algorithm.
 pub type Seed = [u8; 32];
@@ -75,7 +75,7 @@ impl Rng {
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&mut self, n: usize) -> Vec<Self> {
         // Needs to "run" the RNG to avoid constantly opening new branches
-        const JUMP: u128 = 2 << 64;
+        const JUMP: u128 = 2 << 32;
         self.rng
             .set_word_pos(self.rng.get_word_pos().wrapping_add(JUMP));
         let stream = self.rng.get_stream();

@@ -159,8 +159,6 @@ pub mod rand {
     #[doc(no_inline)]
     pub use rand::*;
     #[doc(no_inline)]
-    pub use rand_chacha::*;
-    #[doc(no_inline)]
     pub use rand_distr::*;
 }
 
