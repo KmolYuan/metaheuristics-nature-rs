@@ -55,8 +55,8 @@ pub struct SolverBuilder<'a, F: ObjFunc> {
     seed: SeedOpt,
     algorithm: Box<dyn Algorithm<F>>,
     pool: Pool<'a, F>,
-    task: Box<dyn Fn(&Ctx<F>) -> bool + Send + 'a>,
-    callback: Box<dyn FnMut(&mut Ctx<F>) + Send + 'a>,
+    task: Box<dyn FnMut(&Ctx<F>) -> bool + 'a>,
+    callback: Box<dyn FnMut(&Ctx<F>) + 'a>,
 }
 
 impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
@@ -135,7 +135,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, F>
     where
         'a: 'b,
-        C: Fn(&Ctx<F>) -> bool + Send + 'b,
+        C: FnMut(&Ctx<F>) -> bool + 'b,
     {
         SolverBuilder { task: Box::new(task), ..self }
     }
@@ -163,7 +163,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, F>
     where
         'a: 'b,
-        C: FnMut(&mut Ctx<F>) + Send + 'b,
+        C: FnMut(&Ctx<F>) + 'b,
     {
         SolverBuilder { callback: Box::new(callback), ..self }
     }
@@ -183,7 +183,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
             seed,
             mut algorithm,
             pool,
-            task,
+            mut task,
             mut callback,
         } = self;
         assert!(
@@ -226,7 +226,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
         };
         algorithm.init(&mut ctx, &mut rng);
         loop {
-            callback(&mut ctx);
+            callback(&ctx);
             if task(&ctx) {
                 break;
             }

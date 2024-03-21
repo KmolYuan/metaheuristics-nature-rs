@@ -9,7 +9,7 @@ use alloc::{boxed::Box, vec::Vec};
 pub type Method = De;
 type Func<F> = Box<dyn Fn(&Ctx<F>, &[f64], usize) -> f64>;
 
-const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
+const DEF: De = De { strategy: C1F1, f: 0.6, cross: 0.9 };
 
 /// The Differential Evolution strategy.
 ///
@@ -37,25 +37,30 @@ const DEF: De = De { strategy: S1, f: 0.6, cross: 0.9 };
 pub enum Strategy {
     /// *f1* + *c1*
     #[default]
-    S1,
+    C1F1,
     /// *f2* + *c1*
-    S2,
+    C1F2,
     /// *f3* + *c1*
-    S3,
+    C1F3,
     /// *f4* + *c1*
-    S4,
+    C1F4,
     /// *f5* + *c1*
-    S5,
+    C1F5,
     /// *f1* + *c2*
-    S6,
+    C2F1,
     /// *f2* + *c2*
-    S7,
+    C2F2,
     /// *f3* + *c2*
-    S8,
+    C2F3,
     /// *f4* + *c2*
-    S9,
+    C2F4,
     /// *f5* + *c2*
-    S10,
+    C2F5,
+}
+
+impl Strategy {
+    /// A list of all strategies.
+    pub const LIST: [Self; 10] = [C1F1, C1F2, C1F3, C1F4, C1F5, C2F1, C2F2, C2F3, C2F4, C2F5];
 }
 
 /// Differential Evolution settings.
@@ -113,21 +118,21 @@ impl Method {
     fn formula<F: ObjFunc>(&self, ctx: &Ctx<F>, rng: &mut Rng) -> Func<F> {
         let f = self.f;
         match self.strategy {
-            S1 | S6 => {
+            C1F1 | C2F1 => {
                 let [v0, v1] = rng.array(0..ctx.pop_num());
                 let best = ctx.best.sample_xs(rng).to_vec();
                 Box::new(move |ctx, _, s| best[s] + f * (ctx.pool[v0][s] - ctx.pool[v1][s]))
             }
-            S2 | S7 => Box::new({
+            C1F2 | C2F2 => Box::new({
                 let [v0, v1, v2] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| ctx.pool[v0][s] + f * (ctx.pool[v1][s] - ctx.pool[v2][s])
             }),
-            S3 | S8 => Box::new({
+            C1F3 | C2F3 => Box::new({
                 let [v0, v1] = rng.array(0..ctx.pop_num());
                 let best = ctx.best.sample_xs(rng).to_vec();
                 move |ctx, xs, s| xs[s] + f * (best[s] - xs[s] + ctx.pool[v0][s] - ctx.pool[v1][s])
             }),
-            S4 | S9 => Box::new({
+            C1F4 | C2F4 => Box::new({
                 let [v0, v1, v2, v3] = rng.array(0..ctx.pop_num());
                 let best = ctx.best.sample_xs(rng).to_vec();
                 move |ctx, _, s| {
@@ -137,7 +142,7 @@ impl Method {
                             - ctx.pool[v3][s])
                 }
             }),
-            S5 | S10 => Box::new({
+            C1F5 | C2F5 => Box::new({
                 let [v0, v1, v2, v3, v4] = rng.array(0..ctx.pop_num());
                 move |ctx, _, s| {
                     ctx.pool[v4][s]
@@ -154,8 +159,9 @@ impl Method {
         F: ObjFunc,
     {
         let dim = ctx.dim();
-        for s in (0..dim).cycle().skip(rng.ub(dim)).take(dim) {
-            if !rng.maybe(self.cross) {
+        for (i, s) in (0..dim).cycle().skip(rng.ub(dim)).take(dim).enumerate() {
+            // At last two variables are modified
+            if i > 1 && !rng.maybe(self.cross) {
                 break;
             }
             xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s));
@@ -166,8 +172,10 @@ impl Method {
     where
         F: ObjFunc,
     {
+        // At least one variable is modified
+        let sss = rng.ub(ctx.dim());
         for s in 0..ctx.dim() {
-            if rng.maybe(self.cross) {
+            if sss == s || rng.maybe(self.cross) {
                 xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s));
             }
         }
@@ -186,22 +194,27 @@ impl<F: ObjFunc> Algorithm<F> for Method {
         let (xs, ys): (Vec<_>, Vec<_>) = iter
             .zip(&mut pool)
             .zip(&mut pool_y)
-            .map(|((mut rng, xs), ys)| {
+            .filter_map(|((mut rng, xs), ys)| {
                 // Generate Vector
                 let formula = self.formula(ctx, &mut rng);
                 // Recombination
-                let mut xs_try = xs.clone();
+                let mut xs_trial = xs.clone();
                 match self.strategy {
-                    S1 | S2 | S3 | S4 | S5 => self.c1(ctx, &mut rng, &mut xs_try, formula),
-                    S6 | S7 | S8 | S9 | S10 => self.c2(ctx, &mut rng, &mut xs_try, formula),
+                    C1F1 | C1F2 | C1F3 | C1F4 | C1F5 => {
+                        self.c1(ctx, &mut rng, &mut xs_trial, formula)
+                    }
+                    C2F1 | C2F2 | C2F3 | C2F4 | C2F5 => {
+                        self.c2(ctx, &mut rng, &mut xs_trial, formula)
+                    }
                 }
-                let ys_try = ctx.fitness(&xs_try);
-                if ys_try.is_dominated(ys) {
-                    *xs = xs_try;
-                    *ys = ys_try;
+                let ys_trial = ctx.fitness(&xs_trial);
+                if ys_trial.is_dominated(ys) {
+                    *xs = xs_trial;
+                    *ys = ys_trial;
+                    Some((&*xs, &*ys))
+                } else {
+                    None
                 }
-                // Search with the trial individuals
-                (&*xs, &*ys)
             })
             .unzip();
         ctx.best.update_all(xs, ys);

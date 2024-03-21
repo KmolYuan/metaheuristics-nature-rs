@@ -78,8 +78,7 @@ impl Method {
         };
         let r = zip(&ctx.pool[i], &ctx.pool[j])
             .map(|(a, b)| a - b)
-            .map(|v| v * v)
-            .sum::<f64>();
+            .fold(0., |acc, x| acc + x * x);
         let beta = self.beta_min * (-self.gamma * r).exp();
         let xs = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[j]))
             .map(|(&[min, max], (a, b))| {
@@ -117,7 +116,7 @@ impl<F: ObjFunc> Algorithm<F> for Method {
             });
         ctx.pool = pool;
         ctx.pool_y = pool_y;
-        self.alpha *= 0.95;
         ctx.find_best();
+        self.alpha *= 0.95;
     }
 }

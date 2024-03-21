@@ -98,7 +98,7 @@ impl Rng {
     where
         Standard: Distribution<T>,
     {
-        self.gen_with(|r| r.gen())
+        self.rng.gen()
     }
 
     /// Generate a classic random value between `0..1` (exclusive range).
@@ -110,7 +110,7 @@ impl Rng {
     /// Generate a random boolean by positive (`true`) factor.
     #[inline]
     pub fn maybe(&mut self, p: f64) -> bool {
-        self.gen_with(|r| r.gen_bool(p))
+        self.rng.gen_bool(p)
     }
 
     /// Generate a random value by range.
@@ -120,7 +120,7 @@ impl Rng {
         T: SampleUniform,
         R: SampleRange<T>,
     {
-        self.gen_with(|r| r.gen_range(range))
+        self.rng.gen_range(range)
     }
 
     /// Sample from a distribution.
@@ -129,7 +129,7 @@ impl Rng {
     where
         D: Distribution<T>,
     {
-        self.gen_with(|r| r.sample(distr))
+        self.rng.sample(distr)
     }
 
     /// Generate a random value by upper bound (exclusive range).
@@ -170,7 +170,12 @@ impl Rng {
 
     /// Shuffle a slice.
     pub fn shuffle<S: rand::seq::SliceRandom + ?Sized>(&mut self, s: &mut S) {
-        self.gen_with(|r| s.shuffle(r));
+        s.shuffle(&mut self.rng);
+    }
+
+    /// Choose a random value from the slice.
+    pub fn choose<'a, S: rand::seq::SliceRandom + ?Sized>(&mut self, s: &'a S) -> &'a S::Item {
+        s.choose(&mut self.rng).expect("Empty slice")
     }
 
     /// Generate a random array with no-repeat values.
