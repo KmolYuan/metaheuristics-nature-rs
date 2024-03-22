@@ -306,7 +306,7 @@ impl<F: ObjFunc> Solver<F> {
             pareto_limit: usize::MAX,
             seed: SeedOpt::Entropy,
             pool: Pool::Func(Box::new(uniform_pool())),
-            task: Box::new(|ctx| ctx.gen >= 200),
+            task: Box::new(|ctx| ctx.gen == 200),
             callback: Box::new(|_| ()),
         }
     }

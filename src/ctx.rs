@@ -6,8 +6,22 @@ pub(crate) type BestCon<F> = <F as Fitness>::Best<F>;
 /// A basic context type of the algorithms.
 ///
 /// This type provides a shared dataset if you want to implement a new method.
+/// The fields maybe expanded in the future, so it marked as non-exhaustive.
 ///
-/// Please see [`Algorithm`] for the implementation.
+/// # View the Progress
+///
+/// You can view the progress from the [`SolverBuilder::task()`] and
+/// [`SolverBuilder::callback()`].
+///
+/// + `ctx.gen` - Get generation number.
+/// + `ctx.pop_num()` - Get population number.
+/// + `ctx.best.get_eval()` - Get the current best evaluation value.
+/// + `ctx.best.get_xs()` - Get the current best variables.
+///
+/// # Implement an Algorithm
+///
+/// Do everything you want to do with the context. Please see [`Algorithm`] for
+/// the implementation.
 #[non_exhaustive]
 pub struct Ctx<F: ObjFunc> {
     /// Best container
@@ -16,10 +30,10 @@ pub struct Ctx<F: ObjFunc> {
     pub pool: Vec<Vec<f64>>,
     /// Current fitness values of all individuals
     pub pool_y: Vec<F::Ys>,
-    /// Generation
-    pub gen: u64,
     /// Objective function object
     pub func: F,
+    /// Generation (iteration) number
+    pub gen: u64,
 }
 
 impl<F: ObjFunc> Ctx<F> {
@@ -31,7 +45,7 @@ impl<F: ObjFunc> Ctx<F> {
     ) -> Self {
         let mut best = BestCon::<F::Ys>::from_limit(limit);
         best.update_all(&pool, &pool_y);
-        Self { best, pool, pool_y, gen: 0, func }
+        Self { best, pool, pool_y, func, gen: 0 }
     }
 
     pub(crate) fn from_pool(func: F, limit: usize, pool: Vec<Vec<f64>>) -> Self {
@@ -44,18 +58,9 @@ impl<F: ObjFunc> Ctx<F> {
     }
 
     /// Get population number.
+    #[inline]
     pub fn pop_num(&self) -> usize {
         self.pool.len()
-    }
-
-    /// Get the current best element.
-    pub fn as_best_result(&self) -> (&[f64], &F::Ys) {
-        self.best.as_result()
-    }
-
-    /// Get the current best fitness value.
-    pub fn as_best_fitness(&self) -> &F::Ys {
-        self.best.as_result_fit()
     }
 
     /// Assign the index from source.

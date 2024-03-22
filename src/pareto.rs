@@ -11,9 +11,14 @@ pub struct SingleBest<T: Fitness> {
 }
 
 impl<T: Fitness> SingleBest<T> {
-    /// Get the final best element.
+    /// Get the current best element.
     pub fn get_eval(&self) -> <T as Fitness>::Eval {
         Best::get_eval(self)
+    }
+
+    /// Get the current best design variables.
+    pub fn get_xs(&self) -> &[f64] {
+        Best::get_xs(self)
     }
 }
 
@@ -26,9 +31,14 @@ pub struct Pareto<T: Fitness> {
 }
 
 impl<T: Fitness> Pareto<T> {
-    /// Get the final best element.
+    /// Get the current best element.
     pub fn get_eval(&self) -> <T as Fitness>::Eval {
         Best::get_eval(self)
+    }
+
+    /// Get the current best design variables.
+    pub fn get_xs(&self) -> &[f64] {
+        Best::get_xs(self)
     }
 
     /// Get the number of best elements.
@@ -102,17 +112,21 @@ pub trait Best: MaybeParallel {
     fn sample_xs(&self, rng: &mut Rng) -> &[f64] {
         self.sample(rng).0
     }
-    /// Get the final best element.
+    /// Get the current best element.
     fn as_result(&self) -> (&[f64], &Self::Item);
-    /// Get the final best fitness value.
+    /// Get the current best fitness value.
     fn as_result_fit(&self) -> &Self::Item {
         self.as_result().1
     }
-    /// Convert the best element into the target item.
+    /// Convert the best element into the target item in the final stage.
     ///
     /// See also [`Best::as_result_fit()`] for getting its reference.
     fn into_result_fit(self) -> Self::Item;
-    /// Get the final best evaluation value.
+    /// Get the current best design variables.
+    fn get_xs(&self) -> &[f64] {
+        self.as_result().0
+    }
+    /// Get the current best evaluation value.
     fn get_eval(&self) -> <Self::Item as Fitness>::Eval {
         self.as_result_fit().eval()
     }
