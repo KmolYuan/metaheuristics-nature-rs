@@ -107,7 +107,7 @@ impl AlgCfg for De {
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         self
     }
-    fn default_pop() -> usize {
+    fn pop_num() -> usize {
         400
     }
 }

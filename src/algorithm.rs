@@ -7,13 +7,11 @@ use crate::prelude::*;
 /// Please note that the setting should not overlap with the [`SolverBuilder`].
 pub trait AlgCfg {
     /// Associated algorithm.
-    type Algorithm<F: ObjFunc>: Algorithm<F>;
-
+    type Algorithm<F: ObjFunc>: Algorithm<F> + 'static;
     /// Create the algorithm.
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F>;
-
     /// Default population number.
-    fn default_pop() -> usize {
+    fn pop_num() -> usize {
         200
     }
 }
@@ -88,4 +86,19 @@ pub trait Algorithm<F: ObjFunc>: MaybeParallel {
 
     /// Processing implementation of each generation.
     fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng);
+}
+
+/// Implement for `Box<dyn Algorithm<F>>`.
+///
+/// See also [`SolverBox`].
+impl<F: ObjFunc, T: Algorithm<F> + ?Sized> Algorithm<F> for Box<T> {
+    #[inline]
+    fn init(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
+        self.as_mut().init(ctx, rng);
+    }
+
+    #[inline]
+    fn generation(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
+        self.as_mut().generation(ctx, rng);
+    }
 }
