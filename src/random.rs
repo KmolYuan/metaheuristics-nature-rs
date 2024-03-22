@@ -188,6 +188,6 @@ impl Rng {
     {
         let mut candi = candi.into_iter().collect::<Vec<_>>();
         self.shuffle(candi.as_mut_slice());
-        candi[..N].try_into().unwrap()
+        candi[..N].try_into().expect("candi.len() < N")
     }
 }

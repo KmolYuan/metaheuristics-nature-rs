@@ -187,7 +187,12 @@ impl<T: Fitness> Best for Pareto<T> {
         }
         // Prune the solution set
         let mut ind = (0..self.xs.len()).collect::<Vec<_>>();
+        #[cfg(not(feature = "rayon"))]
         ind.sort_unstable_by(|i, j| self.ys[*i].eval().partial_cmp(&self.ys[*j].eval()).unwrap());
+        #[cfg(feature = "rayon")]
+        ind.par_sort_unstable_by(|i, j| {
+            self.ys[*i].eval().partial_cmp(&self.ys[*j].eval()).unwrap()
+        });
         // No copied vector sort
         for idx in 0..self.xs.len() {
             if ind[idx] != usize::MAX {

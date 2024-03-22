@@ -5,14 +5,16 @@ use alloc::sync::Arc;
 ///
 /// By default, the trait is implemented for types that implement `PartialOrd +
 /// Clone + 'static`, which means a clonable non-lifetime type comparable with
-/// `a <= b` is equivalent to [`a.is_dominated(b)`](Fitness::is_dominated) for
+/// `a < b` is equivalent to [`a.is_dominated(b)`](Fitness::is_dominated) for
 /// using single objective.
 ///
 /// # Example
 ///
-/// If your type has multiple objectives, you can use the [`Pareto`]
-/// container and implement [`Fitness::eval()`] to decide the final fitness
-/// value.
+/// Single objective problems can simply use the `f32`/`f64` number type.
+///
+/// Multi-objective problems can specify the [`Pareto`] container as
+/// [`Fitness::Best`] and implement [`Fitness::eval()`] to decide the final
+/// fitness value.
 ///
 /// ```
 /// use metaheuristics_nature::{pareto::Pareto, Fitness};
@@ -45,7 +47,8 @@ pub trait Fitness: MaybeParallel + Clone + 'static {
     fn is_dominated(&self, rhs: &Self) -> bool;
     /// Evaluate the final fitness value.
     ///
-    /// Used in [`Best::update()`] and [`Best::as_result()`].
+    /// Used in [`Best::as_result()`] and [`Best::update()`] when reaching the
+    /// limit.
     fn eval(&self) -> Self::Eval;
 }
 
@@ -53,7 +56,7 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
     type Best<A: Fitness> = SingleBest<A>;
     type Eval = Self;
     fn is_dominated(&self, rhs: &Self) -> bool {
-        self <= rhs
+        self < rhs
     }
     fn eval(&self) -> Self::Eval {
         self.clone()
@@ -130,7 +133,7 @@ impl<Y, P> WithProduct<Y, P> {
     where
         P: Clone,
     {
-        Arc::unwrap_or_clone(self.product)
+        self.into_err_result().1
     }
 
     /// Get the fitness value and the final result.

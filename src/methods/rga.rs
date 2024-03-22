@@ -107,11 +107,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                 continue;
             }
             #[cfg(not(feature = "rayon"))]
-            let iter = 0..3;
+            let iter = rng.stream(3).into_iter();
             #[cfg(feature = "rayon")]
-            let iter = (0..3).into_par_iter();
-            let mut ret = iter
-                .zip(rng.stream(3))
+            let iter = rng.stream(3).into_par_iter();
+            let mut ret: [_; 3] = iter
+                .enumerate()
                 .map(|(id, mut rng)| {
                     let xs = zip(ctx.bound(), zip(&ctx.pool[i], &ctx.pool[i + 1]))
                         .map(|(&[min, max], (a, b))| {
@@ -126,9 +126,11 @@ impl<F: ObjFunc> Algorithm<F> for Method {
                     let ys = ctx.fitness(&xs);
                     (ys, xs)
                 })
-                .collect::<Vec<_>>();
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap_or_else(|_| unreachable!());
             ret.sort_unstable_by(|(a, _), (b, _)| a.eval().partial_cmp(&b.eval()).unwrap());
-            let [(t1_f, t1_x), (t2_f, t2_x)] = [ret.remove(0), ret.remove(0)];
+            let [(t1_f, t1_x), (t2_f, t2_x), ..] = ret;
             ctx.set_from(i, t1_x, t1_f);
             ctx.set_from(i + 1, t2_x, t2_f);
         }
