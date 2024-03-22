@@ -91,7 +91,7 @@ pub trait Algorithm<F: ObjFunc>: MaybeParallel {
 /// Implement for `Box<dyn Algorithm<F>>`.
 ///
 /// See also [`SolverBox`].
-impl<F: ObjFunc, T: Algorithm<F> + ?Sized> Algorithm<F> for Box<T> {
+impl<F: ObjFunc, T: Algorithm<F> + ?Sized> Algorithm<F> for alloc::boxed::Box<T> {
     #[inline]
     fn init(&mut self, ctx: &mut Ctx<F>, rng: &mut Rng) {
         self.as_mut().init(ctx, rng);
