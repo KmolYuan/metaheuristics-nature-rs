@@ -45,15 +45,14 @@ impl Default for Pso {
     }
 }
 
-impl Setting for Pso {
+impl AlgCfg for Pso {
     type Algorithm<F: ObjFunc> = Method<F::Ys>;
-
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         Method { pso: self, past: Vec::new(), past_y: Vec::new() }
     }
 }
 
-/// Particle Swarm Optimization type.
+/// Algorithm of the Particle Swarm Optimization.
 pub struct Method<Y: Fitness> {
     pso: Pso,
     past: Vec<Vec<f64>>,

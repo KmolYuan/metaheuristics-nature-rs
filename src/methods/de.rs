@@ -5,7 +5,7 @@ use self::Strategy::*;
 use crate::prelude::*;
 use alloc::{boxed::Box, vec::Vec};
 
-/// Differential Evolution type.
+/// Algorithm of the Differential Evolution.
 pub type Method = De;
 type Func<F> = Box<dyn Fn(&Ctx<F>, &[f64], usize) -> f64>;
 
@@ -102,13 +102,11 @@ impl Default for De {
     }
 }
 
-impl Setting for De {
+impl AlgCfg for De {
     type Algorithm<F: ObjFunc> = Method;
-
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         self
     }
-
     fn default_pop() -> usize {
         400
     }

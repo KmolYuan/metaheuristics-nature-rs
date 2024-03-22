@@ -75,7 +75,7 @@ impl ObjFunc for TestMO {
 #[cfg(test)]
 fn test<S>() -> Solver<TestObj>
 where
-    S: Setting + Default,
+    S: AlgCfg + Default,
 {
     let mut report = alloc::vec::Vec::new();
     let s = Solver::build(S::default(), TestObj)

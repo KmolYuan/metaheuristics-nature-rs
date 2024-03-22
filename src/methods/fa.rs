@@ -7,7 +7,7 @@ use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
 
-/// Firefly Algorithm type.
+/// Algorithm of the Firefly Algorithm.
 pub type Method = Fa;
 
 const DEF: Fa = Fa { alpha: 1., beta_min: 1., gamma: 0.01 };
@@ -51,13 +51,11 @@ impl Default for Fa {
     }
 }
 
-impl Setting for Fa {
+impl AlgCfg for Fa {
     type Algorithm<F: ObjFunc> = Method;
-
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         self
     }
-
     fn default_pop() -> usize {
         80
     }

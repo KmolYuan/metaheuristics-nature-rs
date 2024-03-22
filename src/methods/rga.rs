@@ -9,7 +9,7 @@ use crate::prelude::*;
 use alloc::vec::Vec;
 use core::iter::zip;
 
-/// Real-coded Genetic Algorithm type.
+/// Algorithm of the Real-coded Genetic Algorithm.
 pub type Method = Rga;
 
 const DEF: Rga = Rga { cross: 0.95, mutate: 0.05, win: 0.95, delta: 5. };
@@ -58,13 +58,11 @@ impl Default for Rga {
     }
 }
 
-impl Setting for Rga {
+impl AlgCfg for Rga {
     type Algorithm<F: ObjFunc> = Method;
-
     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
         self
     }
-
     fn default_pop() -> usize {
         500
     }

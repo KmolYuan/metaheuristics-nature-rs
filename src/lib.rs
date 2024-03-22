@@ -9,7 +9,7 @@
 //!
 //! # Algorithm
 //!
-//! There are two traits [`Algorithm`] and [`Setting`].
+//! There are two traits [`Algorithm`] and [`AlgCfg`].
 //! The previous is used to design the optimization method,
 //! and the latter is the setting interface.
 //!
@@ -66,7 +66,7 @@ extern crate core as std;
 pub use rayon;
 
 pub use self::{
-    algorithm::*, ctx::*, fitness::*, fx_func::*, methods::*, obj_func::*, setting::*, solver::*,
+    algorithm::*, ctx::*, fitness::*, fx_func::*, methods::*, obj_func::*, solver::*,
     solver_builder::*,
 };
 
@@ -145,7 +145,6 @@ pub mod methods;
 mod obj_func;
 pub mod pareto;
 pub mod random;
-mod setting;
 mod solver;
 mod solver_builder;
 pub mod tests;

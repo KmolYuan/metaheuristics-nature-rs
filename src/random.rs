@@ -19,7 +19,7 @@ pub type Seed = [u8; 32];
 pub enum SeedOpt {
     /// Seed from non-crypto u64
     U64(u64),
-    /// Crypto seed series
+    /// Crypto seed series (32 bytes)
     Seed(Seed),
     /// Auto-decided crypto seed
     Entropy,

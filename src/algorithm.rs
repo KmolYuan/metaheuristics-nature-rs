@@ -1,8 +1,26 @@
 use crate::prelude::*;
 
-/// The methods of the meta-heuristic algorithms.
+/// Algorithm configurations. A trait for preparing the algorithm.
 ///
-/// 1. Implement [`Setting`] trait then indicate to a "method" type.
+/// The setting type is actually a builder of the [`AlgCfg::Algorithm`] type.
+///
+/// Please note that the setting should not overlap with the [`SolverBuilder`].
+pub trait AlgCfg {
+    /// Associated algorithm.
+    type Algorithm<F: ObjFunc>: Algorithm<F>;
+
+    /// Create the algorithm.
+    fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F>;
+
+    /// Default population number.
+    fn default_pop() -> usize {
+        200
+    }
+}
+
+/// The methods of the metaheuristic algorithms.
+///
+/// 1. Implement [`AlgCfg`] trait then indicate to a "method" type.
 /// 1. Implement `Algorithm` trait on the "method" type.
 ///
 /// Usually, the "method" type that implements this trait will not leak from the
@@ -19,9 +37,8 @@ use crate::prelude::*;
 /// }
 ///
 /// /// The implementation of the structure with fields.
-/// impl Setting for MySetting1 {
+/// impl AlgCfg for MySetting1 {
 ///     type Algorithm<F: ObjFunc> = Method;
-///
 ///     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
 ///         Method /* inherit setting */
 ///     }
@@ -32,9 +49,8 @@ use crate::prelude::*;
 /// pub struct MySetting2;
 ///
 /// /// The implementation of a tuple-like structure.
-/// impl Setting for MySetting2 {
+/// impl AlgCfg for MySetting2 {
 ///     type Algorithm<F: ObjFunc> = Method;
-///
 ///     fn algorithm<F: ObjFunc>(self) -> Self::Algorithm<F> {
 ///         Method
 ///     }
@@ -54,6 +70,11 @@ use crate::prelude::*;
 /// type automatically. All you have to do is implement the "initialization"
 /// method and "generation" method, which are corresponded to the
 /// [`Algorithm::init()`] and [`Algorithm::generation()`] respectively.
+///
+/// The generic type `F: ObjFunc` is the objective function marker, which is
+/// used to allow storing the types that are related to the objective function
+/// for the implementor `Self`. An actual example is
+/// [`crate::methods::pso::Method`].
 pub trait Algorithm<F: ObjFunc>: MaybeParallel {
     /// Initialization implementation.
     ///

@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 /// + The objective function is a type that implement [`ObjFunc`].
 /// + A basic algorithm data is hold by [`Ctx`].
 ///
-/// The builder of this type can infer the algorithm by [`Setting::Algorithm`].
+/// The builder of this type can infer the algorithm by [`AlgCfg::Algorithm`].
 ///
 /// Please use [`Solver::build()`] method to start a task.
 ///

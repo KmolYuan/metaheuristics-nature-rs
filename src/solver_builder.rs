@@ -53,18 +53,18 @@ pub enum Pool<'a, F: ObjFunc> {
 /// + Finally, call [`SolverBuilder::solve()`] method to start the algorithm.
 #[allow(clippy::type_complexity)]
 #[must_use = "solver builder do nothing unless call the \"solve\" method"]
-pub struct SolverBuilder<'a, F: ObjFunc> {
+pub struct SolverBuilder<'a, A: Algorithm<F>, F: ObjFunc> {
     func: F,
     pop_num: usize,
     pareto_limit: usize,
     seed: SeedOpt,
-    algorithm: Box<dyn Algorithm<F>>,
+    algorithm: A,
     pool: Pool<'a, F>,
     task: Box<dyn FnMut(&Ctx<F>) -> bool + 'a>,
     callback: Box<dyn FnMut(&Ctx<F>) + 'a>,
 }
 
-impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
+impl<'a, A: Algorithm<F>, F: ObjFunc> SolverBuilder<'a, A, F> {
     impl_builders! {
         /// Population number.
         ///
@@ -139,7 +139,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// # Default
     ///
     /// By default, the algorithm will iterate 200 generation.
-    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, F>
+    pub fn task<'b, C>(self, task: C) -> SolverBuilder<'b, A, F>
     where
         'a: 'b,
         C: FnMut(&Ctx<F>) -> bool + 'b,
@@ -167,7 +167,7 @@ impl<'a, F: ObjFunc> SolverBuilder<'a, F> {
     /// # Default
     ///
     /// By default, this function does nothing.
-    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, F>
+    pub fn callback<'b, C>(self, callback: C) -> SolverBuilder<'b, A, F>
     where
         'a: 'b,
         C: FnMut(&Ctx<F>) + 'b,
@@ -254,16 +254,13 @@ impl<F: ObjFunc> Solver<F> {
     /// If all things are well-setup, call [`SolverBuilder::solve()`].
     ///
     /// The default value of each option can be found in their document.
-    pub fn build<S>(setting: S, func: F) -> SolverBuilder<'static, F>
-    where
-        S: Setting,
-    {
+    pub fn build<S: AlgCfg>(setting: S, func: F) -> SolverBuilder<'static, S::Algorithm<F>, F> {
         SolverBuilder {
             func,
             pop_num: S::default_pop(),
             pareto_limit: usize::MAX,
             seed: SeedOpt::Entropy,
-            algorithm: Box::new(setting.algorithm()),
+            algorithm: setting.algorithm(),
             pool: Pool::Func(Box::new(uniform_pool())),
             task: Box::new(|ctx| ctx.gen >= 200),
             callback: Box::new(|_| ()),
