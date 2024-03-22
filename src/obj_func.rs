@@ -128,8 +128,9 @@ pub trait ObjFunc: Bounded {
     ///
     /// # Adaptive Value
     ///
-    /// Sometimes a value that adjust with converge states can help to restrict
-    /// the searching. The "adaptive function" can be set in
-    /// [`SolverBuilder::callback()`] method.
+    /// Sometimes a value that adjusts with converge states can help to restrict
+    /// the searching. The adaptive value can be set by hiding its mutability
+    /// with [`std::cell::Cell`] but not recommended. Please use the adaptive
+    /// value from the algorithm, not from the objective function.
     fn fitness(&self, xs: &[f64]) -> Self::Ys;
 }
