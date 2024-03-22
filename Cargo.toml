@@ -11,22 +11,22 @@ keywords = ["metaheuristic", "algorithm", "optimization"]
 categories = ["algorithms", "no-std"]
 
 [features]
-default = ["std", "rayon"]
+default = ["std"]
 std = [
     "num-traits/std",
     "rand/std",
-    "rand_chacha/std",
     "rand_distr/std",
+    "rand_chacha/std",
     "serde?/std",
 ]
-clap = ["std", "dep:clap"]
-rayon = ["std", "dep:rayon"]
+clap = ["dep:clap", "std"]
+rayon = ["dep:rayon", "std"]
 serde = ["dep:serde"]
 
 [dependencies]
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
-rand_chacha = { version = "0.3", default-features = false }
 rand_distr = { version = "0.4", default-features = false }
+rand_chacha = { version = "0.3", default-features = false }
 clap = { version = "4", features = ["derive"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }

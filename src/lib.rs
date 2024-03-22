@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-//! # Terminology
+//! # Terminologies
 //!
 //! For unifying the terms, in this documentation,
 //!
@@ -7,7 +7,7 @@
 //! + "Function" that evaluates the design is called "objective function".
 //! + "Return value" of the objective function is called "fitness".
 //!
-//! # Algorithm
+//! # Algorithms
 //!
 //! There are two traits [`Algorithm`] and [`AlgCfg`].
 //! The previous is used to design the optimization method,
@@ -37,15 +37,15 @@
 //!
 //! # Features
 //!
+//! The crate features:
 //! + `std`: Default feature. Enable standard library function, such as timing
-//! and threading. If `std` is disabled, crate "libm" will be enabled for the
-//! math functions.
-//! + `rayon`: Enable parallel computation via `rayon`, let objective function
-//! running without ordered. Disable it for the platform that doesn't supported
-//! threading, or if your objective function is not complicate enough. This
-//! feature require `std` feature.
+//!   and threading. If `std` is disabled, crate "libm" will be enabled for the
+//!   math functions.
+//! + `rayon`: Enable parallel computation via `rayon`. Disable it for the
+//!   platform that doesn't supported threading, or if your objective function
+//!   is not complicate enough. This feature require `std` feature.
 //! + `clap`: Add CLI argument support for the provided algorithms and their
-//! options.
+//!   options.
 //!
 //! # Compatibility
 //!
@@ -56,12 +56,13 @@
 //! version number. Then re-export (`pub use`) this crate for the downstream
 //! crates.
 //!
-//! This crate does the same things on `ndarray` and `rayon`.
+//! This crate does the same things on `rand` and `rayon`.
 #![cfg_attr(doc_cfg, feature(doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+pub use rand;
 #[cfg(feature = "rayon")]
 pub use rayon;
 
@@ -148,15 +149,11 @@ pub mod random;
 mod solver;
 mod solver_builder;
 pub mod tests;
-/// The re-export of the crate `rand` and its related crates.
-pub mod rand {
-    #[doc(no_inline)]
-    pub use rand::*;
-    #[doc(no_inline)]
-    pub use rand_distr::*;
-}
 
 /// A marker trait for parallel computation.
+///
+/// Require `Sync + Send` if the `rayon` feature is enabled, otherwise require
+/// nothing.
 #[cfg(not(feature = "rayon"))]
 pub trait MaybeParallel {}
 #[cfg(not(feature = "rayon"))]
