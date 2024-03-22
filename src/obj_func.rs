@@ -88,7 +88,7 @@ pub trait ObjFunc: Bounded {
     ///
     /// # Wrappers
     ///
-    /// There are some wrappers for the fitness value: [`WithProduct`],
+    /// There are some wrappers for the fitness value: [`WithProduct`] and
     /// [`MakeSingle`].
     type Ys: Fitness;
 

@@ -267,7 +267,7 @@ impl<F: ObjFunc> Solver<F> {
     ///
     /// The default value of each option can be found in their document.
     ///
-    /// See also [`Solver::build_boxed()`] for dynamic dispatching.
+    /// Use [`Solver::build_boxed()`] for dynamic dispatching.
     pub fn build<A: AlgCfg>(cfg: A, func: F) -> SolverBuilder<'static, A::Algorithm<F>, F> {
         Self::build_default(cfg.algorithm(), A::pop_num(), func)
     }
@@ -314,7 +314,7 @@ impl<F: ObjFunc> Solver<F> {
 
 /// A function generates a uniform pool.
 ///
-/// See also [`gaussian_pool()`], [`Pool::Func`],
+/// See also [`gaussian_pool()`], [`Pool::Func`], and
 /// [`SolverBuilder::init_pool()`].
 pub fn uniform_pool() -> PoolFunc<'static> {
     Box::new(move |_, range, rng| rng.range(range))
@@ -324,7 +324,8 @@ pub fn uniform_pool() -> PoolFunc<'static> {
 ///
 /// Where `mean` is the mean value, `std` is the standard deviation.
 ///
-/// See also [`uniform_pool()`], [`Pool::Func`], [`SolverBuilder::init_pool()`].
+/// See also [`uniform_pool()`], [`Pool::Func`], and
+/// [`SolverBuilder::init_pool()`].
 ///
 /// # Panics
 ///
