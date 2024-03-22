@@ -65,11 +65,15 @@ impl<T: MaybeParallel + PartialOrd + Clone + 'static> Fitness for T {
 ///
 /// This wrapper type is overrided [`Fitness::Best`] to [`SingleBest`]. A
 /// multi-objective fitness type can be tested in single mode by setting
-/// [`ObjFunc::Ys`] to `Single<MOFit>`.
+/// [`ObjFunc::Ys`] to `MakeSingle<MyMOFit>` and wrapping the final result with
+/// `MakeSingle(MyMOFit { .. })`.
 #[derive(Clone, Debug)]
-pub struct Single<Y: Fitness>(pub Y);
+#[repr(transparent)]
+pub struct MakeSingle<Y: Fitness>(pub Y)
+where
+    Y::Eval: Fitness;
 
-impl<Y: Fitness> Fitness for Single<Y>
+impl<Y: Fitness> Fitness for MakeSingle<Y>
 where
     Y::Eval: Fitness,
 {
