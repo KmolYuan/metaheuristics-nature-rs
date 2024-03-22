@@ -64,7 +64,7 @@ impl<F: ObjFunc> Solver<F> {
     /// Get the final best element.
     pub fn into_result<P, Fit: Fitness>(self) -> P
     where
-        F: ObjFunc<Ys = Product<Fit, P>>,
+        F: ObjFunc<Ys = WithProduct<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
         self.ctx.best.into_result_fit().into_result()
@@ -73,7 +73,7 @@ impl<F: ObjFunc> Solver<F> {
     /// Get the fitness value and the final result.
     pub fn into_err_result<P, Fit: Fitness>(self) -> (Fit, P)
     where
-        F: ObjFunc<Ys = Product<Fit, P>>,
+        F: ObjFunc<Ys = WithProduct<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
         self.ctx.best.into_result_fit().into_err_result()

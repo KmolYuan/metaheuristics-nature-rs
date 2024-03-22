@@ -20,11 +20,11 @@ impl Bounded for TestObj {
 }
 
 impl ObjFunc for TestObj {
-    type Ys = Product<f64, f64>;
+    type Ys = WithProduct<f64, f64>;
 
     fn fitness(&self, xs: &[f64]) -> Self::Ys {
         let y = OFFSET + xs[0] * xs[0] + 8. * xs[1] * xs[1] + xs[2] * xs[2] + xs[3] * xs[3];
-        Product::new(y, y)
+        WithProduct::new(y, y)
     }
 }
 
@@ -64,11 +64,11 @@ impl Fitness for TestMOFit {
 }
 
 impl ObjFunc for TestMO {
-    type Ys = Product<TestMOFit, ()>;
+    type Ys = WithProduct<TestMOFit, ()>;
 
     fn fitness(&self, xs: &[f64]) -> Self::Ys {
         let ys = TestMOFit { cost: xs[0] * xs[0], weight: xs[1] * xs[1] };
-        Product::new(ys, ())
+        WithProduct::new(ys, ())
     }
 }
 

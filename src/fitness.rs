@@ -93,15 +93,28 @@ where
 /// You can use [`Solver::as_best_xs()`] / [`Solver::as_best_fit()`] /
 /// [`Solver::get_best_eval()`] to access product field.
 #[derive(Clone, Debug)]
-pub struct Product<Y, P> {
+pub struct WithProduct<Y, P: ?Sized> {
     ys: Y,
     product: Arc<P>,
 }
 
-impl<P, Y> Product<Y, P> {
+impl<Y, P: ?Sized> WithProduct<Y, P> {
+    /// Create a product from an existing [`Arc`] object, where `P` can be
+    /// unknown size.
+    pub fn new_from_arc(ys: Y, product: Arc<P>) -> Self {
+        Self { ys, product }
+    }
+
+    /// Get the reference to the final result.
+    pub fn as_result(&self) -> &P {
+        self.product.as_ref()
+    }
+}
+
+impl<Y, P> WithProduct<Y, P> {
     /// Create a product.
     pub fn new(ys: Y, product: P) -> Self {
-        Self { ys, product: Arc::new(product) }
+        Self::new_from_arc(ys, Arc::new(product))
     }
 
     /// Get the fitness value.
@@ -110,11 +123,6 @@ impl<P, Y> Product<Y, P> {
         Y: Clone,
     {
         self.ys.clone()
-    }
-
-    /// Get the reference to the final result.
-    pub fn as_result(&self) -> &P {
-        self.product.as_ref()
     }
 
     /// Consume and get the final result.
@@ -134,10 +142,9 @@ impl<P, Y> Product<Y, P> {
     }
 }
 
-impl<P, Y> Fitness for Product<Y, P>
+impl<Y: Fitness, P> Fitness for WithProduct<Y, P>
 where
     P: MaybeParallel + Clone + 'static,
-    Y: Fitness,
 {
     type Best<T: Fitness> = Y::Best<T>;
     type Eval = Y::Eval;

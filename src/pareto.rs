@@ -65,7 +65,7 @@ impl<T: Fitness> Pareto<T> {
     }
 }
 
-impl<Y, P> Pareto<Product<Y, P>>
+impl<Y, P> Pareto<WithProduct<Y, P>>
 where
     P: MaybeParallel + Clone + 'static,
     Y: Fitness,

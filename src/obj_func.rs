@@ -84,9 +84,12 @@ pub trait Bounded: Sync + Send {
 ///
 /// This trait is designed as immutable and there should only has shared data.
 pub trait ObjFunc: Bounded {
-    /// Type of the fitness value
+    /// Type of the fitness value.
     ///
-    /// See also [`Product`].
+    /// # Wrappers
+    ///
+    /// There are some wrappers for the fitness value: [`WithProduct`],
+    /// [`MakeSingle`].
     type Ys: Fitness;
 
     /// Return fitness, the smaller value represents a good result.

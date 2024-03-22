@@ -34,7 +34,7 @@ let s = mh::Solver::build(mh::Rga::default(), mh::tests::TestObj)
     .solve();
 // Get the optimized XY value of your function
 let (xs, p) = s.as_best();
-// If `p` is a `Product` type wrapped with the fitness value
+// If `p` is a `WithProduct` type wrapped with the fitness value
 let err = p.ys();
 let result = p.as_result();
 // Get the history reports
