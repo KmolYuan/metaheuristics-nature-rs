@@ -158,8 +158,8 @@ impl Method {
     {
         let dim = ctx.dim();
         for (i, s) in (0..dim).cycle().skip(rng.ub(dim)).take(dim).enumerate() {
-            // At last two variables are modified
-            if i > 1 && !rng.maybe(self.cross) {
+            // At last one variables is modified
+            if i >= 1 && !rng.maybe(self.cross) {
                 break;
             }
             xs[s] = rng.clamp(formula(ctx, xs, s), ctx.bound_range(s));

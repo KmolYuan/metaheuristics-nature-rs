@@ -75,11 +75,9 @@ impl Rng {
     /// Use the iterators `.zip()` method to fork this RNG set.
     pub fn stream(&mut self, n: usize) -> Vec<Self> {
         // Needs to "run" the RNG to avoid constantly opening new branches
-        const JUMP: u128 = 2 << 32;
-        self.rng
-            .set_word_pos(self.rng.get_word_pos().wrapping_add(JUMP));
         let stream = self.rng.get_stream();
-        (1..=n)
+        self.rng.set_stream(stream.wrapping_add(n as _));
+        (0..n)
             .map(|i| {
                 let mut rng = self.clone();
                 rng.rng.set_stream(stream.wrapping_add(i as _));
