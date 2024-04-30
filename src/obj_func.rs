@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// A problem is well bounded.
 ///
 /// Provide constant array reference or dynamic slice for the variables.
-pub trait Bounded: Sync + Send {
+pub trait Bounded: MaybeParallel {
     /// The upper bound and lower bound in `[[lower, upper]; number_of_vars]`
     /// form.
     ///
