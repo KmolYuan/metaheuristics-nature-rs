@@ -167,3 +167,17 @@ impl<T> MaybeParallel for T {}
 pub trait MaybeParallel: Sync + Send {}
 #[cfg(feature = "rayon")]
 impl<T: Sync + Send> MaybeParallel for T {}
+
+#[cfg(feature = "rayon")]
+macro_rules! maybe_send_box {
+    ($($traits:tt)+) => {
+        Box<dyn $($traits)+ + Send>
+    };
+}
+#[cfg(not(feature = "rayon"))]
+macro_rules! maybe_send_box {
+    ($($traits:tt)+) => {
+        Box<dyn $($traits)+ >
+    };
+}
+pub(crate) use maybe_send_box;
