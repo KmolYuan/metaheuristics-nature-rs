@@ -67,16 +67,27 @@ impl<F: ObjFunc> Solver<F> {
         F: ObjFunc<Ys = WithProduct<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
-        self.ctx.best.into_result_fit().into_result()
+        self.into_err_result().1
     }
 
     /// Get the fitness value and the final result.
-    pub fn into_err_result<P, Fit: Fitness>(self) -> (Fit, P)
+    pub fn into_err_result<P, Fit: Fitness>(self) -> (Fit::Eval, P)
     where
         F: ObjFunc<Ys = WithProduct<Fit, P>>,
         P: MaybeParallel + Clone + 'static,
     {
-        self.ctx.best.into_result_fit().into_err_result()
+        let (f, p, _) = self.into_err_result_func();
+        (f, p)
+    }
+
+    /// Get the fitness value, final result and the objective function.
+    pub fn into_err_result_func<P, Fit: Fitness>(self) -> (Fit::Eval, P, F)
+    where
+        F: ObjFunc<Ys = WithProduct<Fit, P>>,
+        P: MaybeParallel + Clone + 'static,
+    {
+        let (f, p) = self.ctx.best.into_result_fit().into_err_result();
+        (f, p, self.ctx.func)
     }
 
     /// Seed of the random number generator.

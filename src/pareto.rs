@@ -156,14 +156,13 @@ impl<T: Fitness> Best for SingleBest<T> {
     }
 
     fn as_result(&self) -> (&[f64], &Self::Item) {
-        match (&self.xs, &self.ys) {
-            (Some(xs), Some(ys)) => (xs, ys),
-            _ => panic!("No best element available"),
-        }
+        (self.xs.as_deref())
+            .zip(self.ys.as_ref())
+            .expect("No best element available")
     }
 
     fn into_result_fit(self) -> Self::Item {
-        self.ys.unwrap()
+        self.ys.expect("No best element available")
     }
 }
 
@@ -243,12 +242,10 @@ impl<T: Fitness> Best for Pareto<T> {
     }
 
     fn into_result_fit(self) -> Self::Item {
-        match (self.ys.into_iter())
+        (self.ys.into_iter())
             .map(|ys| (ys.eval(), ys))
             .min_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-        {
-            Some((_, ys)) => ys,
-            None => panic!("No best element available"),
-        }
+            .map(|(_, ys)| ys)
+            .expect("No best element available")
     }
 }

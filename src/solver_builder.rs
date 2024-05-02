@@ -77,7 +77,6 @@ impl<'a, A: Algorithm<F>, F: ObjFunc> SolverBuilder<'a, A, F> {
         ///
         /// If not changed by the algorithm setting, the default number is 200.
         fn pop_num(usize)
-
     }
 
     /// Pareto front limit.

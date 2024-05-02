@@ -133,15 +133,16 @@ impl<Y, P> WithProduct<Y, P> {
     where
         P: Clone,
     {
-        self.into_err_result().1
+        Arc::unwrap_or_clone(self.product)
     }
 
     /// Get the fitness value and the final result.
-    pub fn into_err_result(self) -> (Y, P)
+    pub fn into_err_result(self) -> (Y::Eval, P)
     where
         P: Clone,
+        Y: Fitness,
     {
-        (self.ys, Arc::unwrap_or_clone(self.product))
+        (self.ys.eval(), Arc::unwrap_or_clone(self.product))
     }
 }
 
